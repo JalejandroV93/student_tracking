@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/hooks/use-dashboard-data.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,126 +9,141 @@ import type {
   AlertSettings,
 } from "@/types/dashboard";
 import { getStudentTypeICount, type AlertStatus } from "@/lib/utils";
-import { SECCIONES_ACADEMICAS } from "@/lib/constants"
-
-// Sample data for demonstration
+import { toast } from "sonner";
 
 export function useDashboardData() {
-  const [students, setStudents] = useState<Student[]>([])
-  const [infractions, setInfractions] = useState<Infraction[]>([])
-  const [followUps, setFollowUps] = useState<FollowUp[]>([])
-  const [alertSettings, setAlertSettings] = useState<AlertSettings[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [students, setStudents] = useState<Student[]>([]);
+  const [infractions, setInfractions] = useState<Infraction[]>([]);
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
+  const [alertSettings, setAlertSettings] = useState<AlertSettings[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Derived state
   const [typeICounts, setTypeICounts] = useState(0);
   const [typeIICounts, setTypeIICounts] = useState(0);
   const [typeIIICounts, setTypeIIICounts] = useState(0);
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true)
-        const [studentsRes, infractionsRes, followUpsRes, settingsRes] = await Promise.all([
-          fetch("/api/students"),
-          fetch("/api/infractions"),
-          fetch("/api/followups"),
-          fetch("/api/alert-settings"),
-        ])
+        setLoading(true);
+        const [studentsRes, infractionsRes, followUpsRes, settingsRes] =
+          await Promise.all([
+            fetch("/api/students", {
+                headers: {
+                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+                }
+            }),
+            fetch("/api/infractions", {
+                headers: {
+                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+                }
+            }),
+            fetch("/api/followups", {
+                headers: {
+                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+                }
+            }),
+            fetch("/api/alert-settings", {
+                headers: {
+                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
+                }
+            }),
+          ]);
 
-        if (!studentsRes.ok || !infractionsRes.ok || !followUpsRes.ok || !settingsRes.ok) {
-          throw new Error("Error fetching data")
+        if (
+          !studentsRes.ok ||
+          !infractionsRes.ok ||
+          !followUpsRes.ok ||
+          !settingsRes.ok
+        ) {
+           let errorMessage = "Error fetching data";
+            if (studentsRes.status === 401 || infractionsRes.status === 401 || followUpsRes.status === 401 || settingsRes.status === 401) {
+              errorMessage = "Unauthorized: Invalid API Key";
+            }
+            throw new Error(errorMessage);
         }
 
-        const [studentsData, infractionsData, followUpsData, settingsData] = await Promise.all([
-          studentsRes.json(),
-          infractionsRes.json(),
-          followUpsRes.json(),
-          settingsRes.json(),
-        ])
+        const [studentsData, infractionsData, followUpsData, settingsData] =
+          await Promise.all([
+            studentsRes.json(),
+            infractionsRes.json(),
+            followUpsRes.json(),
+            settingsRes.json(),
+          ]);
 
-        // Transformar los datos
-        const transformedStudents = studentsData.map((student: any) => ({
-          id: `${student.id}-${student.codigo}`,
-          name: student.nombre || "",
-          section: student.seccion_normalizada || "",
-        }))
-
-        const transformedInfractions = infractionsData.map((infraction: any) => ({
-          id: infraction.hash,
-          studentId: `${infraction.id_estudiante}-${infraction.codigo_estudiante}`,
-          type: infraction.tipo_falta || "",
-          number: infraction.numero_falta?.toString() || "",
-          date: infraction.fecha?.split("T")[0] || "",
-        }))
-
-        const transformedFollowUps = followUpsData.map((followUp: any) => ({
-          id: `FUP${followUp.id_seguimiento}`,
-          infractionId: followUp.id_caso.toString(),
-          followUpNumber: followUp.id_seguimiento,
-          date: followUp.fecha_seguimiento?.split("T")[0] || "",
-        }))
-
-        setStudents(transformedStudents)
-        setInfractions(transformedInfractions)
-        setFollowUps(transformedFollowUps)
-        setAlertSettings(settingsData)
-        setError(null)
-      } catch (err) {
-        console.error("Error fetching data:", err)
-        setError("Error loading data. Please try again later.")
+        setStudents(studentsData);
+        setInfractions(infractionsData);
+        setFollowUps(followUpsData);
+        setAlertSettings(settingsData);
+        setError(null);
+      } catch (err: any) {
+        console.error("Error fetching data:", err);
+        setError(err.message || "Error loading data. Please try again later.");
+        toast.error(err.message || "Error loading data. Please try again later.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
+    // Calculate counts, no need useMemo
+    useEffect(() => {
+        const typeI = infractions.filter((inf) => inf.type === "I").length;
+        const typeII = infractions.filter((inf) => inf.type === "II").length;
+        const typeIII = infractions.filter((inf) => inf.type === "III").length;
 
+        setTypeICounts(typeI);
+        setTypeIICounts(typeII);
+        setTypeIIICounts(typeIII);
+    }, [infractions]);
 
-
-  // Calculate counts
-  useEffect(() => {
-    // Count infractions by type
-    const typeI = infractions.filter((inf) => inf.type === "I").length;
-    const typeII = infractions.filter((inf) => inf.type === "II").length;
-    const typeIII = infractions.filter((inf) => inf.type === "III").length;
-
-    setTypeICounts(typeI);
-    setTypeIICounts(typeII);
-    setTypeIIICounts(typeIII);
-  }, [infractions]);
-
-  // Add new follow-up
+  // Add new follow-up -  Consider moving this to an API POST request
   const addFollowUp = (followUp: FollowUp) => {
     setFollowUps((prev) => [...prev, followUp]);
+    // Ideally, also send a POST request to /api/followups to persist this
   };
 
-  // Update alert settings
+  // Update alert settings - Consider moving this to an API POST/PUT request
   const updateAlertSettings = (settings: AlertSettings) => {
     setAlertSettings(settings);
+    // Ideally, send a POST/PUT request to /api/alert-settings to persist this
   };
 
-  // Get alert status for a student
-  const getStudentAlertStatus = (studentId: string): AlertStatus | null => {
-    const student = students.find((s) => s.id === studentId);
-    if (!student) return null;
+// Get alert status for a student
+const getStudentAlertStatus = (studentId: string): AlertStatus | null => {
+  const student = students.find((s) => s.id === studentId);
+  if (!student) return null;
 
-    const typeICount = getStudentTypeICount(studentId, infractions);
+  const typeICount = getStudentTypeICount(studentId, infractions);
+  const defaultPrimaryThreshold = alertSettings.length > 0 ? alertSettings[0].primary_threshold : 3;
+  // Get threshold for this student's section, use find instead of sections
+  const sectionSetting = alertSettings.find(
+    (setting) => setting.seccion === student.section
+  );
+  const primaryThreshold = sectionSetting
+    ? sectionSetting.primary_threshold
+    : defaultPrimaryThreshold;
 
-    // Get threshold for this student's section
-    const sectionThreshold =
-      alertSettings.sections[student.section]?.primary ||
-      alertSettings.primary.threshold;
+  if (typeICount >= primaryThreshold) {
+      //Find if is critical
+      const defaultSecondaryThreshold = alertSettings.length > 0 ? alertSettings[0].secondary_threshold : 3;
+      const secondaryThreshold = sectionSetting
+      ? sectionSetting.secondary_threshold
+      : defaultSecondaryThreshold;
 
-    if (typeICount >= sectionThreshold) {
-      return { level: "warning", count: typeICount };
+    if(typeICount >= secondaryThreshold){
+        return { level: "critical", count: typeICount };
     }
+    return { level: "warning", count: typeICount };
+  }
 
-    return null;
-  };
+  return null;
+};
+
 
   return {
     students,

@@ -1,5 +1,7 @@
+// src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { normalizarSeccion } from "@/lib/constantes";
 
 const prisma = new PrismaClient();
 
@@ -11,11 +13,19 @@ export async function GET() {
         codigo: true,
         nombre: true,
         seccion: true,
-        nivel: true,
+        nivel: true, // Include 'nivel' if needed
       },
     });
 
-    return NextResponse.json(students);
+    // Normalize the 'seccion' field
+    const normalizedStudents = students.map((student) => ({
+      id: `${student.id}-${student.codigo}`,
+      name: student.nombre ?? "", // Use nullish coalescing for safety
+      section: normalizarSeccion(student.seccion ?? ""), // Normalize
+      level: student.nivel ?? "", // And added the level to the return
+    }));
+
+    return NextResponse.json(normalizedStudents);
   } catch (error) {
     console.error("Error fetching students:", error);
     return NextResponse.json(

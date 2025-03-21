@@ -1,6 +1,16 @@
-"use client"
+// src/components/dashboard-sidebar.tsx
+"use client";
 
-import { AlertTriangle, BarChart4, CalendarDays, ChevronDown, Cog, FileText, Home, Users } from "lucide-react"
+import {
+  AlertTriangle,
+  BarChart4,
+  CalendarDays,
+  ChevronDown,
+  Cog,
+  FileText,
+  Home,
+  Users,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,12 +23,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { useState } from "react"
+} from "@/components/ui/sidebar";
+import { useState } from "react";
+import Link from "next/link";
 
 interface DashboardSidebarProps {
-  activePage: string
-  setActivePage: (page: string) => void
+  activePage: string; // Remove this
+  setActivePage: (page: string) => void; // Remove this
 }
 
 // Definir las secciones educativas
@@ -27,24 +38,25 @@ const sections = [
   { id: "elementary", name: "Primaria" },
   { id: "middle", name: "Secundaria" },
   { id: "high", name: "Preparatoria" },
-]
+];
 
-export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebarProps) {
+export function DashboardSidebar({}: DashboardSidebarProps) {
+  // Remove props
   // Estado para controlar qué menús están expandidos
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     alerts: false,
     history: false,
     cases: false,
     reports: false,
-  })
+  });
 
   // Función para alternar la expansión de un menú
   const toggleMenu = (menu: string) => {
     setExpandedMenus((prev) => ({
       ...prev,
       [menu]: !prev[menu],
-    }))
-  }
+    }));
+  };
 
   return (
     <Sidebar>
@@ -58,19 +70,23 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={activePage === "overview"} onClick={() => setActivePage("overview")}>
-              <Home className="h-5 w-5" />
-              <span>Inicio</span>
-            </SidebarMenuButton>
+            <Link href="/dashboard">
+              <SidebarMenuButton>
+                <Home className="h-5 w-5" />
+                <span>Inicio</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
 
           {/* Alertas */}
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={activePage.startsWith("alerts")} onClick={() => toggleMenu("alerts")}>
+            <SidebarMenuButton onClick={() => toggleMenu("alerts")}>
               <AlertTriangle className="h-5 w-5" />
               <span>Alertas</span>
               <ChevronDown
-                className={`ml-auto h-4 w-4 transition-transform ${expandedMenus.alerts ? "rotate-180" : ""}`}
+                className={`ml-auto h-4 w-4 transition-transform ${
+                  expandedMenus.alerts ? "rotate-180" : ""
+                }`}
               />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -78,21 +94,17 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
           {expandedMenus.alerts && (
             <SidebarMenuSub>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  isActive={activePage === "alerts-all"}
-                  onClick={() => setActivePage("alerts-all")}
-                >
-                  Todas las secciones
-                </SidebarMenuSubButton>
+                <Link href="/dashboard/alerts">
+                  <SidebarMenuSubButton>
+                    Todas las secciones
+                  </SidebarMenuSubButton>
+                </Link>
               </SidebarMenuSubItem>
               {sections.map((section) => (
                 <SidebarMenuSubItem key={section.id}>
-                  <SidebarMenuSubButton
-                    isActive={activePage === `alerts-${section.id}`}
-                    onClick={() => setActivePage(`alerts-${section.id}`)}
-                  >
-                    {section.name}
-                  </SidebarMenuSubButton>
+                  <Link href={`/dashboard/alerts/${section.id}`}>
+                    <SidebarMenuSubButton>{section.name}</SidebarMenuSubButton>
+                  </Link>
                 </SidebarMenuSubItem>
               ))}
             </SidebarMenuSub>
@@ -100,14 +112,13 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
 
           {/* Historial de Estudiantes */}
           <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={activePage.startsWith("student-history")}
-              onClick={() => toggleMenu("history")}
-            >
+            <SidebarMenuButton onClick={() => toggleMenu("history")}>
               <Users className="h-5 w-5" />
               <span>Historial de Estudiantes</span>
               <ChevronDown
-                className={`ml-auto h-4 w-4 transition-transform ${expandedMenus.history ? "rotate-180" : ""}`}
+                className={`ml-auto h-4 w-4 transition-transform ${
+                  expandedMenus.history ? "rotate-180" : ""
+                }`}
               />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -115,33 +126,24 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
           {expandedMenus.history && (
             <SidebarMenuSub>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  isActive={activePage === "student-history-all"}
-                  onClick={() => setActivePage("student-history-all")}
-                >
-                  Todas las secciones
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              {sections.map((section) => (
-                <SidebarMenuSubItem key={section.id}>
-                  <SidebarMenuSubButton
-                    isActive={activePage === `student-history-${section.id}`}
-                    onClick={() => setActivePage(`student-history-${section.id}`)}
-                  >
-                    {section.name}
+                <Link href="/dashboard/students">
+                  <SidebarMenuSubButton>
+                    Todas las secciones
                   </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
+                </Link>
+              </SidebarMenuSubItem>
             </SidebarMenuSub>
           )}
 
           {/* Gestión de Casos */}
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={activePage.startsWith("case-management")} onClick={() => toggleMenu("cases")}>
+            <SidebarMenuButton onClick={() => toggleMenu("cases")}>
               <CalendarDays className="h-5 w-5" />
               <span>Gestión de Casos</span>
               <ChevronDown
-                className={`ml-auto h-4 w-4 transition-transform ${expandedMenus.cases ? "rotate-180" : ""}`}
+                className={`ml-auto h-4 w-4 transition-transform ${
+                  expandedMenus.cases ? "rotate-180" : ""
+                }`}
               />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -149,21 +151,17 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
           {expandedMenus.cases && (
             <SidebarMenuSub>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  isActive={activePage === "case-management-all"}
-                  onClick={() => setActivePage("case-management-all")}
-                >
-                  Todas las secciones
-                </SidebarMenuSubButton>
+                <Link href="/dashboard/case-management">
+                  <SidebarMenuSubButton>
+                    Todas las secciones
+                  </SidebarMenuSubButton>
+                </Link>
               </SidebarMenuSubItem>
               {sections.map((section) => (
                 <SidebarMenuSubItem key={section.id}>
-                  <SidebarMenuSubButton
-                    isActive={activePage === `case-management-${section.id}`}
-                    onClick={() => setActivePage(`case-management-${section.id}`)}
-                  >
-                    {section.name}
-                  </SidebarMenuSubButton>
+                  <Link href={`/dashboard/case-management/${section.id}`}>
+                    <SidebarMenuSubButton>{section.name}</SidebarMenuSubButton>
+                  </Link>
                 </SidebarMenuSubItem>
               ))}
             </SidebarMenuSub>
@@ -171,11 +169,13 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
 
           {/* Reportes */}
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={activePage.startsWith("reports")} onClick={() => toggleMenu("reports")}>
+            <SidebarMenuButton onClick={() => toggleMenu("reports")}>
               <BarChart4 className="h-5 w-5" />
               <span>Reportes</span>
               <ChevronDown
-                className={`ml-auto h-4 w-4 transition-transform ${expandedMenus.reports ? "rotate-180" : ""}`}
+                className={`ml-auto h-4 w-4 transition-transform ${
+                  expandedMenus.reports ? "rotate-180" : ""
+                }`}
               />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -183,38 +183,37 @@ export function DashboardSidebar({ activePage, setActivePage }: DashboardSidebar
           {expandedMenus.reports && (
             <SidebarMenuSub>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  isActive={activePage === "reports-all"}
-                  onClick={() => setActivePage("reports-all")}
-                >
-                  Todas las secciones
-                </SidebarMenuSubButton>
+                <Link href="/dashboard/reports">
+                  <SidebarMenuSubButton>
+                    Todas las secciones
+                  </SidebarMenuSubButton>
+                </Link>
               </SidebarMenuSubItem>
               {sections.map((section) => (
                 <SidebarMenuSubItem key={section.id}>
-                  <SidebarMenuSubButton
-                    isActive={activePage === `reports-${section.id}`}
-                    onClick={() => setActivePage(`reports-${section.id}`)}
-                  >
-                    {section.name}
-                  </SidebarMenuSubButton>
+                  <Link href={`/dashboard/reports/${section.id}`}>
+                    <SidebarMenuSubButton>{section.name}</SidebarMenuSubButton>
+                  </Link>
                 </SidebarMenuSubItem>
               ))}
             </SidebarMenuSub>
           )}
 
           <SidebarMenuItem>
-            <SidebarMenuButton isActive={activePage === "settings"} onClick={() => setActivePage("settings")}>
-              <Cog className="h-5 w-5" />
-              <span>Configuración</span>
-            </SidebarMenuButton>
+            <Link href="/dashboard/settings">
+              <SidebarMenuButton>
+                <Cog className="h-5 w-5" />
+                <span>Configuración</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
-        <div className="text-xs text-muted-foreground">Sistema de Gestión de Faltas v1.0</div>
+        <div className="text-xs text-muted-foreground">
+          Sistema de Gestión de Faltas v1.0
+        </div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
-
