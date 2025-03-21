@@ -32,7 +32,7 @@ export function CaseManagement({
   onSelectStudent,
 }: CaseManagementProps) {
   // Get all Type II infractions
-  const typeIIInfractions = infractions.filter((inf) => inf.type === "II");
+  const typeIIInfractions = infractions.filter((inf) => inf.type === "Tipo II");
 
   // Create case objects with follow-up information
   const cases = typeIIInfractions.map((infraction) => {

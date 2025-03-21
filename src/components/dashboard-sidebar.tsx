@@ -167,38 +167,6 @@ export function DashboardSidebar({}: DashboardSidebarProps) {
             </SidebarMenuSub>
           )}
 
-          {/* Reportes */}
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => toggleMenu("reports")}>
-              <BarChart4 className="h-5 w-5" />
-              <span>Reportes</span>
-              <ChevronDown
-                className={`ml-auto h-4 w-4 transition-transform ${
-                  expandedMenus.reports ? "rotate-180" : ""
-                }`}
-              />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          {expandedMenus.reports && (
-            <SidebarMenuSub>
-              <SidebarMenuSubItem>
-                <Link href="/dashboard/reports">
-                  <SidebarMenuSubButton>
-                    Todas las secciones
-                  </SidebarMenuSubButton>
-                </Link>
-              </SidebarMenuSubItem>
-              {sections.map((section) => (
-                <SidebarMenuSubItem key={section.id}>
-                  <Link href={`/dashboard/reports/${section.id}`}>
-                    <SidebarMenuSubButton>{section.name}</SidebarMenuSubButton>
-                  </Link>
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          )}
-
           <SidebarMenuItem>
             <Link href="/dashboard/settings">
               <SidebarMenuButton>

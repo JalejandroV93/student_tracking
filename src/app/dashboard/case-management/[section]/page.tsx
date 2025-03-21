@@ -4,101 +4,90 @@
 import { CaseManagement } from "@/components/case-management";
 import useDashboardStore from "@/lib/store";
 import { SectionSelector } from "@/components/section-selector";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-
+import { NIVELES } from "@/lib/constantes";
 
 export default function CaseManagementSectionPage() {
-    const params = useParams();
-    const { section } = params;
-    const { students, infractions, followUps, fetchData, loading, error } =
-        useDashboardStore();
+  const router = useRouter();
+  const params = useParams();
+  const { section } = params;
+  const { students, infractions, followUps, fetchData, loading, error } =
+    useDashboardStore();
 
-     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    const handleSelectStudent = (studentId: string) => {
-        window.location.href = `/dashboard/students/${studentId}`;
-    };
+  const handleSelectStudent = (studentId: string) => {
+    router.push(`/dashboard/students/${studentId}`);
+  };
 
-    const filteredStudents = section
-        ? students.filter((student) => {
-              const sectionMap: Record<string, string[]> = {
-                  preschool: ["Preescolar"],
-                  elementary: ["Primaria 5A", "Primaria 5B"],
-                  middle: ["Secundaria 1A", "Secundaria 1B", "Secundaria 2A"],
-                  high: ["Preparatoria"],
-              };
-              return sectionMap[section]?.includes(student.grado);
-          })
-        : students;
-
-    const filteredInfractions = section
-        ? infractions.filter((inf) =>
-              filteredStudents.some((student) => student.id === inf.studentId)
-          )
-        : infractions;
-
-    const filteredFollowUps = section
-        ? followUps.filter((followUp) =>
-              filteredInfractions.some((inf) => inf.id === followUp.infractionId)
-          )
-        : followUps;
-
-    const getSectionTitle = (section: string | null): string => {
-        if (!section) return "Todas las secciones";
-        const sectionTitles: Record<string, string> = {
-            preschool: "Preescolar",
-            elementary: "Primaria",
-            middle: "Secundaria",
-            high: "Preparatoria",
+  const filteredStudents = section
+    ? students.filter((student) => {
+        const sectionMap: Record<string, readonly string[]> = {
+          preschool: NIVELES["Preschool"],
+          elementary: NIVELES["Elementary"],
+          middle: NIVELES["Middle School"],
+          high: NIVELES["High School"],
         };
-        return sectionTitles[section] || "Todas las secciones";
+
+        return sectionMap[section as keyof typeof sectionMap]?.includes(
+          student.grado?.toLowerCase() || ""
+        );
+      })
+    : students;
+
+  const getSectionTitle = (section: string | null): string => {
+    const titles: Record<string, string> = {
+      preschool: "Preescolar",
+      elementary: "Primaria",
+      middle: "Secundaria",
+      high: "Bachillerato",
     };
+    return section
+      ? titles[section] || "Todas las secciones"
+      : "Todas las secciones";
+  };
 
-    const sectionTitle = getSectionTitle(section);
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                Loading...
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="flex items-center justify-center h-screen text-red-500">
-                {error}
-            </div>
-        );
-    }
-
+  if (loading) {
     return (
-        <div className="container py-6 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold tracking-tight">
-                    Gestión de Casos
-                </h1>
-                {section !== null && (
-                    <SectionSelector
-                        currentSection={section}
-                        baseRoute="case-management"
-                    />
-                )}
-            </div>
-            <div className="text-sm text-muted-foreground">
-                {section
-                    ? `Mostrando casos para ${sectionTitle}`
-                    : "Mostrando casos para todas las secciones"}
-            </div>
-            <CaseManagement
-                students={filteredStudents}
-                infractions={filteredInfractions}
-                followUps={filteredFollowUps}
-                onSelectStudent={handleSelectStudent}
-            />
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="container py-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Gestión de Casos - {getSectionTitle(section as string)}
+        </h1>
+        <SectionSelector
+          currentSection={section as string}
+          baseRoute="case-management"
+        />
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Mostrando casos para {getSectionTitle(section as string)}
+      </div>
+
+      <CaseManagement
+        students={filteredStudents}
+        infractions={infractions}
+        followUps={followUps}
+        onSelectStudent={handleSelectStudent}
+      />
+    </div>
+  );
 }

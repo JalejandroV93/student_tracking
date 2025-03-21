@@ -29,7 +29,7 @@ const formSchema = z.object({
   studentId: z.string({
     required_error: "Por favor seleccione un estudiante",
   }),
-  type: z.enum(["I", "II", "III"], {
+  type: z.enum(["Tipo I", "Tipo II", "Tipo III"], {
     required_error: "Por favor seleccione un tipo de falta",
   }),
   number: z.string({
@@ -58,18 +58,18 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
 
   // Handle type change to update max number
   const handleTypeChange = (value: string) => {
-    form.setValue("type", value as "I" | "II" | "III");
+    form.setValue("type", value as "Tipo I" | "Tipo II" | "Tipo III");
     form.setValue("number", "");
 
     // Set max number based on type
     switch (value) {
-      case "I":
+      case "Tipo I":
         setMaxNumber(10);
         break;
-      case "II":
+      case "Tipo II":
         setMaxNumber(8);
         break;
-      case "III":
+      case "Tipo III":
         setMaxNumber(5);
         break;
       default:
@@ -138,9 +138,9 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="I">Tipo I (Leve)</SelectItem>
-                    <SelectItem value="II">Tipo II (Moderada)</SelectItem>
-                    <SelectItem value="III">Tipo III (Grave)</SelectItem>
+                    <SelectItem value="Tipo I">Tipo I (Leve)</SelectItem>
+                    <SelectItem value="Tipo II">Tipo II (Moderada)</SelectItem>
+                    <SelectItem value="Tipo III">Tipo III (Grave)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>

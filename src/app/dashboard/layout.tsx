@@ -18,7 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           activePage={activePage}
           setActivePage={setActivePage}
         />
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="flex-1 overflow-auto p-4 mx-auto">{children}</div>
       </div>
     </SidebarProvider>
   );

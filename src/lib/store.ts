@@ -1,13 +1,20 @@
-import { AlertStatus } from "@/lib/utils";
-// Correct import
-
-import { getStudentTypeICount } from "@/lib/utils";
-import { AlertSettings, FollowUp, Infraction, Student } from "@/types/dashboard";
-import { toast } from "sonner";
-// src/lib/store.ts (CORRECTED)
+// src/lib/store.ts
 import { create } from "zustand";
-
+import {
+  AlertSettings,
+  FollowUp,
+  Infraction,
+  Student,
+} from "@/types/dashboard";
+import {
+  AlertStatus,
+  getStudentTypeICount,
+  transformFollowUp,
+  transformInfraction,
+  transformStudent,
+} from "@/lib/utils";
 import { getSectionCategory } from "./constantes";
+import { toast } from "sonner";
 
 interface DashboardState {
   students: Student[];
@@ -70,27 +77,32 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
           settingsRes.json(),
         ]);
 
+      // Transform data *immediately* after fetching
+      const transformedStudents = studentsData.map(transformStudent);
+      const transformedInfractions = infractionsData.map(transformInfraction);
+      const transformedFollowUps = followUpsData.map(transformFollowUp);
+
       // Calculate type counts
-      const typeICounts = infractionsData.filter(
-        (inf: Infraction) => inf.type === "I"
+      const typeICounts = transformedInfractions.filter(
+        (inf: { type: string; }) => inf.type === "I"
       ).length;
-      const typeIICounts = infractionsData.filter(
-        (inf: Infraction) => inf.type === "II"
+      const typeIICounts = transformedInfractions.filter(
+        (inf: { type: string; }) => inf.type === "II"
       ).length;
-      const typeIIICounts = infractionsData.filter(
-        (inf: Infraction) => inf.type === "III"
+      const typeIIICounts = transformedInfractions.filter(
+        (inf: { type: string; }) => inf.type === "III"
       ).length;
 
       console.log("Data fetched successfully:", {
-        students: studentsData.length,
-        infractions: infractionsData.length,
-        followUps: followUpsData.length,
+        students: transformedStudents.length,
+        infractions: transformedInfractions.length,
+        followUps: transformedFollowUps.length,
       });
 
       set({
-        students: studentsData,
-        infractions: infractionsData,
-        followUps: followUpsData,
+        students: transformedStudents,
+        infractions: transformedInfractions,
+        followUps: transformedFollowUps,
         alertSettings: settingsData,
         loading: false,
         typeICounts,
@@ -127,13 +139,13 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
 
       const newFollowUp = await response.json();
       set((state) => ({
-        followUps: [...state.followUps, newFollowUp],
+        followUps: [...state.followUps, transformFollowUp(newFollowUp)],
       }));
       toast.success("Follow-up added successfully");
     } catch (error) {
       console.error("Error adding follow-up:", error);
       toast.error("Failed to add follow-up");
-      throw error;
+      throw error; // Re-throw to let calling component handle it if needed
     }
   },
 
@@ -150,14 +162,12 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
       if (!response.ok) {
         throw new Error("Failed to update alert settings");
       }
-
-      const updatedSettings = await response.json();
-      set({ alertSettings: updatedSettings });
+        await get().fetchData(); // Refetch to get the latest data
       toast.success("Alert settings updated successfully");
     } catch (error) {
       console.error("Error updating alert settings:", error);
       toast.error("Failed to update alert settings");
-      throw error;
+      throw error; // Re-throw for consistency
     }
   },
 

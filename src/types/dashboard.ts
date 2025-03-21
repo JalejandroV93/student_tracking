@@ -21,7 +21,7 @@ export interface Student {
 export interface Infraction {
   id: string;
   studentId: string;
-  type: "I" | "II" | "III";
+  type: "Tipo I" | "Tipo II" | "Tipo III";
   number: string;
   date: string;
   description: string;

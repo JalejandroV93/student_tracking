@@ -47,44 +47,43 @@ export function getStudentTypeICount(
   infractions: Infraction[]
 ): number {
   return infractions.filter(
-    (inf) => inf.studentId === studentId && inf.type === "I"
+    (inf) => inf.studentId === studentId && inf.type === "Tipo I"
   ).length;
 }
 
 // Data transformation function
-export function transformStudent(student: Prisma.EstudiantesGetPayload<object>): Student {
+export function transformStudent(
+  student: Prisma.EstudiantesGetPayload<object>
+): Student {
   return {
     id: `${student.id}-${student.codigo}`,
     name: student.nombre ?? "",
     grado: student.grado ?? "",
     level: student.nivel ?? "",
-  }
-}
-
-export function transformInfraction(infraction: Prisma.FaltasGetPayload<object>): Infraction {
-  const normalizedType = normalizarTipoFalta(infraction.tipo_falta ?? "");
-  if (!["I", "II", "III"].includes(normalizedType)) {
-      throw new Error(`Invalid infraction type: ${normalizedType}`);
-  }
-  
-  return {
-      id: infraction.hash,
-      studentId: `${infraction.id_estudiante}-${infraction.codigo_estudiante}`,
-      type: normalizedType as "I" | "II" | "III",
-      number: infraction.numero_falta?.toString() ?? "",
-      date: infraction.fecha?.toISOString().split("T")[0] ?? "",
-      description: infraction.descripcion_falta ?? "",
-      details: infraction.detalle_falta ?? "",
-      remedialActions: infraction.acciones_reparadoras ?? "",
-      author: infraction.autor ?? "",
-      trimester: infraction.trimestre ?? "",
-      level: infraction.nivel ?? "",
   };
 }
 
+export function transformInfraction(
+  infraction: Prisma.FaltasGetPayload<object>
+): Infraction {
+  return {
+    id: infraction.hash,
+    studentId: `${infraction.id_estudiante}-${infraction.codigo_estudiante}`,
+    type: infraction.tipo_falta ?? "Tipo I",
+    number: infraction.numero_falta?.toString() ?? "",
+    date: infraction.fecha?.toISOString().split("T")[0] ?? "",
+    description: infraction.descripcion_falta ?? "",
+    details: infraction.detalle_falta ?? "",
+    remedialActions: infraction.acciones_reparadoras ?? "",
+    author: infraction.autor ?? "",
+    trimester: infraction.trimestre ?? "",
+    level: infraction.nivel ?? "",
+  };
+}
 
-
-export function transformFollowUp(followUp: Prisma.SeguimientosGetPayload<object>): FollowUp {
+export function transformFollowUp(
+  followUp: Prisma.SeguimientosGetPayload<object>
+): FollowUp {
   return {
     id: `FUP${followUp.id_seguimiento}`,
     infractionId: `${followUp.id_caso}`,
@@ -93,7 +92,7 @@ export function transformFollowUp(followUp: Prisma.SeguimientosGetPayload<object
     type: followUp.tipo_seguimiento ?? "",
     details: followUp.detalles ?? "",
     author: followUp.autor ?? "",
-  }
+  };
 }
 
 export function getStudentTypeIICount(
@@ -101,6 +100,6 @@ export function getStudentTypeIICount(
   infractions: Infraction[]
 ): number {
   return infractions.filter(
-    (inf) => inf.studentId === studentId && inf.type === "II"
+    (inf) => inf.studentId === studentId && inf.type === "Tipo II"
   ).length;
 }
