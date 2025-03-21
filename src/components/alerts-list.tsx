@@ -1,3 +1,4 @@
+// src/components/alerts-list.tsx (Modified)
 "use client";
 
 import {
@@ -16,21 +17,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import useDashboardStore from "@/lib/store"; // Import
+import { getStudentTypeIICount } from "@/lib/utils";
 
 interface AlertsListProps {
   onSelectStudent: (studentId: string) => void;
+  students?: any;
+  infractions?: any;
 }
 
-export function AlertsList({ onSelectStudent }: AlertsListProps) {
+export function AlertsList({ onSelectStudent, students: propStudents, infractions: propInfractions }: AlertsListProps) {
   // Remove props
-  const { students, getStudentAlertStatus } = useDashboardStore(); // Get from store
+  const { students: storeStudents, infractions: storeInfractions, getStudentAlertStatus } = useDashboardStore(); // Get from store
+
+  const students = propStudents ?? storeStudents;
+  const infractions = propInfractions ?? storeInfractions;
+
 
   const studentsWithAlerts = students
     .map((student) => {
       const alertStatus = getStudentAlertStatus(student.id)
+       const typeIICount = getStudentTypeIICount(student.id, infractions);
       return {
         ...student,
         alertStatus,
+        typeIICount // Add Type II count
       }
     })
     .filter((student) => student.alertStatus !== null)
@@ -41,6 +51,7 @@ export function AlertsList({ onSelectStudent }: AlertsListProps) {
     if (a.alertStatus?.level !== "critical" && b.alertStatus?.level === "critical") return 1
     return 0
   })
+  console.log(sortedStudents)
 
   return (
     <Card>
@@ -56,6 +67,7 @@ export function AlertsList({ onSelectStudent }: AlertsListProps) {
               <TableHead>ID</TableHead>
               <TableHead>Nombre</TableHead>
               <TableHead>Faltas Tipo I</TableHead>
+              <TableHead>Faltas Tipo II</TableHead> {/* Added Column */}
               <TableHead>Nivel de Alerta</TableHead>
               <TableHead>Sección</TableHead>
             </TableRow>
@@ -70,6 +82,7 @@ export function AlertsList({ onSelectStudent }: AlertsListProps) {
                 <TableCell>{student.id}</TableCell>
                 <TableCell>{student.name}</TableCell>
                 <TableCell>{student.alertStatus?.count}</TableCell>
+                <TableCell>{student.typeIICount}</TableCell> {/* Display Type II Count */}
                 <TableCell>
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${

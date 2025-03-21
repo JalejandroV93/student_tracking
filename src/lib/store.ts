@@ -133,31 +133,21 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
   },
 
   getStudentAlertStatus: (studentId: string): AlertStatus | null => {
-    const state = get(); // Get current state
+    const state = get();
     const student = state.students.find((s) => s.id === studentId);
     if (!student) return null;
 
     const typeICount = getStudentTypeICount(studentId, state.infractions);
 
-    // Get the student's section category (e.g., "Middle School")
+    // **CORRECTED THRESHOLD LOOKUP**
     const sectionCategory = getSectionCategory(student.section);
+    const primaryThreshold = state.alertSettings.sections[sectionCategory]?.primary ?? state.alertSettings.primary.threshold;
+    const secondaryThreshold = state.alertSettings.sections[sectionCategory]?.secondary ?? state.alertSettings.secondary.threshold;
 
-
-    // Look for a specific threshold for the section *category*
-    const sectionThreshold =
-      state.alertSettings.sections[sectionCategory]?.primary ??
-      state.alertSettings.primary.threshold;
-
-    const sectionSecondaryThreshold =
-      state.alertSettings.sections[sectionCategory]?.secondary ??
-      state.alertSettings.secondary.threshold;
-
-
-    if (typeICount >= sectionThreshold) {
-        if(typeICount >= sectionSecondaryThreshold){
-            return { level: "critical", count: typeICount };
-        }
-        return { level: "warning", count: typeICount };
+    if (typeICount >= secondaryThreshold) {
+      return { level: "critical", count: typeICount };
+    } else if (typeICount >= primaryThreshold) {
+      return { level: "warning", count: typeICount };
     }
 
     return null;

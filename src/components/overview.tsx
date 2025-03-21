@@ -1,3 +1,4 @@
+// src/components/overview.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, AlertTriangle, FileWarning } from "lucide-react"
 import type { Student, Infraction } from "@/types/dashboard"
@@ -25,7 +26,7 @@ export function Overview({
   getStudentAlertStatus,
   onSelectStudent,
 }: OverviewProps) {
-  // Get students with alerts
+  // Get students with alerts (no change)
   const studentsWithAlerts = students
     .map((student) => {
       const alertStatus = getStudentAlertStatus(student.id)
@@ -36,7 +37,6 @@ export function Overview({
     })
     .filter((student) => student.alertStatus !== null)
 
-  // Agrupar estudiantes por sección
   const sectionMap: Record<string, string[]> = {
     Preescolar: ["Preescolar"],
     Primaria: ["Primaria 5A", "Primaria 5B"],
@@ -44,23 +44,23 @@ export function Overview({
     Preparatoria: ["Preparatoria"],
   }
 
-  // Calcular estadísticas por sección
+  // Calculate statistics by section (CORRECTED)
   const sectionStats = Object.entries(sectionMap).map(([sectionName, sectionValues]) => {
-    // Filtrar estudiantes por sección
-    const sectionStudents = students.filter((student) => sectionValues.includes(student.section))
+    // 1. Filter students by section *values* (the specific sections)
+    const sectionStudents = students.filter((student) => sectionValues.includes(student.section));
 
-    // Filtrar infracciones por estudiantes de la sección
+    // 2. Filter infractions based on those *filtered students*
     const sectionInfractions = infractions.filter((inf) =>
-      sectionStudents.some((student) => student.id === inf.studentId),
-    )
+      sectionStudents.some((student) => student.id === inf.studentId)
+    );
 
-    // Contar infracciones por tipo
-    const typeI = sectionInfractions.filter((inf) => inf.type === "I").length
-    const typeII = sectionInfractions.filter((inf) => inf.type === "II").length
-    const typeIII = sectionInfractions.filter((inf) => inf.type === "III").length
+    // 3. Count infractions by type (no change)
+    const typeI = sectionInfractions.filter((inf) => inf.type === "I").length;
+    const typeII = sectionInfractions.filter((inf) => inf.type === "II").length;
+    const typeIII = sectionInfractions.filter((inf) => inf.type === "III").length;
 
-    // Contar alertas
-    const alertsCount = sectionStudents.filter((student) => getStudentAlertStatus(student.id) !== null).length
+    // 4. Count alerts for students in this section (no change)
+    const alertsCount = sectionStudents.filter((student) => getStudentAlertStatus(student.id) !== null).length;
 
     return {
       name: sectionName,
@@ -70,10 +70,10 @@ export function Overview({
       typeIII,
       total: typeI + typeII + typeIII,
       alertsCount,
-    }
-  })
-
-  return (
+    };
+  });
+  // Rest of the component remains the same
+   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="border-l-4 border-l-blue-500">
@@ -126,4 +126,3 @@ export function Overview({
     </div>
   )
 }
-

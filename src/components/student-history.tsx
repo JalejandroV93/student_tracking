@@ -1,3 +1,4 @@
+// src/components/student-history.tsx (Modified)
 "use client"
 
 import { useState, useEffect } from "react"
@@ -20,7 +21,8 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import type { Student, Infraction, FollowUp } from "@/types/dashboard"
 import { formatDate, generateId } from "@/lib/utils"
-import { Search, Plus } from "lucide-react"
+import { Search, Plus, Loader2 } from "lucide-react"
+import { Textarea } from "./ui/textarea"
 
 interface StudentHistoryProps {
   students: Student[]
@@ -31,7 +33,7 @@ interface StudentHistoryProps {
   addFollowUp: (followUp: FollowUp) => void
 }
 
-// Define schema for follow-up form validation
+// Define schema for follow-up form validation (extended for details)
 const followUpFormSchema = z.object({
   infractionId: z.string({
     required_error: "Por favor seleccione una falta",
@@ -42,7 +44,13 @@ const followUpFormSchema = z.object({
   date: z.string({
     required_error: "Por favor seleccione la fecha del seguimiento",
   }),
-})
+  details: z.string({ // Added details field
+    required_error: "Por favor ingrese los detalles del seguimiento",
+  }).min(10, "Los detalles deben tener al menos 10 caracteres."),
+  type: z.string(),
+  author: z.string()
+});
+
 
 export function StudentHistory({
   students,
@@ -57,19 +65,24 @@ export function StudentHistory({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [availableFollowUps, setAvailableFollowUps] = useState<number[]>([])
+  const [isLoadingStudent, setIsLoadingStudent] = useState(false); // Loading indicator
 
   // Initialize form
   const form = useForm<z.infer<typeof followUpFormSchema>>({
     resolver: zodResolver(followUpFormSchema),
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
+      details: "",
+      type: "",
+      author: "",
     },
   })
 
-  // Update filtered students when search query changes
+  // Update filtered students when search query changes (no change)
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredStudents(students)
+       setSelectedStudent(null); // Clear selected student
     } else {
       const query = searchQuery.toLowerCase()
       setFilteredStudents(
@@ -80,39 +93,49 @@ export function StudentHistory({
     }
   }, [searchQuery, students])
 
-  // Update selected student when selectedStudentId changes
-  useEffect(() => {
-    if (selectedStudentId) {
-      const student = students.find((s) => s.id === selectedStudentId)
-      if (student) {
-        setSelectedStudent(student)
-        setSearchQuery(student.name)
-      }
-    }
-  }, [selectedStudentId, students])
+  // **CORRECTED STUDENT SELECTION LOGIC**
+    useEffect(() => {
+        // If a selectedStudentId is provided via props (e.g., from navigation)
+        if (selectedStudentId) {
+            setIsLoadingStudent(true);
+            const student = students.find((s) => s.id === selectedStudentId);
+            if (student) {
+                setSelectedStudent(student);
+                setSearchQuery(student.name); // Update search input
+                setIsLoadingStudent(false);
+            } else {
+                // Handle case where student is not found (optional)
+                console.warn(`Student with ID ${selectedStudentId} not found.`);
+                setIsLoadingStudent(false);
+            }
+        } else {
+          setSelectedStudent(null);
+        }
+    }, [selectedStudentId, students]);
 
-  // Handle student selection from search results
+  // Handle student selection from search results (modified)
   const handleSelectStudent = (student: Student) => {
-    setSelectedStudent(student)
-    onSelectStudent(student.id)
-    setSearchQuery(student.name)
+      setSelectedStudent(student)
+      onSelectStudent(student.id); // Keep this to update URL
+      setSearchQuery(student.name) // Update search bar
   }
 
-  // Get student infractions
-  const studentInfractions = selectedStudent ? infractions.filter((inf) => inf.studentId === selectedStudent.id) : []
 
-  // Sort by date (newest first)
+  // Get student infractions (no change)
+  const studentInfractions = selectedStudent ? infractions.filter((inf) => inf.studentId === selectedStudent.id) : []
+// Sort by date (newest first)
   const sortedInfractions = [...studentInfractions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   )
 
   const getFollowUpsForInfraction = (infractionId: string) => {
+     // No change
     return followUps
       .filter((followUp) => followUp.infractionId === infractionId)
       .sort((a, b) => a.followUpNumber - b.followUpNumber)
   }
 
-  // Handle infraction selection for follow-up
+  // Handle infraction selection for follow-up (modified for details)
   const handleInfractionSelect = (infractionId: string) => {
     form.setValue("infractionId", infractionId)
 
@@ -128,27 +151,44 @@ export function StudentHistory({
       form.setValue("followUpNumber", available[0].toString())
     }
 
+     // Find the selected infraction
+    const selectedInfraction = infractions.find((inf) => inf.id === infractionId);
+    if (selectedInfraction) {
+      // Find the corresponding student
+      const student = students.find((s) => s.id === selectedInfraction.studentId);
+        form.setValue("type", selectedInfraction.type);
+        form.setValue("author", student?.name || 'Unknown');
+    }
+
     setDialogOpen(true)
+
   }
 
-  // Handle follow-up form submission
+
+  // Handle follow-up form submission (modified for details)
   const handleFollowUpSubmit = (values: z.infer<typeof followUpFormSchema>) => {
     const newFollowUp: FollowUp = {
       id: generateId(),
       infractionId: values.infractionId,
       followUpNumber: Number.parseInt(values.followUpNumber),
       date: values.date,
-    }
+      details: values.details, // Include details
+      type: values.type,
+      author: values.author
+    };
 
-    addFollowUp(newFollowUp)
+    addFollowUp(newFollowUp);
     form.reset({
       infractionId: "",
       followUpNumber: "",
       date: new Date().toISOString().split("T")[0],
-    })
+      details: "", // Reset details
+      type: "",
+      author: ""
+    });
 
-    setDialogOpen(false)
-  }
+    setDialogOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -169,7 +209,7 @@ export function StudentHistory({
             />
           </div>
 
-          {searchQuery && !selectedStudent && (
+          {searchQuery && (  // Only show if there's a search query
             <div className="mt-2 border rounded-md">
               {filteredStudents.length > 0 ? (
                 <ul className="py-2 max-h-[200px] overflow-auto">
@@ -212,13 +252,17 @@ export function StudentHistory({
               Limpiar
             </Button>
           </CardHeader>
-          <CardContent>
-            {sortedInfractions.length > 0 ? (
+           <CardContent>
+            {isLoadingStudent ? ( // Show loading indicator
+                <div className="flex items-center justify-center h-20">
+                    <Loader2 className="animate-spin h-6 w-6" />
+                </div>
+            ) : sortedInfractions.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
-                    <TableHead>Tipo</TableHead>
+                     <TableHead>Tipo</TableHead>
                     <TableHead>Numeración</TableHead>
                     <TableHead>Seguimientos</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -263,10 +307,12 @@ export function StudentHistory({
                         </TableCell>
                         <TableCell className="text-right">
                           {infraction.type === "II" && infractionFollowUps.length < 3 && (
+                            
                             <Button variant="outline" size="sm" onClick={() => handleInfractionSelect(infraction.id)}>
                               <Plus className="h-4 w-4 mr-1" />
                               Seguimiento
                             </Button>
+                            
                           )}
                         </TableCell>
                       </TableRow>
@@ -336,6 +382,38 @@ export function StudentHistory({
                 )}
               />
 
+               {/* Details Field */}
+              <FormField
+                control={form.control}
+                name="details"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Detalles del Seguimiento</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Ingrese los detalles del seguimiento aquí..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                <FormField
+                    name="type"
+                    render={({ field }) => (
+                        // Hidden field for storing 'type'
+                        <input type="hidden" {...field} />
+                    )}
+                />
+                <FormField
+                    name="author"
+                    render={({ field }) => (
+                        // Hidden field for storing 'author'
+                        <input type="hidden" {...field} />
+                    )}
+                />
+
               <DialogFooter>
                 <Button type="submit">Guardar Seguimiento</Button>
               </DialogFooter>
@@ -346,4 +424,3 @@ export function StudentHistory({
     </div>
   )
 }
-

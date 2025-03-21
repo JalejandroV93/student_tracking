@@ -95,3 +95,12 @@ export function transformFollowUp(followUp: Prisma.SeguimientosGetPayload<object
     author: followUp.autor ?? "",
   }
 }
+
+export function getStudentTypeIICount(
+  studentId: string,
+  infractions: Infraction[]
+): number {
+  return infractions.filter(
+    (inf) => inf.studentId === studentId && inf.type === "II"
+  ).length;
+}
