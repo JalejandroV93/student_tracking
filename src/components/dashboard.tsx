@@ -1,13 +1,12 @@
 // src/components/dashboard.tsx
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { DashboardContent } from "@/components/dashboard-content"
-import useDashboardStore from "@/lib/store" 
-import { toast } from "@/hooks/use-toast"
-
+import { useState, useEffect } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { DashboardContent } from "@/components/dashboard-content";
+import useDashboardStore from "@/lib/store";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const {
@@ -18,66 +17,68 @@ export default function Dashboard() {
     alertSettings,
     updateAlertSettings,
     getStudentAlertStatus,
-    fetchData, 
-    loading, 
-    error, 
+    fetchData,
+    loading,
+    error,
+    typeICounts,
+    typeIICounts,
+    typeIIICounts,
+  } = useDashboardStore();
 
-  } = useDashboardStore() 
-
-  const [selectedStudent, setSelectedStudent] = useState<string | null>(null)
-  const [activePage, setActivePage] = useState<string>("overview")
-
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [activePage, setActivePage] = useState<string>("overview");
 
   useEffect(() => {
-      fetchData();
+    fetchData();
   }, [fetchData]);
 
   useEffect(() => {
-    const studentsWithAlerts = students.filter(student => getStudentAlertStatus(student.id) !== null);
+    const studentsWithAlerts = students.filter(
+      (student) => getStudentAlertStatus(student.id) !== null
+    );
 
     if (studentsWithAlerts.length > 0) {
-        toast({
-            title: "Alertas Activas",
-            description: `Hay ${studentsWithAlerts.length} estudiantes con alertas activas.`,
-        });
+      toast(
+        "Hay " + studentsWithAlerts.length + " estudiantes con alertas activas",
+        {
+          description: "Revisa la sección de alertas para más detalles",
+        }
+      );
     }
+  }, [students, getStudentAlertStatus]);
 
-  }, [students, getStudentAlertStatus]); // Run when students or getStudentAlertStatus change
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
-   // Show loading indicator
-    if (loading) {
-        return <div className="flex items-center justify-center h-screen">Loading...</div>;
-    }
-
-    // Show error message
-    if (error) {
-        return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
-    }
-
-      // Show toast notifications for students with alerts on initial load.
-    
-
-
-  // Calculate type counts here, using useMemo to prevent unnecessary recalculations
-  const typeICounts =  infractions.filter((inf) => inf.type === "I").length;
-  const typeIICounts = infractions.filter((inf) => inf.type === "II").length;
-  const typeIIICounts = infractions.filter((inf) => inf.type === "III").length;
-
-
-  // Función para manejar la navegación entre páginas
-  const handlePageChange = (page: string) => {
-    setActivePage(page)
-
-    // Si cambiamos de página, limpiamos el estudiante seleccionado
-    if (!page.startsWith("student-history")) {
-      setSelectedStudent(null)
-    }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500 text-center">
+          <h2 className="text-2xl font-bold mb-4">Error</h2>
+          <p>{error}</p>
+          <button
+            onClick={() => fetchData()}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <DashboardSidebar activePage={activePage} setActivePage={handlePageChange} />
+        <DashboardSidebar
+          activePage={activePage}
+          setActivePage={setActivePage}
+        />
         <DashboardContent
           activePage={activePage}
           students={students}
@@ -95,5 +96,5 @@ export default function Dashboard() {
         />
       </div>
     </SidebarProvider>
-  )
+  );
 }
