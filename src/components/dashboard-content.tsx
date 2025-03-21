@@ -71,12 +71,22 @@ export function DashboardContent({
         // Mapear las secciones a los valores de la propiedad section
         const sectionMap: Record<string, string[]> = {
           preschool: ["Preescolar"],
-          elementary: ["Primaria 5A", "Primaria 5B"],
-          middle: ["Secundaria 1A", "Secundaria 1B", "Secundaria 2A"],
-          high: ["Preparatoria"],
+          elementary: [
+            "Primero",
+            "Segundo",
+            "Tercero",
+            "Cuarto",
+            "Quinto",
+            "Sexto",
+          ],
+          middle: ["Séptimo", "Octavo", "Noveno"],
+          high: ["Décimo", "Undécimo", "Duodécimo"],
         };
 
-        return sectionMap[currentSection]?.includes(student.grado);
+        // Verificar si el grado del estudiante comienza con alguno de los valores mapeados
+        return sectionMap[currentSection]?.some((grade) =>
+          student.grado?.startsWith(grade)
+        );
       })
     : students;
 
@@ -93,8 +103,6 @@ export function DashboardContent({
         filteredInfractions.some((inf) => inf.id === followUp.infractionId)
       )
     : followUps;
-
-  
 
   // Determinar el título de la página basado en la sección actual
   const getSectionTitle = (section: string | null): string => {

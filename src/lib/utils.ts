@@ -55,11 +55,15 @@ export function getStudentTypeICount(
 export function transformStudent(
   student: Prisma.EstudiantesGetPayload<object>
 ): Student {
+  if (!student) {
+    throw new Error("Student data is required");
+  }
+
   return {
     id: `${student.id}-${student.codigo}`,
-    name: student.nombre ?? "",
-    grado: student.grado ?? "",
-    level: student.nivel ?? "",
+    name: student.nombre || "Sin nombre",
+    grado: student.grado || "Sin grado",
+    level: student.nivel || "Sin nivel",
   };
 }
 

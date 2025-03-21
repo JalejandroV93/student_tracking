@@ -1,14 +1,18 @@
-// src/app/api/students/route.ts (MODIFIED TO HANDLE SINGLE STUDENT FETCH)
+// src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { transformFollowUp, transformInfraction, transformStudent } from "@/lib/utils";
+import {
+  transformFollowUp,
+  transformInfraction,
+  transformStudent,
+} from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const studentId = searchParams.get('studentId')
+    const { searchParams } = new URL(request.url);
+    const studentId = searchParams.get("studentId");
 
     if (studentId) {
       // Fetch single student with infractions and follow-ups
@@ -16,14 +20,12 @@ export async function GET(request: Request) {
       const id = parseInt(idPart, 10);
       const code = parseInt(codePart, 10);
 
-
       const student = await prisma.estudiantes.findUnique({
         where: {
           id_codigo: {
-             id: id,
-             codigo: code,
-          }
-
+            id: id,
+            codigo: code,
+          },
         },
         include: {
           faltas: {
@@ -38,31 +40,31 @@ export async function GET(request: Request) {
         },
       });
 
-
       if (!student) {
-        return NextResponse.json({ error: "Student not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Student not found" },
+          { status: 404 }
+        );
       }
 
-        // Transform the student data
+      // Transform the student data
       const transformedStudent = transformStudent(student);
 
       // Transform infractions and follow-ups
       const transformedInfractions = student.faltas.map(transformInfraction);
-      const followUps = student.faltas.flatMap(falta =>
-        falta.casos.flatMap(caso => caso.seguimientos)
+      const followUps = student.faltas.flatMap((falta) =>
+        falta.casos.flatMap((caso) => caso.seguimientos)
       );
 
-      const transformedFollowUps = followUps.map(transformFollowUp)
-
+      const transformedFollowUps = followUps.map(transformFollowUp);
 
       return NextResponse.json({
         student: transformedStudent,
         infractions: transformedInfractions,
-        followUps: transformedFollowUps
+        followUps: transformedFollowUps,
       });
-
     } else {
-      // Fetch all students (original logic)
+      // Fetch all students with complete data
       const students = await prisma.estudiantes.findMany({
         select: {
           id: true,
@@ -70,11 +72,33 @@ export async function GET(request: Request) {
           nombre: true,
           grado: true,
           nivel: true,
+          faltas: {
+            select: {
+              hash: true,
+              tipo_falta: true,
+              fecha: true,
+              descripcion_falta: true,
+              detalle_falta: true,
+              acciones_reparadoras: true,
+              autor: true,
+              trimestre: true,
+              nivel: true,
+            },
+          },
         },
       });
 
-      const normalizedStudents = students.map(transformStudent);
-      return NextResponse.json(normalizedStudents);
+      // Transform students with their infractions
+      const transformedStudents = students.map((student) => ({
+        ...transformStudent(student),
+        infractions: student.faltas.map(transformInfraction),
+      }));
+
+      return NextResponse.json(transformedStudents, {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      });
     }
   } catch (error) {
     console.error("Error fetching students:", error);
