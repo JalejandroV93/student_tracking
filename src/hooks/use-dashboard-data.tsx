@@ -1,7 +1,7 @@
 // src/hooks/use-dashboard-data.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type {
   Student,
   Infraction,
@@ -10,59 +10,45 @@ import type {
 } from "@/types/dashboard";
 import { getStudentTypeICount, type AlertStatus } from "@/lib/utils";
 import { toast } from "sonner";
+import { getSectionCategory } from "@/lib/constantes";
 
 export function useDashboardData() {
   const [students, setStudents] = useState<Student[]>([]);
   const [infractions, setInfractions] = useState<Infraction[]>([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
-  const [alertSettings, setAlertSettings] = useState<AlertSettings[]>([]);
+  const [alertSettings, setAlertSettings] = useState<AlertSettings>({
+    primary: { threshold: 3 },
+    secondary: { threshold: 5 },
+    sections: {},
+  }); // Initialize
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Derived state
-  const [typeICounts, setTypeICounts] = useState(0);
-  const [typeIICounts, setTypeIICounts] = useState(0);
-  const [typeIIICounts, setTypeIIICounts] = useState(0);
-  
-  useEffect(() => {
-    const fetchData = async () => {
+  // Fetch data function, useCallback for memoization
+  const fetchData = useCallback(async () => {
       try {
-        setLoading(true);
-        const [studentsRes, infractionsRes, followUpsRes, settingsRes] =
-          await Promise.all([
-            fetch("/api/students", {
-                headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
-                }
-            }),
-            fetch("/api/infractions", {
-                headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
-                }
-            }),
-            fetch("/api/followups", {
-                headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
-                }
-            }),
-            fetch("/api/alert-settings", {
-                headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_KEY}`,
-                }
-            }),
-          ]);
+          setLoading(true);
+          setError(null); // Clear previous errors
 
-        if (
-          !studentsRes.ok ||
-          !infractionsRes.ok ||
-          !followUpsRes.ok ||
-          !settingsRes.ok
-        ) {
-           let errorMessage = "Error fetching data";
-            if (studentsRes.status === 401 || infractionsRes.status === 401 || followUpsRes.status === 401 || settingsRes.status === 401) {
-              errorMessage = "Unauthorized: Invalid API Key";
-            }
-            throw new Error(errorMessage);
+          const [studentsRes, infractionsRes, followUpsRes, settingsRes] =
+              await Promise.all([
+                  fetch("/api/students"),
+                  fetch("/api/infractions"),
+                  fetch("/api/followups"),
+                  fetch("/api/alert-settings"),
+              ]);
+
+        if (!studentsRes.ok ||!infractionsRes.ok ||!followUpsRes.ok ||!settingsRes.ok) {
+          let errorMessage = "Error fetching data";
+          if (
+            studentsRes.status === 401 ||
+            infractionsRes.status === 401 ||
+            followUpsRes.status === 401 ||
+            settingsRes.status === 401
+          ) {
+            errorMessage = "Unauthorized: Invalid API Key";
+          }
+          throw new Error(errorMessage);
         }
 
         const [studentsData, infractionsData, followUpsData, settingsData] =
@@ -77,7 +63,6 @@ export function useDashboardData() {
         setInfractions(infractionsData);
         setFollowUps(followUpsData);
         setAlertSettings(settingsData);
-        setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         console.error("Error fetching data:", err);
@@ -86,64 +71,86 @@ export function useDashboardData() {
       } finally {
         setLoading(false);
       }
-    };
+    }, []); // Empty dependency array, only runs once
 
+  useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-    // Calculate counts, no need useMemo
-    useEffect(() => {
-        const typeI = infractions.filter((inf) => inf.type === "I").length;
-        const typeII = infractions.filter((inf) => inf.type === "II").length;
-        const typeIII = infractions.filter((inf) => inf.type === "III").length;
+  // Add new follow-up (with API call)
+  const addFollowUp = useCallback(async (followUp: FollowUp) => {
+    try {
+        const response = await fetch("/api/followups", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(followUp),
+        });
 
-        setTypeICounts(typeI);
-        setTypeIICounts(typeII);
-        setTypeIIICounts(typeIII);
-    }, [infractions]);
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const newFollowUp = await response.json(); // Get the *actual* new follow-up (with server-generated ID)
+        setFollowUps((prev) => [...prev, newFollowUp]); // Use the followUp from the response
 
-  // Add new follow-up -  Consider moving this to an API POST request
-  const addFollowUp = (followUp: FollowUp) => {
-    setFollowUps((prev) => [...prev, followUp]);
-    // Ideally, also send a POST request to /api/followups to persist this
-  };
-
-  // Update alert settings - Consider moving this to an API POST/PUT request
-  const updateAlertSettings = (settings: AlertSettings) => {
-    setAlertSettings(settings);
-    // Ideally, send a POST/PUT request to /api/alert-settings to persist this
-  };
-
-// Get alert status for a student
-const getStudentAlertStatus = (studentId: string): AlertStatus | null => {
-  const student = students.find((s) => s.id === studentId);
-  if (!student) return null;
-
-  const typeICount = getStudentTypeICount(studentId, infractions);
-  const defaultPrimaryThreshold = alertSettings.length > 0 ? alertSettings[0].primary_threshold : 3;
-  // Get threshold for this student's section, use find instead of sections
-  const sectionSetting = alertSettings.find(
-    (setting) => setting.seccion === student.grado
-  );
-  const primaryThreshold = sectionSetting
-    ? sectionSetting.primary_threshold
-    : defaultPrimaryThreshold;
-
-  if (typeICount >= primaryThreshold) {
-      //Find if is critical
-      const defaultSecondaryThreshold = alertSettings.length > 0 ? alertSettings[0].secondary_threshold : 3;
-      const secondaryThreshold = sectionSetting
-      ? sectionSetting.secondary_threshold
-      : defaultSecondaryThreshold;
-
-    if(typeICount >= secondaryThreshold){
-        return { level: "critical", count: typeICount };
+    } catch (error) {
+        console.error("There was a problem with the fetch operation:", error);
+         toast.error("Failed to add follow-up.");
     }
-    return { level: "warning", count: typeICount };
-  }
+}, []); // Depend on nothing, so it doesn't change
 
-  return null;
-};
+  // Update alert settings (with API call)
+const updateAlertSettings = useCallback(async (settings: AlertSettings) => {
+    try {
+        const response = await fetch("/api/alert-settings", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(settings),
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        // No need to update local state here, refetch instead
+        await fetchData();  // Refetch to get the latest data
+        toast.success("Alert settings updated successfully.");
+
+    } catch (error) {
+        console.error("There was a problem with the fetch operation:", error);
+        toast.error("Failed to update alert settings.");
+    }
+}, [fetchData]); // Depends on fetchData
+
+
+const getStudentAlertStatus = useCallback((studentId: string): AlertStatus | null => {
+    const student = students.find((s) => s.id === studentId);
+    if (!student) return null;
+
+    const typeICount = getStudentTypeICount(studentId, infractions);
+
+    // Use getSectionCategory to get the correct level
+    const sectionCategory = getSectionCategory(student.grado);
+
+    // Get thresholds, using defaults if not set for the section
+    const primaryThreshold =
+        alertSettings.sections[sectionCategory]?.primary ??
+        alertSettings.primary.threshold;
+    const secondaryThreshold =
+        alertSettings.sections[sectionCategory]?.secondary ??
+        alertSettings.secondary.threshold;
+
+    if (typeICount >= secondaryThreshold) {
+        return { level: "critical", count: typeICount };
+    } else if (typeICount >= primaryThreshold) {
+        return { level: "warning", count: typeICount };
+    }
+
+    return null;
+}, [students, infractions, alertSettings]); // Depend on relevant state
+
 
 
   return {
@@ -151,9 +158,6 @@ const getStudentAlertStatus = (studentId: string): AlertStatus | null => {
     infractions,
     followUps,
     addFollowUp,
-    typeICounts,
-    typeIICounts,
-    typeIIICounts,
     alertSettings,
     updateAlertSettings,
     getStudentAlertStatus,

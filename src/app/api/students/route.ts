@@ -1,7 +1,7 @@
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { normalizarSeccion } from "@/lib/constantes"; // Import
+import { getSectionCategory } from "@/lib/constantes"; // Import
 
 const prisma = new PrismaClient();
 
@@ -21,7 +21,7 @@ export async function GET() {
     const normalizedStudents = students.map((student) => ({
       id: `${student.id}-${student.codigo}`,
       name: student.nombre ?? "",
-      section: student.grado ? normalizarSeccion(student.grado) : "", // Normalize and handle null
+      grado: student.grado ? getSectionCategory(student.grado) : "", // Normalize and handle null
       level: student.nivel ?? "", // Keep level for other purposes if needed
     }));
 

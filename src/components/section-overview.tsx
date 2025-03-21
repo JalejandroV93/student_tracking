@@ -1,4 +1,3 @@
-// src/components/section-overview.tsx (CORRECTED)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { School } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
@@ -31,9 +30,9 @@ export function SectionOverview({ section }: SectionOverviewProps) {
         return "border-purple-500"
       case "Elementary":
         return "border-green-500"
-      case "Middle School":
+      case "Middle School":  // Corrected case
         return "border-blue-500"
-      case "High School":
+      case "High School":    // Corrected case
         return "border-orange-500"
       default:
         return "border-gray-500"

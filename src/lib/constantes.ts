@@ -1,3 +1,5 @@
+// src/lib/constantes.ts
+
 export const NIVELES = {
     "Preschool": [
         "kinder 4 a",
@@ -50,7 +52,6 @@ export const TIPOS_FALTA = {
     "Tipo III": "III",
 } as const;
 
-
 export const SECCIONES_ACADEMICAS = {
     "Preschool": "Preschool",
     "Elementary": "Elementary",
@@ -59,42 +60,28 @@ export const SECCIONES_ACADEMICAS = {
 } as const;
 
 
+//  Simplified section categorization function.
+export function getSectionCategory(grado: string | undefined): string {
+    if (!grado) {
+        return "Unknown";
+    }
 
-export function getSectionCategory(className: string): string {
-    const classNameLower = className.toLowerCase();
+    const gradoLower = grado.toLowerCase();
+
     for (const category in NIVELES) {
-        if (NIVELES[category as keyof typeof NIVELES].some(nivel => nivel.toLowerCase() === classNameLower)) {
+        if (NIVELES[category as keyof typeof NIVELES].some(nivel => gradoLower.includes(nivel))) {
             return category;
         }
     }
-    return "Unknown"; // Or some default category
+    return "Unknown";
 }
 
-
-export function normalizarSeccion(seccion: string): string {
-    const seccionLower = seccion.toLowerCase();
-
-    // Buscar en cada sección académica
-    for (const [seccionAcademica, niveles] of Object.entries(NIVELES)) {
-        if (niveles.some(nivel => seccionLower.includes(nivel.toLowerCase()))) {
-            return seccionAcademica;
-        }
+// Normalizes the infraction type.
+export function normalizarTipoFalta(tipo: string | undefined): "I" | "II" | "III" | undefined {
+    if (!tipo) {
+        return undefined;
     }
-
-    return seccion;
+  const normalized = Object.keys(TIPOS_FALTA).find(key => TIPOS_FALTA[key as keyof typeof TIPOS_FALTA] === tipo) as keyof typeof TIPOS_FALTA | undefined;
+    return normalized ? TIPOS_FALTA[normalized] : undefined;
 }
 
-export function normalizarNivel(seccion: string, nivel: string): string {
-    const nivelLower = nivel.toLowerCase();
-    const seccionNormalizada = normalizarSeccion(seccion);
-
-    const niveles = NIVELES[seccionNormalizada as keyof typeof NIVELES];
-    if (!niveles) return nivel;
-
-    const nivelEncontrado = niveles.find(n => nivelLower.includes(n.toLowerCase()));
-    return nivelEncontrado || nivel;
-}
-
-export function normalizarTipoFalta(tipo: string): string {
-    return TIPOS_FALTA[tipo as keyof typeof TIPOS_FALTA] || tipo;
-}
