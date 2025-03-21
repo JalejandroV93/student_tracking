@@ -1,4 +1,4 @@
-// src/lib/store.ts
+// src/lib/store.ts (CORRECTED)
 import { create } from "zustand";
 import {
   Student,
@@ -7,7 +7,7 @@ import {
   AlertSettings,
 } from "@/types/dashboard";
 import { AlertStatus } from "@/lib/utils";
-import { getSectionCategory } from "./constantes";
+import { getSectionCategory, SECCIONES_ACADEMICAS } from "./constantes"; // Correct import
 
 import { getStudentTypeICount } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
         students: studentsData,
         infractions: infractionsData,
         followUps: followUpsData,
-        alertSettings: settingsData, 
+        alertSettings: settingsData,
         loading: false,
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,10 +139,17 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
 
     const typeICount = getStudentTypeICount(studentId, state.infractions);
 
-    // **CORRECTED THRESHOLD LOOKUP**
+    // Use getSectionCategory to get the correct level
     const sectionCategory = getSectionCategory(student.section);
-    const primaryThreshold = state.alertSettings.sections[sectionCategory]?.primary ?? state.alertSettings.primary.threshold;
-    const secondaryThreshold = state.alertSettings.sections[sectionCategory]?.secondary ?? state.alertSettings.secondary.threshold;
+
+    // Get thresholds, using defaults if not set for the section
+    const primaryThreshold =
+      state.alertSettings.sections[sectionCategory]?.primary ??
+      state.alertSettings.primary.threshold;
+    const secondaryThreshold =
+      state.alertSettings.sections[sectionCategory]?.secondary ??
+      state.alertSettings.secondary.threshold;
+
 
     if (typeICount >= secondaryThreshold) {
       return { level: "critical", count: typeICount };

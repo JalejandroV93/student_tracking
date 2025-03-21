@@ -1,4 +1,5 @@
-// src/components/overview.tsx
+// src/components/overview.tsx (CORRECTED)
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, AlertTriangle, FileWarning } from "lucide-react"
 import type { Student, Infraction } from "@/types/dashboard"
@@ -6,6 +7,8 @@ import type { AlertStatus } from "@/lib/utils"
 import { AlertsWidget } from "@/components/alerts-widget"
 import { InfractionTrends } from "@/components/infraction-trends"
 import { SectionOverview } from "@/components/section-overview"
+import { getSectionCategory, SECCIONES_ACADEMICAS } from "@/lib/constantes"  // Import
+
 
 interface OverviewProps {
   typeICounts: number
@@ -37,17 +40,15 @@ export function Overview({
     })
     .filter((student) => student.alertStatus !== null)
 
-  const sectionMap: Record<string, string[]> = {
-    Preescolar: ["Preescolar"],
-    Primaria: ["Primaria 5A", "Primaria 5B"],
-    Secundaria: ["Secundaria 1A", "Secundaria 1B", "Secundaria 2A"],
-    Preparatoria: ["Preparatoria"],
-  }
 
   // Calculate statistics by section (CORRECTED)
-  const sectionStats = Object.entries(sectionMap).map(([sectionName, sectionValues]) => {
-    // 1. Filter students by section *values* (the specific sections)
-    const sectionStudents = students.filter((student) => sectionValues.includes(student.section));
+ // Calculate statistics by section
+  const sectionStats = Object.keys(SECCIONES_ACADEMICAS).map((sectionKey) => {
+    const sectionName = SECCIONES_ACADEMICAS[sectionKey as keyof typeof SECCIONES_ACADEMICAS];
+    // 1. Filter students by section category
+    const sectionStudents = students.filter(
+      (student) => getSectionCategory(student.section) === sectionName
+    );
 
     // 2. Filter infractions based on those *filtered students*
     const sectionInfractions = infractions.filter((inf) =>
@@ -60,7 +61,9 @@ export function Overview({
     const typeIII = sectionInfractions.filter((inf) => inf.type === "III").length;
 
     // 4. Count alerts for students in this section (no change)
-    const alertsCount = sectionStudents.filter((student) => getStudentAlertStatus(student.id) !== null).length;
+    const alertsCount = sectionStudents.filter(
+      (student) => getStudentAlertStatus(student.id) !== null
+    ).length;
 
     return {
       name: sectionName,
@@ -72,6 +75,7 @@ export function Overview({
       alertsCount,
     };
   });
+
   // Rest of the component remains the same
    return (
     <div className="space-y-6">
@@ -118,7 +122,7 @@ export function Overview({
 
       <h2 className="text-2xl font-bold mt-8 mb-4">Resumen por Secciones</h2>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {sectionStats.map((section) => (
           <SectionOverview key={section.name} section={section} />
         ))}

@@ -1,6 +1,8 @@
+// src/components/section-overview.tsx (CORRECTED)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { School } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { NIVELES } from "@/lib/constantes"  // Import
 
 interface SectionStats {
   name: string
@@ -23,16 +25,18 @@ export function SectionOverview({ section }: SectionOverviewProps) {
   const typeIIPercent = Math.round((section.typeII / totalInfractions) * 100)
   const typeIIIPercent = Math.round((section.typeIII / totalInfractions) * 100)
 
-  // Determinar el color de la tarjeta basado en la sección
+ // Determinar el color de la tarjeta basado en la sección
   const getSectionColor = (name: string): string => {
     switch (name) {
-      case "Preescolar":
+      case "Mi Taller":
+        return "border-pink-500"
+      case "Preschool":
         return "border-purple-500"
-      case "Primaria":
+      case "Elementary":
         return "border-green-500"
-      case "Secundaria":
+      case "Middle School":
         return "border-blue-500"
-      case "Preparatoria":
+      case "High School":
         return "border-orange-500"
       default:
         return "border-gray-500"
@@ -63,7 +67,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
               {section.typeI} ({typeIPercent}%)
             </span>
           </div>
-          <Progress value={typeIPercent} className="h-2 bg-muted" indicatorClassName="bg-blue-500" />
+          <Progress value={typeIPercent} className="h-2 bg-muted" />
 
           <div className="flex justify-between text-xs">
             <span>Tipo II</span>
@@ -71,7 +75,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
               {section.typeII} ({typeIIPercent}%)
             </span>
           </div>
-          <Progress value={typeIIPercent} className="h-2 bg-muted" indicatorClassName="bg-yellow-500" />
+          <Progress value={typeIIPercent} className="h-2 bg-muted"  />
 
           <div className="flex justify-between text-xs">
             <span>Tipo III</span>
@@ -79,7 +83,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
               {section.typeIII} ({typeIIIPercent}%)
             </span>
           </div>
-          <Progress value={typeIIIPercent} className="h-2 bg-muted" indicatorClassName="bg-red-500" />
+          <Progress value={typeIIIPercent} className="h-2 bg-muted" />
         </div>
 
         <div className="flex justify-between items-center pt-2 border-t">
@@ -90,4 +94,3 @@ export function SectionOverview({ section }: SectionOverviewProps) {
     </Card>
   )
 }
-

@@ -1,4 +1,6 @@
-// src/components/alerts-list.tsx (Modified)
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/components/alerts-list.tsx (CORRECTED)
+
 "use client";
 
 import {
@@ -51,7 +53,7 @@ export function AlertsList({ onSelectStudent, students: propStudents, infraction
     if (a.alertStatus?.level !== "critical" && b.alertStatus?.level === "critical") return 1
     return 0
   })
-  console.log(sortedStudents)
+
 
   return (
     <Card>

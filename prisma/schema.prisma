@@ -18,7 +18,7 @@ model Estudiantes {
   id      Int
   codigo  Int
   nombre  String?
-  seccion String?
+  grado String?
   nivel   String?
   faltas  Faltas[]
 

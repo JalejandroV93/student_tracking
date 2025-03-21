@@ -1,3 +1,4 @@
+// src/app/api/alert-settings/route.ts 
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
@@ -46,28 +47,46 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { seccion, primary_threshold, secondary_threshold } = body;
+    const { primary, secondary, sections } = body; // Get directly from body
 
-    if (!seccion || primary_threshold === undefined || secondary_threshold === undefined) {
+
+    if (!sections || !primary || !secondary ) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+     //Update general thresholds
 
-    // Update or create the setting
-    
-      await prisma.alertSettings.upsert({
-        where: { seccion: seccion },
+     await prisma.alertSettings.upsert({
+        where: { seccion: 'general_thresholds' }, // Use a unique identifier
         update: {
-          primary_threshold: primary_threshold,
-          secondary_threshold: secondary_threshold,
-          
+          primary_threshold: primary.threshold,
+          secondary_threshold: secondary.threshold,
         },
         create: {
-          seccion: seccion,
-          primary_threshold: seccion[seccion].primary,
-          secondary_threshold: seccion[seccion].secondary,
+          seccion: 'general_thresholds', // Unique identifier
+          primary_threshold: primary.threshold,
+          secondary_threshold: secondary.threshold,
         },
       });
-    
+
+    // Update or create the setting
+    for (const section in sections) {
+
+        await prisma.alertSettings.upsert({
+            where: { seccion: section },
+            update: {
+            primary_threshold: sections[section].primary,
+            secondary_threshold: sections[section].secondary,
+
+            },
+            create: {
+            seccion: section,
+            primary_threshold: sections[section].primary,
+            secondary_threshold: sections[section].secondary,
+            },
+        });
+
+    }
+
 
     return NextResponse.json({ message: "Settings updated successfully" });
   } catch (error) {

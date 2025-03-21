@@ -1,7 +1,7 @@
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { normalizarSeccion } from "@/lib/constantes";
+import { normalizarSeccion } from "@/lib/constantes"; // Import
 
 const prisma = new PrismaClient();
 
@@ -12,17 +12,17 @@ export async function GET() {
         id: true,
         codigo: true,
         nombre: true,
-        seccion: true,
-        nivel: true, // Include 'nivel' if needed
+        seccion: true, 
+        nivel: true,
       },
     });
 
-    // Normalize the 'seccion' field
+    // Normalize the 'seccion' field and use correct keys
     const normalizedStudents = students.map((student) => ({
       id: `${student.id}-${student.codigo}`,
-      name: student.nombre ?? "", // Use nullish coalescing for safety
-      section: normalizarSeccion(student.seccion ?? ""), // Normalize
-      level: student.nivel ?? "", // And added the level to the return
+      name: student.nombre ?? "",
+      section: student.seccion ? normalizarSeccion(student.seccion) : "", // Normalize and handle null
+      level: student.nivel ?? "", // Keep level for other purposes if needed
     }));
 
     return NextResponse.json(normalizedStudents);

@@ -1,6 +1,7 @@
+// src/components/settings.tsx (CORRECTED)
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form"
@@ -8,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
 import type { AlertSettings } from "@/types/dashboard"
+import { SECCIONES_ACADEMICAS } from "@/lib/constantes"
+import { toast } from "@/hooks/use-toast"
+import useDashboardStore from "@/lib/store"
 
 interface SettingsProps {
   alertSettings: AlertSettings
@@ -16,16 +20,21 @@ interface SettingsProps {
 
 export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) {
   const [activeTab, setActiveTab] = useState("alerts")
+   const { fetchData } =
+        useDashboardStore();
+
 
   // Agrupar secciones para una mejor organización
   const sectionGroups = {
-    Preescolar: ["Preescolar"],
-    Primaria: ["Primaria 5A", "Primaria 5B"],
-    Secundaria: ["Secundaria 1A", "Secundaria 1B", "Secundaria 2A"],
-    Preparatoria: ["Preparatoria"],
+    "Mi Taller": ["Mi Taller"],
+    Preschool: ["Preschool"],
+    Elementary: ["Elementary"],
+    "Middle School": ["Middle School"],
+    "High School": ["High School"],
   }
 
-  // Initialize form with current alert settings
+
+    // Initialize form with current alert settings
   const form = useForm({
     defaultValues: {
       primary: {
@@ -34,35 +43,53 @@ export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) 
       secondary: {
         threshold: alertSettings.secondary.threshold.toString(),
       },
-      sections: {
-        ...Object.fromEntries(
+      sections:  Object.fromEntries(
           Object.entries(alertSettings.sections).map(([key, value]) => [
             key,
             { primary: value.primary.toString(), secondary: value.secondary.toString() },
           ]),
         ),
-      },
     },
   })
 
   // Handle form submission
+// Handle form submission
   const onSubmit = (data: any) => {
-    const updatedSettings: AlertSettings = {
-      primary: {
-        threshold: Number.parseInt(data.primary.threshold),
-      },
-      secondary: {
-        threshold: Number.parseInt(data.secondary.threshold),
-      },
-      sections: Object.fromEntries(
-        Object.entries(data.sections).map(([key, value]: [string, any]) => [
-          key,
-          { primary: Number.parseInt(value.primary), secondary: Number.parseInt(value.secondary) },
-        ]),
-      ),
-    }
+      const updatedSettings: AlertSettings = {
+        primary: {
+          threshold: Number.parseInt(data.primary.threshold),
+        },
+        secondary: {
+          threshold: Number.parseInt(data.secondary.threshold),
+        },
+        sections: {},
+      };
+        // Map the form data to the settings structure
+      for (const sectionKey in SECCIONES_ACADEMICAS) {
+        const sectionName = SECCIONES_ACADEMICAS[sectionKey as keyof typeof SECCIONES_ACADEMICAS]
 
-    updateAlertSettings(updatedSettings)
+        // Check if settings for the section exist in the form data
+        if (data.sections[sectionName]) {
+          updatedSettings.sections[sectionName] = {
+            primary: Number.parseInt(data.sections[sectionName].primary),
+            secondary: Number.parseInt(data.sections[sectionName].secondary),
+          };
+        } else {
+          // Provide default values if settings are missing
+          updatedSettings.sections[sectionName] = { primary: 3, secondary: 5 };
+        }
+      }
+
+
+
+    updateAlertSettings(updatedSettings);
+    toast({
+        title: "Configuración Actualizada",
+        description: "La configuración de alertas ha sido actualizada exitosamente.",
+    });
+     // Refetch data to update UI
+    fetchData();
+
   }
 
   return (
@@ -125,13 +152,28 @@ export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) 
                     {sections.map((section) => (
                       <div key={section} className="border rounded-md p-4 space-y-4">
                         <h4 className="font-medium">{section}</h4>
-                        <div>
+                        <div className = "grid gap-4 md:grid-cols-2">
                           <FormField
                             control={form.control}
                             name={`sections.${section}.primary`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Umbral de Alerta</FormLabel>
+                                <FormLabel>Umbral de Alerta Primaria</FormLabel>
+                                <FormControl>
+                                  <Input type="number" min="1" max="10" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Número de faltas Tipo I para activar una alerta en esta sección
+                                </FormDescription>
+                              </FormItem>
+                            )}
+                          />
+                           <FormField
+                            control={form.control}
+                            name={`sections.${section}.secondary`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Umbral de Alerta Secundaria</FormLabel>
                                 <FormControl>
                                   <Input type="number" min="1" max="10" {...field} />
                                 </FormControl>
@@ -168,4 +210,3 @@ export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) 
     </Tabs>
   )
 }
-
