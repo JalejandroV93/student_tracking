@@ -4,7 +4,6 @@ import { Overview } from "@/components/overview";
 import { AlertsList } from "@/components/alerts-list";
 import { StudentHistory } from "@/components/student-history";
 import { CaseManagement } from "@/components/case-management";
-import { Reports } from "@/components/reports";
 import { Settings } from "@/components/settings";
 import type {
   Student,
@@ -172,7 +171,6 @@ export function DashboardContent({
               students={filteredStudents}
               infractions={filteredInfractions}
               onSelectStudent={setSelectedStudent}
-              getStudentAlertStatus={getStudentAlertStatus}
             />
           </div>
         ) : activePage.startsWith("student-history") ? (
@@ -239,10 +237,7 @@ export function DashboardContent({
                 ? `Mostrando reportes para ${sectionTitle}`
                 : "Mostrando reportes para todas las secciones"}
             </div>
-            <Reports
-              students={filteredStudents}
-              infractions={filteredInfractions}
-            />
+            
           </div>
         ) : activePage === "settings" ? (
           <div className="space-y-6">

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/alerts-list.tsx (CORRECTED)
+// src/components/alerts-list.tsx 
 
 "use client";
 
@@ -20,11 +19,11 @@ import {
 } from "@/components/ui/table";
 import useDashboardStore from "@/lib/store"; // Import
 import { getStudentTypeIICount } from "@/lib/utils";
-
+import { Student, Infraction } from "@/types/dashboard";
 interface AlertsListProps {
   onSelectStudent: (studentId: string) => void;
-  students?: any;
-  infractions?: any;
+  students?: Student;
+  infractions?: Infraction;
 }
 
 export function AlertsList({ onSelectStudent, students: propStudents, infractions: propInfractions }: AlertsListProps) {
@@ -33,26 +32,24 @@ export function AlertsList({ onSelectStudent, students: propStudents, infraction
 
   const students = propStudents ?? storeStudents;
   const infractions = propInfractions ?? storeInfractions;
-
-
-  const studentsWithAlerts = students
-    .map((student) => {
-      const alertStatus = getStudentAlertStatus(student.id)
-       const typeIICount = getStudentTypeIICount(student.id, infractions);
-      return {
-        ...student,
+  const studentsWithAlerts = Array.isArray(students) 
+    ? students.map((student: Student) => {
+        const alertStatus = getStudentAlertStatus(student.id);
+        const typeIICount = getStudentTypeIICount(student.id, Array.isArray(infractions) ? infractions : [infractions].filter(Boolean));
+        return {
+          ...student,
         alertStatus,
-        typeIICount // Add Type II count
+        typeIICount
       }
     })
     .filter((student) => student.alertStatus !== null)
+  : [];
 
-  // Sort by alert level (critical first, then warning)
   const sortedStudents = [...studentsWithAlerts].sort((a, b) => {
-    if (a.alertStatus?.level === "critical" && b.alertStatus?.level !== "critical") return -1
-    if (a.alertStatus?.level !== "critical" && b.alertStatus?.level === "critical") return 1
-    return 0
-  })
+    if (a.alertStatus?.level === "critical" && b.alertStatus?.level !== "critical") return -1;
+    if (a.alertStatus?.level !== "critical" && b.alertStatus?.level === "critical") return 1;
+    return 0;
+  });
 
 
   return (
@@ -96,7 +93,7 @@ export function AlertsList({ onSelectStudent, students: propStudents, infraction
                     {student.alertStatus?.level === "critical" ? "Crítico" : "Advertencia"}
                   </span>
                 </TableCell>
-                <TableCell>{student.section}</TableCell>
+                <TableCell>{student.grado}</TableCell>
               </TableRow>
             ))}
           </TableBody>

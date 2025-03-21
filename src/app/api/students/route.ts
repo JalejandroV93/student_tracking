@@ -16,16 +16,11 @@ export async function GET(request: Request) {
 
     if (studentId) {
       // Fetch single student with infractions and follow-ups
-      const [idPart, codePart] = studentId.split("-");
-      const id = parseInt(idPart, 10);
-      const code = parseInt(codePart, 10);
+      const id = parseInt(studentId, 10);
 
       const student = await prisma.estudiantes.findUnique({
         where: {
-          id_codigo: {
-            id: id,
-            codigo: code,
-          },
+          id: id,
         },
         include: {
           faltas: {
@@ -75,7 +70,10 @@ export async function GET(request: Request) {
           faltas: {
             select: {
               hash: true,
+              id_estudiante: true,
+              codigo_estudiante: true,
               tipo_falta: true,
+              numero_falta: true,
               fecha: true,
               descripcion_falta: true,
               detalle_falta: true,

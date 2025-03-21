@@ -51,7 +51,6 @@ import {
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { generateId } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -83,7 +82,7 @@ const followUpFormSchema = z.object({
 export default function StudentDetailsPage({}: StudentDetailsPageProps) {
   const params = useParams();
   const { id } = params;
-  const { students, infractions, followUps, addFollowUp, fetchData } =
+  const { addFollowUp, fetchData } =
     useDashboardStore();
   const [student, setStudent] = useState<Student | null>(null);
   const [studentInfractions, setStudentInfractions] = useState<Infraction[]>(

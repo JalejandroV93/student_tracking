@@ -13,16 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Estudiantes {
-  id      Int
-  codigo  Int
-  nombre  String?
-  grado String?
-  nivel   String?
-  faltas  Faltas[]
-
-  @@id([id, codigo])
+  id     Int      @id
+  codigo Int      @unique
+  nombre String?
+  grado  String?
+  nivel  String?
+  faltas Faltas[]
 }
 
 model Faltas {
@@ -39,7 +36,7 @@ model Faltas {
   trimestre            String?
   nivel                String?
   casos                Casos[]
-  estudiante           Estudiantes @relation(fields: [id_estudiante, codigo_estudiante], references: [id, codigo])
+  estudiante           Estudiantes @relation(fields: [id_estudiante], references: [id])
 }
 
 model Casos {

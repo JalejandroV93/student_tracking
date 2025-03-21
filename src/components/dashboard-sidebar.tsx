@@ -3,7 +3,6 @@
 
 import {
   AlertTriangle,
-  BarChart4,
   CalendarDays,
   ChevronDown,
   Cog,

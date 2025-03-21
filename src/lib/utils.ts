@@ -72,7 +72,7 @@ export function transformInfraction(
 ): Infraction {
   return {
     id: infraction.hash,
-    studentId: `${infraction.id_estudiante}-${infraction.codigo_estudiante}`,
+    studentId: infraction.id_estudiante.toString(),
     type: infraction.tipo_falta ?? "Tipo I",
     number: infraction.numero_falta?.toString() ?? "",
     date: infraction.fecha?.toISOString().split("T")[0] ?? "",

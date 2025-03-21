@@ -36,7 +36,9 @@ export function CaseManagement({
 
   // Create case objects with follow-up information
   const cases = typeIIInfractions.map((infraction) => {
-    const student = students.find((s) => s.id === infraction.studentId);
+    const student = students.find(
+      (s) => s.id.toString() === infraction.studentId
+    );
     const caseFollowUps = followUps.filter(
       (f) => f.infractionId === infraction.id
     );
