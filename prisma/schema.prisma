@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Estudiantes {
+  id      Int
+  codigo  Int
+  nombre  String?
+  seccion String?
+  nivel   String?
+  faltas  Faltas[]
+
+  @@id([id, codigo])
+}
+
+model Faltas {
+  hash                 String      @id
+  id_estudiante        Int
+  codigo_estudiante    Int
+  tipo_falta           String?
+  numero_falta         Int?
+  descripcion_falta    String?
+  detalle_falta        String?
+  acciones_reparadoras String?
+  autor                String?
+  fecha                DateTime?   @db.Date
+  trimestre            String?
+  nivel                String?
+  casos                Casos[]
+  estudiante           Estudiantes @relation(fields: [id_estudiante, codigo_estudiante], references: [id, codigo])
+}
+
+model Casos {
+  id_caso      Int            @id @default(autoincrement())
+  hash_falta   String
+  fecha_inicio DateTime?      @db.Date
+  estado       String         @default("Abierto")
+  seguimientos Seguimientos[]
+  falta        Faltas         @relation(fields: [hash_falta], references: [hash])
+}
+
+model Seguimientos {
+  id_seguimiento    Int       @id @default(autoincrement())
+  id_caso           Int
+  tipo_seguimiento  String?
+  fecha_seguimiento DateTime? @db.Date
+  detalles          String?
+  autor             String?
+  caso              Casos     @relation(fields: [id_caso], references: [id_caso])
+}
+
+model AlertSettings {
+  id                  Int      @id @default(autoincrement())
+  seccion             String   @unique
+  primary_threshold   Int
+  secondary_threshold Int
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+}
