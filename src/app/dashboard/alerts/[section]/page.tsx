@@ -7,17 +7,12 @@
 
 
      // Definir las secciones educativas
-    const sections = [
-    { id: "preschool", name: "Preescolar" },
-    { id: "elementary", name: "Primaria" },
-    { id: "middle", name: "Secundaria" },
-    { id: "high", name: "Preparatoria" },
-    ]
+    
 
     export default function AlertsSectionPage() {
     const params = useParams();
     const { section } = params;
-    const { students, infractions, getStudentAlertStatus } = useDashboardStore();
+    const { students } = useDashboardStore();
 
     // Function to handle student selection
     const handleSelectStudent = (studentId: string) => {

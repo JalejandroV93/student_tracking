@@ -78,6 +78,7 @@ export function useDashboardData() {
         setFollowUps(followUpsData);
         setAlertSettings(settingsData);
         setError(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         console.error("Error fetching data:", err);
         setError(err.message || "Error loading data. Please try again later.");

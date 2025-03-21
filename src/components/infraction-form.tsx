@@ -1,14 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Student, Infraction } from "@/types/dashboard"
-import { generateId } from "@/lib/utils"
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Student, Infraction } from "@/types/dashboard";
+import { generateId } from "@/lib/utils";
 
 // Define schema for form validation
 const formSchema = z.object({
@@ -24,15 +38,15 @@ const formSchema = z.object({
   date: z.string({
     required_error: "Por favor seleccione la fecha de la falta",
   }),
-})
+});
 
 interface InfractionFormProps {
-  students: Student[]
-  onSubmit: (infraction: Infraction) => void
+  students: Student[];
+  onSubmit: (infraction: Infraction) => void;
 }
 
 export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
-  const [maxNumber, setMaxNumber] = useState<number>(10)
+  const [maxNumber, setMaxNumber] = useState<number>(10);
 
   // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,28 +54,28 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
     },
-  })
+  });
 
   // Handle type change to update max number
   const handleTypeChange = (value: string) => {
-    form.setValue("type", value as "I" | "II" | "III")
-    form.setValue("number", "")
+    form.setValue("type", value as "I" | "II" | "III");
+    form.setValue("number", "");
 
     // Set max number based on type
     switch (value) {
       case "I":
-        setMaxNumber(10)
-        break
+        setMaxNumber(10);
+        break;
       case "II":
-        setMaxNumber(8)
-        break
+        setMaxNumber(8);
+        break;
       case "III":
-        setMaxNumber(5)
-        break
+        setMaxNumber(5);
+        break;
       default:
-        setMaxNumber(10)
+        setMaxNumber(10);
     }
-  }
+  };
 
   // Handle form submission
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
@@ -71,16 +85,16 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
       type: values.type,
       number: values.number,
       date: values.date,
-    }
+    };
 
-    onSubmit(newInfraction)
+    onSubmit(newInfraction);
     form.reset({
       studentId: "",
       type: "",
       number: "",
       date: new Date().toISOString().split("T")[0],
-    })
-  }
+    });
+  };
 
   return (
     <Form {...form}>
@@ -129,7 +143,9 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
                     <SelectItem value="III">Tipo III (Grave)</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Tipo II requiere seguimientos posteriores</FormDescription>
+                <FormDescription>
+                  Tipo II requiere seguimientos posteriores
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -141,18 +157,24 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Numeración</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!form.watch("type")}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={!form.watch("type")}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccione la numeración" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Array.from({ length: maxNumber }, (_, i) => i + 1).map((num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num}
-                      </SelectItem>
-                    ))}
+                    {Array.from({ length: maxNumber }, (_, i) => i + 1).map(
+                      (num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
                 <FormDescription>Número específico de la falta</FormDescription>
@@ -185,6 +207,5 @@ export function InfractionForm({ students, onSubmit }: InfractionFormProps) {
         </Button>
       </form>
     </Form>
-  )
+  );
 }
-

@@ -67,6 +67,19 @@ export const SECCIONES_ACADEMICAS = {
     "High School": "High School",
 } as const;
 
+
+
+export function getSectionCategory(className: string): string {
+    const classNameLower = className.toLowerCase();
+    for (const category in NIVELES) {
+        if (NIVELES[category as keyof typeof NIVELES].some(nivel => nivel.toLowerCase() === classNameLower)) {
+            return category;
+        }
+    }
+    return "Unknown"; // Or some default category
+}
+
+
 export function normalizarSeccion(seccion: string): string {
     const seccionLower = seccion.toLowerCase();
 

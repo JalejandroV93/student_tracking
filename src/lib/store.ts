@@ -7,6 +7,7 @@ import {
   AlertSettings,
 } from "@/types/dashboard";
 import { AlertStatus } from "@/lib/utils";
+import { getSectionCategory } from "./constantes";
 
 import { getStudentTypeICount } from "@/lib/utils";
 
@@ -67,9 +68,10 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
         students: studentsData,
         infractions: infractionsData,
         followUps: followUpsData,
-        alertSettings: settingsData, // Set directly
+        alertSettings: settingsData, 
         loading: false,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Error fetching data:", err);
       set({
@@ -137,14 +139,27 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
 
     const typeICount = getStudentTypeICount(studentId, state.infractions);
 
-    // Use optional chaining and nullish coalescing for safety
+    // Get the student's section category (e.g., "Middle School")
+    const sectionCategory = getSectionCategory(student.section);
+
+
+    // Look for a specific threshold for the section *category*
     const sectionThreshold =
-      state.alertSettings.sections?.[student.section]?.primary ??
+      state.alertSettings.sections[sectionCategory]?.primary ??
       state.alertSettings.primary.threshold;
 
+    const sectionSecondaryThreshold =
+      state.alertSettings.sections[sectionCategory]?.secondary ??
+      state.alertSettings.secondary.threshold;
+
+
     if (typeICount >= sectionThreshold) {
-      return { level: "warning", count: typeICount };
+        if(typeICount >= sectionSecondaryThreshold){
+            return { level: "critical", count: typeICount };
+        }
+        return { level: "warning", count: typeICount };
     }
+
     return null;
   },
 }));

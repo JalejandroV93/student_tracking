@@ -12,27 +12,41 @@ export type PrismaFollowUp = Seguimientos;
 export type PrismaAlertSetting = PrismaAlertSettings;
 
 export interface Student {
-  id: string
-  name: string
-  section: string
+  id: string;
+  name: string;
+  section: string;
+  level: string;
 }
 
 export interface Infraction {
-  id: string
-  studentId: string
-  type: "I" | "II" | "III"
-  number: string
-  date: string
+  id: string;
+  studentId: string;
+  type: "I" | "II" | "III";
+  number: string;
+  date: string;
+  description: string;
+  details: string;
+  author: string;
+  remedialActions: string;
+  trimester: string;
+  level: string;
 }
 
 export interface FollowUp {
-  id: string
-  infractionId: string
-  followUpNumber: number
-  date: string
+  id: string;
+  infractionId: string;
+  followUpNumber: number;
+  date: string;
+  type: string;
+  details: string;
+  author: string;
 }
 
-export type AlertSettings = PrismaAlertSetting;
+export interface AlertSettings {
+  primary: { threshold: number };
+  secondary: { threshold: number };
+  sections: Record<string, { primary: number; secondary: number }>;
+}
 
 export interface DashboardState {
   students: Student[];
@@ -46,7 +60,10 @@ export interface DashboardState {
   typeIIICounts: number;
 
   fetchData: () => Promise<void>;
-  addFollowUp: (followUp: Omit<FollowUp, 'id'>) => Promise<void>;
-  updateAlertSetting: (id: number, updatedSetting: Partial<AlertSettings>) => Promise<void>;
+  addFollowUp: (followUp: Omit<FollowUp, "id">) => Promise<void>;
+  updateAlertSetting: (
+    id: number,
+    updatedSetting: Partial<AlertSettings>
+  ) => Promise<void>;
   getStudentAlertStatus: (studentId: string) => AlertStatus | null;
 }

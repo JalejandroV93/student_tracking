@@ -1,35 +1,58 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { Student, Infraction, FollowUp } from "@/types/dashboard"
-import { formatDate, calculateExpectedFollowUpDates } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { Student, Infraction, FollowUp } from "@/types/dashboard";
+import { formatDate, calculateExpectedFollowUpDates } from "@/lib/utils";
 
 interface CaseManagementProps {
-  students: Student[]
-  infractions: Infraction[]
-  followUps: FollowUp[]
-  onSelectStudent: (studentId: string) => void
+  students: Student[];
+  infractions: Infraction[];
+  followUps: FollowUp[];
+  onSelectStudent: (studentId: string) => void;
 }
 
-export function CaseManagement({ students, infractions, followUps, onSelectStudent }: CaseManagementProps) {
+export function CaseManagement({
+  students,
+  infractions,
+  followUps,
+  onSelectStudent,
+}: CaseManagementProps) {
   // Get all Type II infractions
-  const typeIIInfractions = infractions.filter((inf) => inf.type === "II")
+  const typeIIInfractions = infractions.filter((inf) => inf.type === "II");
 
   // Create case objects with follow-up information
   const cases = typeIIInfractions.map((infraction) => {
-    const student = students.find((s) => s.id === infraction.studentId)
-    const caseFollowUps = followUps.filter((f) => f.infractionId === infraction.id)
-    const expectedDates = calculateExpectedFollowUpDates(infraction.date)
+    const student = students.find((s) => s.id === infraction.studentId);
+    const caseFollowUps = followUps.filter(
+      (f) => f.infractionId === infraction.id
+    );
+    const expectedDates = calculateExpectedFollowUpDates(infraction.date);
 
     // Determine case status
-    const isComplete = caseFollowUps.length === 3
-    const status = isComplete ? "closed" : "open"
+    const isComplete = caseFollowUps.length === 3;
+    const status = isComplete ? "closed" : "open";
 
     // Calculate next follow-up information
-    const nextFollowUpNumber = caseFollowUps.length + 1
-    const nextFollowUpDate = nextFollowUpNumber <= 3 ? expectedDates[nextFollowUpNumber - 1] : null
-    const isNextFollowUpOverdue = nextFollowUpDate ? new Date() > new Date(nextFollowUpDate) : false
+    const nextFollowUpNumber = caseFollowUps.length + 1;
+    const nextFollowUpDate =
+      nextFollowUpNumber <= 3 ? expectedDates[nextFollowUpNumber - 1] : null;
+    const isNextFollowUpOverdue = nextFollowUpDate
+      ? new Date() > new Date(nextFollowUpDate)
+      : false;
 
     return {
       id: infraction.id,
@@ -45,26 +68,34 @@ export function CaseManagement({ students, infractions, followUps, onSelectStude
       nextFollowUpNumber: nextFollowUpNumber <= 3 ? nextFollowUpNumber : null,
       nextFollowUpDate,
       isNextFollowUpOverdue,
-    }
-  })
+    };
+  });
 
   // Sort cases: open first (with overdue at the top), then closed
   const sortedCases = [...cases].sort((a, b) => {
-    if (a.status === "open" && b.status === "closed") return -1
-    if (a.status === "closed" && b.status === "open") return 1
+    if (a.status === "open" && b.status === "closed") return -1;
+    if (a.status === "closed" && b.status === "open") return 1;
     if (a.status === "open" && b.status === "open") {
-      if (a.isNextFollowUpOverdue && !b.isNextFollowUpOverdue) return -1
-      if (!a.isNextFollowUpOverdue && b.isNextFollowUpOverdue) return 1
-      return new Date(a.infractionDate).getTime() - new Date(b.infractionDate).getTime()
+      if (a.isNextFollowUpOverdue && !b.isNextFollowUpOverdue) return -1;
+      if (!a.isNextFollowUpOverdue && b.isNextFollowUpOverdue) return 1;
+      return (
+        new Date(a.infractionDate).getTime() -
+        new Date(b.infractionDate).getTime()
+      );
     }
-    return new Date(b.infractionDate).getTime() - new Date(a.infractionDate).getTime()
-  })
+    return (
+      new Date(b.infractionDate).getTime() -
+      new Date(a.infractionDate).getTime()
+    );
+  });
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Gestión de Casos</CardTitle>
-        <CardDescription>Seguimiento de casos para faltas de Tipo II</CardDescription>
+        <CardDescription>
+          Seguimiento de casos para faltas de Tipo II
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {sortedCases.length > 0 ? (
@@ -119,7 +150,9 @@ export function CaseManagement({ students, infractions, followUps, onSelectStude
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Completado</span>
+                      <span className="text-xs text-muted-foreground">
+                        Completado
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -133,6 +166,5 @@ export function CaseManagement({ students, infractions, followUps, onSelectStude
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
-

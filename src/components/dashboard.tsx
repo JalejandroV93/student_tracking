@@ -5,13 +5,11 @@ import { useState, useEffect } from "react"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardContent } from "@/components/dashboard-content"
-// import { useDashboardData } from "@/hooks/use-dashboard-data"  // REMOVE THIS
-import useDashboardStore from "@/lib/store" // Import Zustand store
+import useDashboardStore from "@/lib/store" 
 import { toast } from "@/hooks/use-toast"
 
 
 export default function Dashboard() {
-  // const { ... } = useDashboardData()  // REMOVE THIS
   const {
     students,
     infractions,
@@ -20,11 +18,11 @@ export default function Dashboard() {
     alertSettings,
     updateAlertSettings,
     getStudentAlertStatus,
-    fetchData, // Add this
-    loading, // Add
-    error, // Add
+    fetchData, 
+    loading, 
+    error, 
 
-  } = useDashboardStore() // Use Zustand store
+  } = useDashboardStore() 
 
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null)
   const [activePage, setActivePage] = useState<string>("overview")
