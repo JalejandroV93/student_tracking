@@ -58,7 +58,7 @@ export function CaseManagement({
       id: infraction.id,
       studentId: infraction.studentId,
       studentName: student?.name || "Desconocido",
-      studentSection: student?.section || "",
+      studentSection: student?.grado || "",
       infractionDate: infraction.date,
       infractionNumber: infraction.number,
       followUps: caseFollowUps,

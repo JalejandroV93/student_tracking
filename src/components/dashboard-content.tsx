@@ -76,7 +76,7 @@ export function DashboardContent({
           high: ["Preparatoria"],
         };
 
-        return sectionMap[currentSection]?.includes(student.section);
+        return sectionMap[currentSection]?.includes(student.grado);
       })
     : students;
 

@@ -35,7 +35,7 @@ export function InfractionTrends({ infractions }: InfractionTrendsProps) {
 
     // Convert to array for chart
     return Object.entries(groupedByMonth).map(([month, counts]) => {
-      const [year, monthNum] = month.split("-")
+      const [monthNum] = month.split("-")
       const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
       const monthName = monthNames[Number.parseInt(monthNum) - 1]
 

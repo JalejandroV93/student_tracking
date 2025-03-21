@@ -56,7 +56,7 @@ export function transformStudent(student: Prisma.EstudiantesGetPayload<object>):
   return {
     id: `${student.id}-${student.codigo}`,
     name: student.nombre ?? "",
-    section: student.seccion ?? "",
+    grado: student.grado ?? "",
     level: student.nivel ?? "",
   }
 }

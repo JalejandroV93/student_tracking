@@ -2,7 +2,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { School } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
-import { NIVELES } from "@/lib/constantes"  // Import
 
 interface SectionStats {
   name: string
@@ -28,8 +27,6 @@ export function SectionOverview({ section }: SectionOverviewProps) {
  // Determinar el color de la tarjeta basado en la sección
   const getSectionColor = (name: string): string => {
     switch (name) {
-      case "Mi Taller":
-        return "border-pink-500"
       case "Preschool":
         return "border-purple-500"
       case "Elementary":

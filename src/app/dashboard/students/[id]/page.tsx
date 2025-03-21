@@ -64,7 +64,7 @@ export default function StudentDetailsPage({}: StudentDetailsPageProps) {
           <div>
             <CardTitle>{student.name}</CardTitle>
             <CardDescription>
-              ID: {student.id} | Sección: {student.section}
+              ID: {student.id} | Sección: {student.grado}
             </CardDescription>
           </div>
         </CardHeader>

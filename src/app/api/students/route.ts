@@ -12,7 +12,7 @@ export async function GET() {
         id: true,
         codigo: true,
         nombre: true,
-        seccion: true, 
+        grado: true, 
         nivel: true,
       },
     });
@@ -21,7 +21,7 @@ export async function GET() {
     const normalizedStudents = students.map((student) => ({
       id: `${student.id}-${student.codigo}`,
       name: student.nombre ?? "",
-      section: student.seccion ? normalizarSeccion(student.seccion) : "", // Normalize and handle null
+      section: student.grado ? normalizarSeccion(student.grado) : "", // Normalize and handle null
       level: student.nivel ?? "", // Keep level for other purposes if needed
     }));
 

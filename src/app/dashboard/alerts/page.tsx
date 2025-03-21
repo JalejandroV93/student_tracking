@@ -2,11 +2,9 @@
  "use client";
 
  import { AlertsList } from "@/components/alerts-list";
- import useDashboardStore from "@/lib/store";
 
 
  export default function AlertsPage() {
- const { students, infractions, getStudentAlertStatus } = useDashboardStore();
 
  // Function to handle student selection
  const handleSelectStudent = (studentId: string) => {

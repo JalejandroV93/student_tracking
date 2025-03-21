@@ -14,7 +14,7 @@ export type PrismaAlertSetting = PrismaAlertSettings;
 export interface Student {
   id: string;
   name: string;
-  section: string;
+  grado: string;
   level: string;
 }
 

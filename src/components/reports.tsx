@@ -56,7 +56,7 @@ export function Reports({ students, infractions }: ReportsProps) {
       return {
         id: student.id,
         name: student.name,
-        section: student.section,
+        section: student.grado,
         typeICount,
         typeIICount,
         typeIIICount,

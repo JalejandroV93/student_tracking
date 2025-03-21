@@ -219,7 +219,7 @@ export function StudentHistory({
                       className="px-3 py-2 hover:bg-muted cursor-pointer"
                       onClick={() => handleSelectStudent(student)}
                     >
-                      {student.name} ({student.id}) - {student.section}
+                      {student.name} ({student.id}) - {student.grado}
                     </li>
                   ))}
                 </ul>
@@ -237,7 +237,7 @@ export function StudentHistory({
             <div>
               <CardTitle>{selectedStudent.name}</CardTitle>
               <CardDescription>
-                ID: {selectedStudent.id} | Sección: {selectedStudent.section}
+                ID: {selectedStudent.id} | Sección: {selectedStudent.grado}
               </CardDescription>
             </div>
             <Button

@@ -1,12 +1,4 @@
 export const NIVELES = {
-    "Mi Taller": [
-        "kinder 1 a",
-        "kinder 2 a",
-        "kinder 2 b",
-        "kinder 2 c",
-        "kinder 3 a",
-        "kinder 3 b",
-    ],
     "Preschool": [
         "kinder 4 a",
         "kinder 4 b",
@@ -60,7 +52,6 @@ export const TIPOS_FALTA = {
 
 
 export const SECCIONES_ACADEMICAS = {
-    "Mi Taller": "Mi Taller",
     "Preschool": "Preschool",
     "Elementary": "Elementary",
     "Middle School": "Middle School",

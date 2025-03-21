@@ -7,7 +7,7 @@ import {
   AlertSettings,
 } from "@/types/dashboard";
 import { AlertStatus } from "@/lib/utils";
-import { getSectionCategory, SECCIONES_ACADEMICAS } from "./constantes"; // Correct import
+import { getSectionCategory } from "./constantes"; // Correct import
 
 import { getStudentTypeICount } from "@/lib/utils";
 
@@ -140,7 +140,7 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
     const typeICount = getStudentTypeICount(studentId, state.infractions);
 
     // Use getSectionCategory to get the correct level
-    const sectionCategory = getSectionCategory(student.section);
+    const sectionCategory = getSectionCategory(student.grado);
 
     // Get thresholds, using defaults if not set for the section
     const primaryThreshold =

@@ -30,7 +30,7 @@ export default function CaseManagementSectionPage() {
                   middle: ["Secundaria 1A", "Secundaria 1B", "Secundaria 2A"],
                   high: ["Preparatoria"],
               };
-              return sectionMap[section]?.includes(student.section);
+              return sectionMap[section]?.includes(student.grado);
           })
         : students;
 

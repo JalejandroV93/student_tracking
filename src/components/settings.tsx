@@ -1,9 +1,7 @@
 // src/components/settings.tsx (CORRECTED)
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -19,14 +17,12 @@ interface SettingsProps {
 }
 
 export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState("alerts")
    const { fetchData } =
         useDashboardStore();
 
 
   // Agrupar secciones para una mejor organización
   const sectionGroups = {
-    "Mi Taller": ["Mi Taller"],
     Preschool: ["Preschool"],
     Elementary: ["Elementary"],
     "Middle School": ["Middle School"],
@@ -54,6 +50,7 @@ export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) 
 
   // Handle form submission
 // Handle form submission
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = (data: any) => {
       const updatedSettings: AlertSettings = {
         primary: {
@@ -93,13 +90,8 @@ export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) 
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList>
-        <TabsTrigger value="alerts">Configuración de Alertas</TabsTrigger>
-        <TabsTrigger value="general">Configuración General</TabsTrigger>
-      </TabsList>
+    <>
 
-      <TabsContent value="alerts">
         <Card>
           <CardHeader>
             <CardTitle>Configuración de Alertas</CardTitle>
@@ -194,19 +186,7 @@ export function Settings({ alertSettings, updateAlertSettings }: SettingsProps) 
             </Form>
           </CardContent>
         </Card>
-      </TabsContent>
-
-      <TabsContent value="general">
-        <Card>
-          <CardHeader>
-            <CardTitle>Configuración General</CardTitle>
-            <CardDescription>Ajustes generales del sistema</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Esta sección está en desarrollo.</p>
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+      
+    </>
   )
 }

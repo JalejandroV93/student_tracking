@@ -123,7 +123,7 @@ const getStudentAlertStatus = (studentId: string): AlertStatus | null => {
   const defaultPrimaryThreshold = alertSettings.length > 0 ? alertSettings[0].primary_threshold : 3;
   // Get threshold for this student's section, use find instead of sections
   const sectionSetting = alertSettings.find(
-    (setting) => setting.seccion === student.section
+    (setting) => setting.seccion === student.grado
   );
   const primaryThreshold = sectionSetting
     ? sectionSetting.primary_threshold

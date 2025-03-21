@@ -47,7 +47,7 @@ export function Overview({
     const sectionName = SECCIONES_ACADEMICAS[sectionKey as keyof typeof SECCIONES_ACADEMICAS];
     // 1. Filter students by section category
     const sectionStudents = students.filter(
-      (student) => getSectionCategory(student.section) === sectionName
+      (student) => getSectionCategory(student.grado) === sectionName
     );
 
     // 2. Filter infractions based on those *filtered students*
