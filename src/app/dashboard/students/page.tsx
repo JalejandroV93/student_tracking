@@ -3,7 +3,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { StudentSearchList } from "@/components/students/StudentSearchList"; // Adjust path
 import { useStudentsStore } from "@/stores/students.store"; // Adjust path
 import type { Student } from "@/types/dashboard";
@@ -12,7 +11,7 @@ import type { Student } from "@/types/dashboard";
 export default function StudentsListPage() {
   const router = useRouter();
   const {
-    studentsList,
+    
     filteredStudents,
     searchQuery,
     fetchStudentList,

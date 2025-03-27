@@ -8,7 +8,6 @@ import { AlertsList } from "@/components/alerts/AlertsList"; // Adjust path
 import { SectionSelector } from "@/components/shared/SectionSelector"; // Adjust path
 import { useAlertsStore } from "@/stores/alerts.store"; // Adjust path
 import { useSettingsStore } from "@/stores/settings.store"; // Adjust path
-import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
 
 // Helper to get section title
 const getSectionTitle = (sectionId: string | string[] | undefined): string => {

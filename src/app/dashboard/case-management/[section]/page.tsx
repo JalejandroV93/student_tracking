@@ -1,7 +1,7 @@
 // src/app/dashboard/case-management/[section]/page.tsx
 "use client";
 //Pendiente Refactorizar
-import { CaseManagementList } from "@/components/case-management/CaseManagementList";
+import { CaseManagementList  } from "@/components/case-management/CaseManagementList";
 import useDashboardStore from "@/lib/store";
 import { SectionSelector } from "@/components/shared/SectionSelector";
 import { useParams, useRouter } from "next/navigation";
@@ -82,7 +82,7 @@ export default function CaseManagementSectionPage() {
         Mostrando casos para {getSectionTitle(section as string)}
       </div>
 
-      <CaseManagementList
+      <CaseManagementList 
         students={filteredStudents}
         infractions={infractions}
         followUps={followUps}
