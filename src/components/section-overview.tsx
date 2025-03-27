@@ -1,45 +1,51 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { School } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { School } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface SectionStats {
-  name: string
-  studentCount: number
-  typeI: number
-  typeII: number
-  typeIII: number
-  total: number
-  alertsCount: number
+  name: string;
+  studentCount: number;
+  typeI: number;
+  typeII: number;
+  typeIII: number;
+  total: number;
+  alertsCount: number;
 }
 
 interface SectionOverviewProps {
-  section: SectionStats
+  section: SectionStats;
 }
 
 export function SectionOverview({ section }: SectionOverviewProps) {
   // Calcular el porcentaje de cada tipo de falta
-  const totalInfractions = section.total || 1 // Evitar división por cero
-  const typeIPercent = Math.round((section.typeI / totalInfractions) * 100)
-  const typeIIPercent = Math.round((section.typeII / totalInfractions) * 100)
-  const typeIIIPercent = Math.round((section.typeIII / totalInfractions) * 100)
+  const totalInfractions = section.total || 1; // Evitar división por cero
+  const typeIPercent = Math.round((section.typeI / totalInfractions) * 100);
+  const typeIIPercent = Math.round((section.typeII / totalInfractions) * 100);
+  const typeIIIPercent = Math.round((section.typeIII / totalInfractions) * 100);
 
- // Determinar el color de la tarjeta basado en la sección
+  // Determinar el color de la tarjeta basado en la sección
   const getSectionColor = (name: string): string => {
     switch (name) {
       case "Preschool":
-        return "border-purple-500"
+        return "border-purple-500";
       case "Elementary":
-        return "border-green-500"
-      case "Middle School":  // Corrected case
-        return "border-blue-500"
-      case "High School":    // Corrected case
-        return "border-orange-500"
+        return "border-green-500";
+      case "Middle School": // Corrected case
+        return "border-blue-500";
+      case "High School": // Corrected case
+        return "border-orange-500";
       default:
-        return "border-gray-500"
+        return "border-gray-500";
     }
-  }
+  };
 
-  const borderColor = getSectionColor(section.name)
+  const borderColor = getSectionColor(section.name);
 
   return (
     <Card className={`border-l-4 ${borderColor}`}>
@@ -71,7 +77,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
               {section.typeII} ({typeIIPercent}%)
             </span>
           </div>
-          <Progress value={typeIIPercent} className="h-2 bg-muted"  />
+          <Progress value={typeIIPercent} className="h-2 bg-muted" />
 
           <div className="flex justify-between text-xs">
             <span>Tipo III</span>
@@ -84,9 +90,11 @@ export function SectionOverview({ section }: SectionOverviewProps) {
 
         <div className="flex justify-between items-center pt-2 border-t">
           <span className="text-sm font-medium">Alertas activas:</span>
-          <span className="text-lg font-bold text-amber-600">{section.alertsCount}</span>
+          <span className="text-lg font-bold text-amber-600">
+            {section.alertsCount}
+          </span>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

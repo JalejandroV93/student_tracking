@@ -1,5 +1,5 @@
 // FILE: src/lib/utils.ts
-import { ClassValue, clsx, type } from "clsx";
+import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import type { Infraction } from "@/types/dashboard";
@@ -51,6 +51,16 @@ export function getStudentTypeICount(
   ).length;
 }
 
+export function getStudentTypeIICount(
+  studentId: string,
+  infractions: Infraction[]
+): number {
+  // Use the standardized type format
+  return infractions.filter(
+    (inf) => inf.studentId === studentId && inf.type === "Tipo II"
+  ).length;
+}
+
 // Data transformation function
 export function transformStudent(
   student: Prisma.EstudiantesGetPayload<object>
@@ -72,7 +82,7 @@ export function transformInfraction(
 ): Infraction {
   return {
     id: infraction.hash,
-    studentId: infraction.id_estudiante,
+    studentId: String(infraction.id_estudiante),
     type: infraction.tipo_falta as "Tipo I" | "Tipo II" | "Tipo III",
     number: infraction.numero_falta?.toString() ?? "",
     date: infraction.fecha?.toISOString().split("T")[0] ?? "",
@@ -99,11 +109,3 @@ export function transformFollowUp(
   };
 }
 
-export function getStudentTypeIICount(
-  studentId: string,
-  infractions: Infraction[]
-): number {
-  return infractions.filter(
-    (inf) => inf.studentId === studentId && inf.type === "Tipo II"
-  ).length;
-}

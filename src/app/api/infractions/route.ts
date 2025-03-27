@@ -1,16 +1,30 @@
-// src/app/api/infractions/route.ts
+// src/app/api/infractions/route.ts - Corrected Mapping
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { normalizarTipoFalta } from "@/lib/constantes";
+import { verificarConexionBD } from '@/lib/db'
+
+import { transformInfraction } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
+
+
 export async function GET() {
   try {
-    const infractions = await prisma.faltas.findMany({
+    const estaConectado = await verificarConexionBD()
+
+    if (!estaConectado) {
+      return Response.json(
+        { error: 'Error de conexión a la base de datos' },
+        { status: 503 }
+      )
+    }
+    // Fetch raw data needed for transformation
+    const infractionsRaw = await prisma.faltas.findMany({
       select: {
         hash: true,
         id_estudiante: true,
+        codigo_estudiante: true,
         tipo_falta: true,
         numero_falta: true,
         descripcion_falta: true,
@@ -23,21 +37,11 @@ export async function GET() {
       },
     });
 
-    const normalizedInfractions = infractions.map((infraction) => ({
-      id: infraction.hash,
-      studentId: infraction.id_estudiante.toString(),
-      type: normalizarTipoFalta(infraction.tipo_falta ?? ""),
-      number: infraction.numero_falta?.toString() ?? "",
-      date: infraction.fecha?.toISOString().split("T")[0] ?? "",
-      description: infraction.descripcion_falta ?? "",
-      details: infraction.detalle_falta ?? "",
-      remedialActions: infraction.acciones_reparadoras ?? "",
-      author: infraction.autor ?? "",
-      trimester: infraction.trimestre ?? "",
-      level: infraction.nivel ?? "",
-    }));
+    const transformedInfractions = infractionsRaw.map(transformInfraction);
 
-    return NextResponse.json(normalizedInfractions);
+
+
+    return NextResponse.json(transformedInfractions);
   } catch (error) {
     console.error("Error fetching infractions:", error);
     return NextResponse.json(

@@ -55,12 +55,9 @@ export function Overview({
     );
 
     // 3. Count infractions by type (no change)
-    const typeI = sectionInfractions.filter((inf) => inf.type === "I").length;
-    const typeII = sectionInfractions.filter((inf) => inf.type === "II").length;
-    const typeIII = sectionInfractions.filter(
-      (inf) => inf.type === "III"
-    ).length;
-
+    const typeI = sectionInfractions.filter((inf) => inf.type === "Tipo I").length; 
+    const typeII = sectionInfractions.filter((inf) => inf.type === "Tipo II").length; 
+    const typeIII = sectionInfractions.filter((inf) => inf.type === "Tipo III").length; 
     // 4. Count alerts for students in this section (no change)
     const alertsCount = sectionStudents.filter(
       (student) => getStudentAlertStatus(student.id) !== null

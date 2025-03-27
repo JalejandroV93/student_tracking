@@ -19,23 +19,23 @@ import {
 } from "@/components/ui/table";
 import useDashboardStore from "@/lib/store"; // Import
 import { getStudentTypeIICount } from "@/lib/utils";
-import { Student, Infraction } from "@/types/dashboard";
+import { Student } from "@/types/dashboard";
+
+
 interface AlertsListProps {
   onSelectStudent: (studentId: string) => void;
-  students?: Student;
-  infractions?: Infraction;
+
 }
 
-export function AlertsList({ onSelectStudent, students: propStudents, infractions: propInfractions }: AlertsListProps) {
+export function AlertsList({ onSelectStudent }: AlertsListProps) {
   // Remove props
-  const { students: storeStudents, infractions: storeInfractions, getStudentAlertStatus } = useDashboardStore(); // Get from store
+  const { students, infractions, getStudentAlertStatus } = useDashboardStore(); 
 
-  const students = propStudents ?? storeStudents;
-  const infractions = propInfractions ?? storeInfractions;
+  
   const studentsWithAlerts = Array.isArray(students) 
     ? students.map((student: Student) => {
         const alertStatus = getStudentAlertStatus(student.id);
-        const typeIICount = getStudentTypeIICount(student.id, Array.isArray(infractions) ? infractions : [infractions].filter(Boolean));
+        const typeIICount = getStudentTypeIICount(student.id, infractions);
         return {
           ...student,
         alertStatus,

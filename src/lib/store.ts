@@ -83,14 +83,17 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
       const transformedFollowUps = followUpsData.map(transformFollowUp);
 
       // Calculate type counts
-      const typeICounts = transformedInfractions.filter(
-        (inf) => inf.type === "I"
+      const typeICounts = infractionsData.filter(
+        // Use infractionsData directly
+        (inf: Infraction) => inf.type === "Tipo I" // Consistent check
       ).length;
-      const typeIICounts = transformedInfractions.filter(
-        (inf) => inf.type === "II"
+      const typeIICounts = infractionsData.filter(
+        // Use infractionsData directly
+        (inf: Infraction) => inf.type === "Tipo II" // Consistent check
       ).length;
-      const typeIIICounts = transformedInfractions.filter(
-        (inf) => inf.type === "III"
+      const typeIIICounts = infractionsData.filter(
+        // Use infractionsData directly
+        (inf: Infraction) => inf.type === "Tipo III" // Consistent check
       ).length;
 
       console.log("Data fetched successfully:", {
@@ -106,7 +109,7 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
 
       set({
         students: transformedStudents,
-        infractions: transformedInfractions,
+        infractions: infractionsData,
         followUps: transformedFollowUps,
         alertSettings: settingsData,
         loading: false,

@@ -16,6 +16,9 @@ export default function DashboardPage() {
     fetchData,
     loading,
     error,
+    typeICounts,
+    typeIICounts,
+    typeIIICounts,
   } = useDashboardStore();
 
   useEffect(() => {
@@ -35,10 +38,7 @@ export default function DashboardPage() {
     }
   }, [students, getStudentAlertStatus]);
 
-  // Calculate type counts here, using useMemo to prevent unnecessary recalculations
-  const typeICounts = infractions.filter((inf) => inf.type === "I").length;
-  const typeIICounts = infractions.filter((inf) => inf.type === "II").length;
-  const typeIIICounts = infractions.filter((inf) => inf.type === "III").length;
+  
 
   if (loading) {
     return (
