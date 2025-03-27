@@ -153,9 +153,7 @@ export function StudentHistory({
 
   // Get student infractions (no change)
   const studentInfractions = selectedStudent
-    ? infractions.filter(
-        (inf) => inf.studentId === selectedStudent.id.toString()
-      )
+    ? infractions.filter((inf) => inf.studentId === selectedStudent.id)
     : [];
   // Sort by date (newest first)
   const sortedInfractions = [...studentInfractions].sort(
@@ -194,7 +192,7 @@ export function StudentHistory({
     if (selectedInfraction) {
       // Find the corresponding student
       const student = students.find(
-        (s) => s.id.toString() === selectedInfraction.studentId
+        (s) => s.id === selectedInfraction.studentId
       );
       form.setValue("type", selectedInfraction.type);
       form.setValue("author", student?.name || "Unknown");

@@ -84,19 +84,24 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
 
       // Calculate type counts
       const typeICounts = transformedInfractions.filter(
-        (inf: { type: string; }) => inf.type === "I"
+        (inf) => inf.type === "I"
       ).length;
       const typeIICounts = transformedInfractions.filter(
-        (inf: { type: string; }) => inf.type === "II"
+        (inf) => inf.type === "II"
       ).length;
       const typeIIICounts = transformedInfractions.filter(
-        (inf: { type: string; }) => inf.type === "III"
+        (inf) => inf.type === "III"
       ).length;
 
       console.log("Data fetched successfully:", {
         students: transformedStudents.length,
         infractions: transformedInfractions.length,
         followUps: transformedFollowUps.length,
+        typeCounts: {
+          typeI: typeICounts,
+          typeII: typeIICounts,
+          typeIII: typeIIICounts,
+        },
       });
 
       set({
@@ -162,7 +167,7 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
       if (!response.ok) {
         throw new Error("Failed to update alert settings");
       }
-        await get().fetchData(); // Refetch to get the latest data
+      await get().fetchData(); // Refetch to get the latest data
       toast.success("Alert settings updated successfully");
     } catch (error) {
       console.error("Error updating alert settings:", error);

@@ -1,8 +1,8 @@
 // FILE: src/lib/utils.ts
-import { clsx, type ClassValue } from "clsx";
+import { ClassValue, clsx, type } from "clsx";
 import { twMerge } from "tailwind-merge";
+
 import type { Infraction } from "@/types/dashboard";
-import { normalizarTipoFalta } from "@/lib/constantes"; // Import getSectionCategory
 import { Prisma } from "@prisma/client";
 import { Student, FollowUp } from "@/types/dashboard";
 
@@ -72,8 +72,8 @@ export function transformInfraction(
 ): Infraction {
   return {
     id: infraction.hash,
-    studentId: infraction.id_estudiante.toString(),
-    type: infraction.tipo_falta ?? "Tipo I",
+    studentId: infraction.id_estudiante,
+    type: infraction.tipo_falta as "Tipo I" | "Tipo II" | "Tipo III",
     number: infraction.numero_falta?.toString() ?? "",
     date: infraction.fecha?.toISOString().split("T")[0] ?? "",
     description: infraction.descripcion_falta ?? "",
