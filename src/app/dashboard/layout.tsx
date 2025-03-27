@@ -1,24 +1,25 @@
 "use client";
 
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { useState, ReactNode } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar"; // Make sure path is correct
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"; // Make sure path is correct
+import { ReactNode } from "react";
+import { Toaster } from "@/components/ui/sonner"; // Import Sonner Toaster
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [activePage, setActivePage] = useState<string>("overview");
-
+  // No more activePage state needed here
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <DashboardSidebar
-          activePage={activePage}
-          setActivePage={setActivePage}
-        />
-        <div className="flex-1 overflow-auto p-4 mx-auto">{children}</div>
+        {/* Sidebar no longer needs activePage props */}
+        <DashboardSidebar />
+        {/* Content is rendered directly by the page files */}
+        <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
+        {/* Add Sonner Toaster here for global notifications */}
+        <Toaster />
       </div>
     </SidebarProvider>
   );

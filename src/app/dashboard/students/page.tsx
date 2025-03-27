@@ -1,66 +1,62 @@
 // src/app/dashboard/students/page.tsx
 "use client";
 
-import { StudentHistory } from "@/components/student-history";
-import useDashboardStore from "@/lib/store";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { StudentSearchList } from "@/components/students/StudentSearchList"; // Adjust path
+import { useStudentsStore } from "@/stores/students.store"; // Adjust path
+import type { Student } from "@/types/dashboard";
 
-export default function StudentsPage() {
+
+export default function StudentsListPage() {
   const router = useRouter();
   const {
-    students,
-    infractions,
-    followUps,
-    addFollowUp,
-    fetchData,
-    loading,
-    error,
-  } = useDashboardStore();
+    studentsList,
+    filteredStudents,
+    searchQuery,
+    fetchStudentList,
+    setSearchQuery,
+    listLoading,
+    listError,
+    clearSelectedStudent, // Get the clear function
+  } = useStudentsStore();
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    // Fetch the list on mount
+    fetchStudentList();
+    // Ensure any previously selected student detail is cleared when navigating here
+    clearSelectedStudent();
+  }, [fetchStudentList, clearSelectedStudent]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen text-red-500">
-        {error}
-      </div>
-    );
-  }
+  const handleSelectStudent = (student: Student) => {
+    // Navigate to the detail page when a student is selected from the list
+    router.push(`/dashboard/students/${student.id}`);
+  };
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">
-          Historial de Estudiantes
+          Buscar Estudiantes
         </h1>
+        {/* Add filters or other controls here if needed */}
       </div>
-      <div className="text-sm text-muted-foreground">
-        Mostrando historial para todas las secciones
-      </div>
+       <p className="text-sm text-muted-foreground">
+         Busca por nombre o ID para ver el historial de faltas y seguimientos.
+       </p>
 
-      <StudentHistory
-        students={students}
-        infractions={infractions}
-        followUps={followUps}
-        selectedStudentId={null}
-        onSelectStudent={(studentId) => {
-          if (studentId) {
-            router.push(`/dashboard/students/${studentId}`);
-          }
-        }}
-        addFollowUp={addFollowUp}
+      {/* Render the Search/List Component */}
+      <StudentSearchList
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        students={filteredStudents} // Pass the filtered list
+        onSelectStudent={handleSelectStudent}
+        isLoading={listLoading}
+        error={listError}
       />
+
+      {/* Note: StudentDetailCard is removed from this page. It belongs on the [id] page */}
     </div>
   );
 }

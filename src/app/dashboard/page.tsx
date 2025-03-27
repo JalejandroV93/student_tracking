@@ -1,7 +1,7 @@
 // src/app/dashboard/page.tsx
 "use client";
 
-import { Overview } from "@/components/overview";
+import { Overview } from "@/components/dashboard/Overview";
 import useDashboardStore from "@/lib/store";
 import { useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -37,8 +37,6 @@ export default function DashboardPage() {
       });
     }
   }, [students, getStudentAlertStatus]);
-
-  
 
   if (loading) {
     return (

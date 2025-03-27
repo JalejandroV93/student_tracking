@@ -31,6 +31,7 @@ export async function GET(request: Request) {
                 },
               },
             },
+            orderBy: { fecha: 'desc' }
           },
         },
       });
@@ -67,30 +68,13 @@ export async function GET(request: Request) {
           nombre: true,
           grado: true,
           nivel: true,
-          faltas: {
-            select: {
-              hash: true,
-              id_estudiante: true,
-              codigo_estudiante: true,
-              tipo_falta: true,
-              numero_falta: true,
-              fecha: true,
-              descripcion_falta: true,
-              detalle_falta: true,
-              acciones_reparadoras: true,
-              autor: true,
-              trimestre: true,
-              nivel: true,
-            },
-          },
         },
+        orderBy: { nombre: 'asc' }
       });
 
       // Transform students with their infractions
-      const transformedStudents = students.map((student) => ({
-        ...transformStudent(student),
-        infractions: student.faltas.map(transformInfraction),
-      }));
+      const transformedStudents = students.map(transformStudent);
+
 
       return NextResponse.json(transformedStudents, {
         headers: {
