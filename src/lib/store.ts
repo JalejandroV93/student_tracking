@@ -189,13 +189,13 @@ const useDashboardStore = create<DashboardState>((set, get) => ({
     // Use getSectionCategory to get the correct level
     const sectionCategory = getSectionCategory(student.grado);
 
+    const sectionSettings = state.alertSettings.sections[sectionCategory];
+
     // Get thresholds, using defaults if not set for the section
-    const primaryThreshold =
-      state.alertSettings.sections[sectionCategory]?.primary ??
-      state.alertSettings.primary.threshold;
-    const secondaryThreshold =
-      state.alertSettings.sections[sectionCategory]?.secondary ??
-      state.alertSettings.secondary.threshold;
+    const primaryThreshold = sectionSettings?.primary ?? state.alertSettings.primary.threshold;
+
+    const secondaryThreshold = sectionSettings?.secondary ?? state.alertSettings.secondary.threshold;
+
 
     if (typeICount >= secondaryThreshold) {
       return { level: "critical", count: typeICount };
