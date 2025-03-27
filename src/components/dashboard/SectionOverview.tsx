@@ -28,7 +28,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
   const typeIPercent = Math.round((section.typeI / totalInfractions) * 100);
   const typeIIPercent = Math.round((section.typeII / totalInfractions) * 100);
   const typeIIIPercent = Math.round((section.typeIII / totalInfractions) * 100);
-
+console.log("section:", section);
   // Determinar el color de la tarjeta basado en la sección
   const getSectionColor = (name: string): string => {
     switch (name) {

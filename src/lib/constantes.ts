@@ -65,17 +65,27 @@ export function getSectionCategory(grado: string | undefined): string {
     return "Unknown";
   }
 
-  const gradoLower = grado.toLowerCase();
+  const gradoLower = grado.toLowerCase().trim();
 
+  // Primero intentamos una coincidencia exacta
   for (const category in NIVELES) {
-    if (
-      NIVELES[category as keyof typeof NIVELES].some((nivel) =>
-        gradoLower.includes(nivel)
-      )
-    ) {
+    if (NIVELES[category as keyof typeof NIVELES].includes(gradoLower)) {
       return category;
     }
   }
+
+  // Si no hay coincidencia exacta, intentamos una coincidencia parcial
+  for (const category in NIVELES) {
+    const niveles = NIVELES[category as keyof typeof NIVELES];
+    const match = niveles.find((nivel) => {
+      const nivelBase = nivel.split(" ")[0]; // Obtiene la primera palabra (ej: "sexto" de "sexto a")
+      return gradoLower.startsWith(nivelBase);
+    });
+    if (match) {
+      return category;
+    }
+  }
+
   return "Unknown";
 }
 

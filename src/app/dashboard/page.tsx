@@ -39,11 +39,7 @@ export default function DashboardPage() {
     fetchSettings();
   }, [fetchAlertsData, fetchSettings]);
 
-  // Calculate overall type counts (can be derived here or added to a store if needed globally)
-  const typeICounts = infractions.filter((inf) => inf.type === "Tipo I").length;
-  const typeIICounts = infractions.filter((inf) => inf.type === "Tipo II").length;
-  const typeIIICounts = infractions.filter((inf) => inf.type === "Tipo III").length;
-
+ 
   // --- Alert Calculation Logic (Re-usable Function) ---
   // This logic is encapsulated better in useAlertsStore.getStudentsWithAlerts
   // We pass a function definition to Overview that uses the store's helpers
@@ -114,13 +110,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6"> {/* Removed container/py-6 for consistency with other pages */}
-      <h1 className="text-3xl font-bold tracking-tight">Resumen General</h1>
       <Overview
-        typeICounts={typeICounts}
-        typeIICounts={typeIICounts}
-        typeIIICounts={typeIIICounts}
         students={students}
-        infractions={infractions}
         settings={settings} // <-- Pass the settings from useSettingsStore
         getStudentAlertStatus={getStudentAlertStatus} // Pass the calculation function
         onSelectStudent={(studentId) => {
