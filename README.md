@@ -1,7 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
-
+components.json, eslint.config.mjs, next.config.ts, postcss.config.mjs, tsconfig.json, prisma/migrations/, src/components/ui/
 First, run the development server:
 
 ```bash
