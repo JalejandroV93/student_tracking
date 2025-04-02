@@ -21,48 +21,109 @@ import { useInfractionsStore } from "@/stores/infractions.store";
 
 interface OverviewProps {
   students: Student[];
-  settings: AlertSettings;
+  settings: AlertSettings; // Keep settings prop if needed by getStudentAlertStatus
   getStudentAlertStatus: (studentId: string) => AlertStatus | null;
   onSelectStudent: (studentId: string) => void;
 }
 
 export function Overview({
   students,
+  // settings, // settings might not be needed directly if getStudentAlertStatus gets it from its own store context
   getStudentAlertStatus,
   onSelectStudent,
 }: OverviewProps) {
-  const [currentTrimestre, setCurrentTrimestre] = useState<string>("all");
-  const { infractions, fetchInfractions } = useInfractionsStore();
+  const [currentTrimestre, setCurrentTrimestre] = useState<string>("all"); // Ensure it's string
+  const {
+    infractions,
+    fetchInfractions,
+    loading: infractionsLoading,
+    error: infractionsError,
+  } = useInfractionsStore(); // Get loading/error states
 
   useEffect(() => {
     fetchInfractions();
   }, [fetchInfractions]);
+console.log("Fetching infractions...", infractions);
+  // Filter infractions by trimester first - This is the core fix
+  const filteredInfractions = useMemo(() => {
+    if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
+    if (currentTrimestre === "all") {
+      // console.log(`Filtering for 'all': ${infractions.length} total infractions`);
+      return infractions;
+    }
+    // Ensure we compare string to string and handle potential null/empty strings from DB
+    const filtered = infractions.filter((inf) => {
+      // Mapeo de valores numéricos a nombres de trimestre
+      const trimestreMap: Record<string, string> = {
+        "1": "Primer Trimestre",
+        "2": "Segundo Trimestre",
+        "3": "Tercer Trimestre",
+      };
 
-  // Calculate students with alerts using the passed function
+      // Obtener el valor esperado del trimestre según lo seleccionado
+      const valorEsperado = trimestreMap[currentTrimestre];
+
+      // Comparaciones de depuración
+      console.log(
+        `Comparing: "${inf.trimester}" with expected "${valorEsperado}"`
+      );
+
+      // Comparar con el valor mapeado
+      return inf.trimester === valorEsperado;
+    });
+    // console.log(`Filtering for Trimestre '${currentTrimestre}': Found ${filtered.length} of ${infractions.length} infractions`);
+    // console.log('Sample matching infraction (if any):', filtered.find(inf => inf.trimester === currentTrimestre));
+    // console.log('Sample non-matching infraction (if any):', infractions.find(inf => inf.trimester !== currentTrimestre));
+
+    return filtered;
+  }, [infractions, currentTrimestre, infractionsLoading, infractionsError]); // Add loading/error dependencies
+
+  // Calculate students with alerts using the passed function (uses ALL infractions for calculation, not filtered ones)
   const studentsWithAlerts = useMemo(
     () => {
-      return students
-        .map((student) => ({
-          ...student,
-          alertStatus: getStudentAlertStatus(student.id),
-        }))
-        .filter((student) => student.alertStatus !== null);
+      if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
+      return (
+        students
+          .map((student) => ({
+            ...student,
+            // This function internally uses the *complete* infractions list from its store context (e.g., useAlertsStore)
+            // or it should receive the complete list if not using a separate store.
+            // Assuming getStudentAlertStatus correctly uses the full infraction list.
+            alertStatus: getStudentAlertStatus(student.id),
+          }))
+          .filter((student) => student.alertStatus !== null)
+          // Sort critical alerts first
+          .sort((a, b) => {
+            if (
+              a.alertStatus?.level === "critical" &&
+              b.alertStatus?.level !== "critical"
+            )
+              return -1;
+            if (
+              a.alertStatus?.level !== "critical" &&
+              b.alertStatus?.level === "critical"
+            )
+              return 1;
+            if (a.alertStatus && b.alertStatus)
+              return b.alertStatus.count - a.alertStatus.count; // Higher count first
+            return 0;
+          })
+      );
     },
-    [students, getStudentAlertStatus] // Dependencies include settings now
+    [students, getStudentAlertStatus, infractionsLoading, infractionsError] // Depends on students and the alert function logic (which implicitly depends on infractions/settings)
   );
 
-  // Calculate statistics by section (Memoized for performance)
+  // Calculate statistics by section using the *filtered* infractions
   const sectionStats = useMemo(() => {
+    // Base the calculation ONLY on the already filtered infractions for the selected trimester
     return Object.values(SECCIONES_ACADEMICAS).map((sectionName) => {
-      // 1. Filter infractions by section and trimester
-      const sectionInfractions = infractions.filter((inf) => {
-        const matchesSection = inf.level === sectionName;
-        const matchesTrimestre =
-          currentTrimestre === "all" || inf.trimester === currentTrimestre;
-        return matchesSection && matchesTrimestre;
-      });
+      // 1. Filter the *already trimester-filtered* infractions by section
+      const sectionInfractions = filteredInfractions.filter(
+        (inf) => inf.level === sectionName // `level` should match section names like "Elementary", "Middle School" etc.
+      );
+      //   console.log(`Section: ${sectionName}, Trimestre: ${currentTrimestre}, Found ${sectionInfractions.length} infractions`);
 
-      // 2. Get unique students with infractions in this section
+      // 2. Get unique students involved in these specific infractions
       const sectionStudentIds = new Set(
         sectionInfractions.map((inf) => inf.studentId)
       );
@@ -70,7 +131,7 @@ export function Overview({
         sectionStudentIds.has(student.id)
       );
 
-      // 3. Count infractions by type
+      // 3. Count infractions by type within this filtered set
       const typeI = sectionInfractions.filter(
         (inf) => inf.type === "Tipo I"
       ).length;
@@ -81,33 +142,29 @@ export function Overview({
         (inf) => inf.type === "Tipo III"
       ).length;
 
-      // 4. Count alerts for students in this section
+      // 4. Count alerts for students active in this section *during this trimester*
+      //    (This requires checking alerts based on *all* infractions for that student up to now)
       const alertsCount = sectionStudents.filter(
         (student) => getStudentAlertStatus(student.id) !== null
       ).length;
 
       return {
         name: sectionName,
-        studentCount: sectionStudents.length,
+        studentCount: sectionStudents.length, // Students with infractions in this section/trimester
         typeI,
         typeII,
         typeIII,
         total: typeI + typeII + typeIII,
-        alertsCount,
+        alertsCount, // Total active alerts for students involved in this section/trimester
       };
     });
-  }, [students, infractions, getStudentAlertStatus, currentTrimestre]);
+  }, [students, filteredInfractions, getStudentAlertStatus]); // Use filteredInfractions here
 
-  // Filter infractions by trimester
-  const filteredInfractions = useMemo(() => {
-    if (currentTrimestre === "all") return infractions;
-    return infractions.filter((inf) => inf.trimester === currentTrimestre);
-  }, [infractions, currentTrimestre]);
+  // Calculate overall stats based on filtered infractions
+  const totalStudents = students.length; // Total students doesn't change with trimester filter
+  const totalInfractions = filteredInfractions.length; // Use count from filtered list
 
-  const totalStudents = students.length;
-  const totalInfractions = filteredInfractions.length;
-
-  // Calculate filtered counts by type
+  // Calculate filtered counts by type from the filtered list
   const filteredTypeICounts = filteredInfractions.filter(
     (inf) => inf.type === "Tipo I"
   ).length;
@@ -117,6 +174,19 @@ export function Overview({
   const filteredTypeIIICounts = filteredInfractions.filter(
     (inf) => inf.type === "Tipo III"
   ).length;
+
+  // Handle Loading/Error State for Infractions
+  if (infractionsLoading) {
+    return <div>Loading infraction data...</div>; // Or a spinner component
+  }
+
+  if (infractionsError) {
+    return (
+      <div className="text-destructive">
+        Error loading infractions: {infractionsError}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -128,7 +198,7 @@ export function Overview({
         />
       </div>
 
-      {/* Main KPI Cards */}
+      {/* Main KPI Cards - Use calculated stats based on filteredInfractions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -142,8 +212,9 @@ export function Overview({
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Faltas</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">
+            Total Faltas
+          </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -174,20 +245,26 @@ export function Overview({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Casos Abiertos (Tipo II)
+              Casos Abiertos (Tipo II{" "}
+              
             </CardTitle>
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
+            {/* This needs refinement - 'filteredTypeIICounts' is just the count of Type II *in the selected trimester*.
+                It doesn't represent currently 'open' cases which depend on follow-ups.
+                For a simple display, we show the count for the trimester.
+                A dedicated 'Case Management' store/view is better for true 'open cases'.
+             */}
             <div className="text-2xl font-bold">{filteredTypeIICounts}</div>
             <p className="text-xs text-muted-foreground">
-              Faltas Tipo II registradas
+              Faltas Tipo II en este período
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Infraction Type Summary */}
+      {/* Infraction Type Summary - Use counts from filteredInfractions */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-l-4 border-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -198,7 +275,7 @@ export function Overview({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{filteredTypeICounts}</div>
-            <p className="text-xs text-muted-foreground mt-1">Faltas leves</p>
+            
           </CardContent>
         </Card>
         <Card className="border-l-4 border-yellow-500">
@@ -210,9 +287,7 @@ export function Overview({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{filteredTypeIICounts}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Requieren seguimiento
-            </p>
+            
           </CardContent>
         </Card>
         <Card className="border-l-4 border-red-500">
@@ -224,7 +299,7 @@ export function Overview({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{filteredTypeIIICounts}</div>
-            <p className="text-xs text-muted-foreground mt-1">Faltas graves</p>
+            
           </CardContent>
         </Card>
       </div>
@@ -232,17 +307,17 @@ export function Overview({
       {/* Widgets: Alerts and Trends */}
       <div className="grid gap-6 lg:grid-cols-2">
         <AlertsWidget
-          studentsWithAlerts={studentsWithAlerts} // Already calculated
+          // studentsWithAlerts is calculated based on ALL infractions, which is correct for alerts status
+          studentsWithAlerts={studentsWithAlerts}
           onSelectStudent={onSelectStudent}
         />
+        {/* InfractionTrends should probably show ALL infractions regardless of trimester filter */}
         <InfractionTrends infractions={infractions} />
       </div>
 
-      {/* Section Summaries */}
+      {/* Section Summaries - Uses sectionStats which is derived from filteredInfractions */}
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight mb-4">
-          Resumen por Secciones
-        </h2>
+        
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {sectionStats.map((section) => (
             <SectionOverview key={section.name} section={section} />
