@@ -30,6 +30,7 @@ export interface Infraction {
   remedialActions: string;
   trimester: string;
   level: string;
+  attended: boolean;
 }
 
 export interface FollowUp {

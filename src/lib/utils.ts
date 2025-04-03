@@ -44,10 +44,11 @@ export interface AlertStatus {
 // Get Type I infraction count for a student
 export function getStudentTypeICount(
   studentId: string,
-  infractions: Infraction[]
+  infractions: Infraction[] // Expect the transformed Infraction type
 ): number {
   return infractions.filter(
-    (inf) => inf.studentId === studentId && inf.type === "Tipo I"
+    (inf) =>
+      inf.studentId === studentId && inf.type === "Tipo I" && !inf.attended // <-- ADD !inf.attended
   ).length;
 }
 
@@ -92,6 +93,7 @@ export function transformInfraction(
     author: infraction.autor ?? "",
     trimester: infraction.trimestre ?? "",
     level: infraction.nivel ?? "",
+    attended: infraction.attended ?? false,
   };
 }
 

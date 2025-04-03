@@ -43,7 +43,11 @@ interface StudentsState {
   addFollowUp: (followUpData: Omit<FollowUp, "id">) => Promise<FollowUp | null>;
   setSearchQuery: (query: string) => void;
   clearSelectedStudent: () => void;
-  clearStudentListCache: () => void; // <-- Added for explicit refresh
+  clearStudentListCache: () => void;
+  toggleInfractionAttended: (
+    infractionId: string,
+    currentAttendedState: boolean
+  ) => Promise<boolean>;
 }
 
 export const useStudentsStore = create<StudentsState>((set, get) => ({
@@ -335,6 +339,86 @@ export const useStudentsStore = create<StudentsState>((set, get) => ({
       set({ detailLoading: false });
       toast.error(message);
       return null;
+    }
+  },
+
+  toggleInfractionAttended: async (infractionId, currentAttendedState) => {
+    const newState = !currentAttendedState;
+    // Optional: Add specific loading state for this action if needed
+    // set({ detailLoading: true }); // Or use a more granular flag
+
+    try {
+      const response = await fetch(`/api/infractions/${infractionId}/attend`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attended: newState }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Server error" }));
+        throw new Error(
+          errorData.error || `Failed to update status: ${response.statusText}`
+        );
+      }
+
+      // Update state locally
+      const studentId = get().selectedStudentData.student?.id;
+      set((state) => {
+        // Update selectedStudentData
+        const updatedInfractions = state.selectedStudentData.infractions.map(
+          (inf) =>
+            inf.id === infractionId ? { ...inf, attended: newState } : inf
+        );
+        const updatedSelectedData = {
+          ...state.selectedStudentData,
+          infractions: updatedInfractions,
+        };
+
+        // Update cache if studentId exists
+        const updatedCache =
+          studentId && state.cachedStudentDetails[studentId]
+            ? {
+                ...state.cachedStudentDetails,
+                [studentId]: {
+                  ...state.cachedStudentDetails[studentId], // Keep other data (student, followups)
+                  infractions: updatedInfractions, // Update only infractions
+                  timestamp: Date.now(), // Update timestamp
+                },
+              }
+            : state.cachedStudentDetails;
+
+        return {
+          selectedStudentData: updatedSelectedData,
+          cachedStudentDetails: updatedCache,
+          // detailLoading: false, // Reset loading state if used
+        };
+      });
+
+      toast.success(
+        `Falta marcada como ${newState ? '"Atendida"' : '"Pendiente"'}.`
+      );
+
+      // --- Crucial: Trigger Alert Recalculation ---
+      // Because alerts depend on infractions across potentially *multiple* students,
+      // the cleanest way is often to refetch the underlying data for the alerts store
+      // or trigger a recalculation if the store holds all necessary data.
+      // If useAlertsStore holds its own copy of infractions, it needs updating.
+      // If it relies on useStudentsStore, it might not update automatically.
+      // A simple approach is to invalidate the alerts store's data or force a refetch.
+      // Let's assume useAlertsStore needs a hint to refresh.
+      // Import and call its fetch function (or a dedicated recalculate function).
+      // import { useAlertsStore } from './alerts.store'; // Adjust import path
+      // useAlertsStore.getState().fetchAlertsData({ force: true }); // Force reload alert data
+
+      return true; // Indicate success
+    } catch (error) {
+      console.error("Error toggling infraction attended status:", error);
+      const message = error instanceof Error ? error.message : "Update failed";
+      toast.error(`Error: ${message}`);
+      // set({ detailLoading: false }); // Reset loading state if used
+      return false; // Indicate failure
     }
   },
 

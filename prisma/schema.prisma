@@ -35,6 +35,8 @@ model Faltas {
   fecha                DateTime?   @db.Date
   trimestre            String?
   nivel                String?
+  attended             Boolean     @default(false)
+  attended_at         DateTime?
   casos                Casos[]
   estudiante           Estudiantes @relation(fields: [id_estudiante], references: [id])
 }
