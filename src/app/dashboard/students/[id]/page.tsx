@@ -1,38 +1,76 @@
 // src/app/dashboard/students/[id]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StudentDetailCard } from "@/components/students/StudentDetailCard"; // Adjust path
 import { FollowUpDialog } from "@/components/students/FollowUpDialog"; // Adjust path
-import { useStudentsStore } from "@/stores/students.store"; // Adjust path
 import type { FollowUp, Infraction } from "@/types/dashboard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchStudentDetails, addFollowUp, toggleInfractionAttended } from "@/lib/apiClient";
+import { toast } from "sonner";
 
 export default function StudentDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const studentId = params.id as string;
+  const queryClient = useQueryClient();
+  
+ const {
+   data: studentDetailsData, // Contains { student, infractions, followUps }
+   isLoading: detailLoading,
+   error: detailError,
+   isFetching: detailIsFetching, // For background refresh
+ } = useQuery({
+   // Query key includes the student ID to make it unique per student
+   queryKey: ["students", studentId],
+   queryFn: () => fetchStudentDetails(studentId),
+   enabled: !!studentId, // Only run query if studentId is available
+   // Consider gcTime and staleTime adjustments if needed
+ });
+  
+   const { mutate: saveFollowUp, isPending: isAddingFollowUp } = useMutation({
+   mutationFn: addFollowUp,
+   onSuccess: (newFollowUp) => {
+       toast.success("Seguimiento agregado exitosamente!");
+       setFollowUpDialogOpen(false);
+       setSelectedInfractionForFollowUp(null);
+       // Invalidate the current student's detail query to refetch fresh data
+       queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+       // Optionally invalidate generic followups list if used elsewhere
+       // queryClient.invalidateQueries({ queryKey: ["followUps"] });
+       // Potentially invalidate case management data if it depends on followups
+       queryClient.invalidateQueries({ queryKey: ["cases"] });
+   },
+   onError: (error) => {
+       toast.error(`Error agregando seguimiento: ${error.message}`);
+   }
+ });
+ const { mutate: toggleAttended, isPending: isTogglingAttended } = useMutation({
+     mutationFn: toggleInfractionAttended, // Expects { infractionId, attended }
+     onSuccess: (data, variables) => {
+         toast.success(`Falta marcada como ${variables.attended ? 'Atendida' : 'Pendiente'}.`);
+         // Invalidate student details to update the UI
+         queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+         // Invalidate generic infractions list if needed
+         queryClient.invalidateQueries({ queryKey: ["infractions"] });
+         // Invalidate alerts as attended status affects calculation
+         queryClient.invalidateQueries({ queryKey: ["alerts"] });
+     },
+     onError: (error) => {
+         toast.error(`Error actualizando estado: ${error.message}`);
+     },
+     // Optional: Optimistic updates can be added here for better UX
+ });
 
-  const {
-    selectedStudentData,
-    fetchStudentDetails,
-    addFollowUp,
-    detailLoading,
-    detailError,
-  } = useStudentsStore();
+
 
   const [isFollowUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [selectedInfractionForFollowUp, setSelectedInfractionForFollowUp] = useState<Infraction | null>(null);
 
-  useEffect(() => {
-    if (studentId) {
-      fetchStudentDetails(studentId);
-    }
-    // No cleanup needed to clear student on unmount, handled by store/list page
-  }, [studentId, fetchStudentDetails]);
-
+ 
 
   const handleOpenFollowUpDialog = (infraction: Infraction) => {
       setSelectedInfractionForFollowUp(infraction);
@@ -40,14 +78,15 @@ export default function StudentDetailsPage() {
   };
 
    const handleAddFollowUp = async (followUpData: Omit<FollowUp, "id">) => {
-       const result = await addFollowUp(followUpData);
-       if (result) {
-            setFollowUpDialogOpen(false); // Close dialog on success
-            setSelectedInfractionForFollowUp(null);
-            // Data updates handled by the store automatically
-       }
-        // Error handling is done within the store action (toast)
-   };
+       saveFollowUp(followUpData);
+  };
+  
+ const handleToggleAttended = (infraction: Infraction) => {
+     toggleAttended({ infractionId: infraction.id, attended: !infraction.attended });
+  };
+  
+  const isActionLoading = isAddingFollowUp || isTogglingAttended || detailIsFetching;
+
 
   if (detailLoading) {
     return (
@@ -60,16 +99,19 @@ export default function StudentDetailsPage() {
   if (detailError) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-         <p className="text-destructive mb-4">{detailError}</p>
-         <Button variant="outline" onClick={() => router.back()}>
-             <ArrowLeft className="mr-2 h-4 w-4" /> Volver
-         </Button>
+        <p className="text-destructive mb-4">{detailError.message}</p>
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Volver
+        </Button>
       </div>
     );
   }
 
-  if (!selectedStudentData.student) {
-    // This might happen briefly or if fetch failed silently
+   const student = studentDetailsData?.student;
+   const infractions = studentDetailsData?.infractions ?? [];
+   const followUps = studentDetailsData?.followUps ?? [];
+
+   if (!student && !detailLoading) {
     return (
          <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
              <p className="text-muted-foreground mb-4">No se encontró información del estudiante.</p>
@@ -81,7 +123,7 @@ export default function StudentDetailsPage() {
   }
 
   // Sort infractions by date, newest first
-  const sortedInfractions = [...selectedStudentData.infractions].sort(
+  const sortedInfractions = [...infractions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
@@ -92,25 +134,29 @@ export default function StudentDetailsPage() {
          </Button>
 
         {/* Student Detail Card */}
-        <StudentDetailCard
-            student={selectedStudentData.student}
-            infractions={sortedInfractions} // Pass sorted infractions
-            followUps={selectedStudentData.followUps}
-            onAddFollowUpClick={handleOpenFollowUpDialog} // Pass handler to open dialog
-        />
+         {student && (
+            <StudentDetailCard
+                student={student}
+                infractions={sortedInfractions}
+                followUps={followUps}
+                onAddFollowUpClick={handleOpenFollowUpDialog}
+               onToggleAttendedClick={handleToggleAttended} // Pass toggle handler
+               isActionLoading={isActionLoading} // Pass combined loading state
+            />
+        )}
 
         {/* Follow Up Dialog */}
-        {selectedInfractionForFollowUp && selectedStudentData.student && (
+        {selectedInfractionForFollowUp && student && (
              <FollowUpDialog
                 isOpen={isFollowUpDialogOpen}
                 onOpenChange={setFollowUpDialogOpen}
                 infraction={selectedInfractionForFollowUp}
-                studentName={selectedStudentData.student.name} // Pass student name for context/author
-                existingFollowUps={selectedStudentData.followUps.filter(
+                studentName={student.name}
+              existingFollowUps={followUps.filter( // Use followUps from query data
                     (f) => f.infractionId === selectedInfractionForFollowUp.id
                 )}
                 onSubmit={handleAddFollowUp}
-                isSubmitting={detailLoading} // Use detailLoading to indicate submission process
+               isSubmitting={isAddingFollowUp} // Use mutation pending state
             />
         )}
     </div>

@@ -1,7 +1,7 @@
 // src/components/settings/SettingsForm.tsx
 "use client";
-
 import { useEffect } from "react";
+
 import {
   Card,
   CardContent,
@@ -29,11 +29,10 @@ import { Loader2 } from "lucide-react";
 
 interface SettingsFormProps {
   currentSettings: AlertSettings | null; // Accept null
-  onSave: (updatedSettings: AlertSettings) => Promise<void>;
+  onSave: (updatedSettings: AlertSettings) => void;
   isSaving: boolean;
 }
 
-// Zod schema remains the same
 const sectionThresholdSchema = z
   .object({
     primary: z.coerce.number().min(1, "Mínimo 1").max(20, "Máximo 20"),
@@ -69,8 +68,9 @@ const getInitialFormValues = (
   const initialSectionValues = Object.values(SECCIONES_ACADEMICAS).reduce(
     (acc, sectionName) => {
       acc[sectionName] = {
-        primary: settings?.sections[sectionName]?.primary ?? 3, // Sensible default for first input
-        secondary: settings?.sections[sectionName]?.secondary ?? 5, // Sensible default for first input
+        // Use ?? operator for cleaner default value assignment
+        primary: settings?.sections[sectionName]?.primary ?? 3,
+        secondary: settings?.sections[sectionName]?.secondary ?? 5,
       };
       return acc;
     },
@@ -78,11 +78,12 @@ const getInitialFormValues = (
   );
 
   return {
-    primary: { threshold: settings?.primary.threshold ?? 3 }, // Sensible default
-    secondary: { threshold: settings?.secondary.threshold ?? 5 }, // Sensible default
+    primary: { threshold: settings?.primary.threshold ?? 3 },
+    secondary: { threshold: settings?.secondary.threshold ?? 5 },
     sections: initialSectionValues,
   };
 };
+
 
 export function SettingsForm({
   currentSettings,
@@ -91,21 +92,15 @@ export function SettingsForm({
 }: SettingsFormProps) {
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
-    // Initialize based on whether currentSettings exist
     defaultValues: getInitialFormValues(currentSettings),
   });
 
-  // Effect to reset form only if currentSettings prop *changes* AND is not null
   useEffect(() => {
-    if (currentSettings) {
-      // Only reset if we receive actual settings
-      form.reset(getInitialFormValues(currentSettings));
-    }
-    // If currentSettings becomes null (e.g., error during fetch), don't reset to empty, keep last valid state or initial defaults
-  }, [currentSettings, form]); // Depend on currentSettings
+    form.reset(getInitialFormValues(currentSettings));
+  }, [currentSettings, form.reset, form]);
 
-  const onSubmit = async (data: SettingsFormData) => {
-    await onSave(data); // onSave comes from the page, which calls the store's updateSettings
+  const onSubmit = (data: SettingsFormData) => {
+    onSave(data); 
   };
 
   const sectionNames = Object.values(SECCIONES_ACADEMICAS);
@@ -260,7 +255,10 @@ export function SettingsForm({
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isSaving}>
+              <Button
+                type="submit"
+                disabled={isSaving || !form.formState.isValid}
+              >
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {currentSettings === null
                   ? "Guardar Configuración Inicial"

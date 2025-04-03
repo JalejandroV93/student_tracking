@@ -1,0 +1,111 @@
+// src/lib/apiClient.ts (New File)
+import type {
+  Student,
+  Infraction,
+  FollowUp,
+  AlertSettings,
+} from "@/types/dashboard";
+
+// --- Helper for handling API responses ---
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+    throw new Error(
+      errorData.message || `HTTP error! Status: ${response.status}`
+    );
+  }
+  return response.json() as Promise<T>;
+}
+
+// --- Fetching Functions ---
+
+export const fetchStudentsList = async (): Promise<Student[]> => {
+  const response = await fetch("/api/students");
+  return handleResponse<Student[]>(response);
+};
+
+export const fetchStudentDetails = async (
+  studentId: string
+): Promise<{
+  student: Student;
+  infractions: Infraction[];
+  followUps: FollowUp[];
+}> => {
+  if (!studentId) throw new Error("Student ID is required");
+  const response = await fetch(`/api/students?studentId=${studentId}`);
+  // The API returns an object { student, infractions, followUps }
+  return handleResponse<{
+    student: Student;
+    infractions: Infraction[];
+    followUps: FollowUp[];
+  }>(response);
+};
+
+export const fetchInfractions = async (): Promise<Infraction[]> => {
+  const response = await fetch("/api/infractions");
+  return handleResponse<Infraction[]>(response);
+};
+
+export const fetchFollowUps = async (): Promise<FollowUp[]> => {
+  const response = await fetch("/api/followups");
+  return handleResponse<FollowUp[]>(response);
+};
+
+// Adjust the return type based on your actual API response structure
+export const fetchSettings = async (): Promise<{
+  configured: boolean;
+  settings: AlertSettings | null;
+}> => {
+  const response = await fetch("/api/alert-settings");
+  const data = await handleResponse<{
+    configured: boolean;
+    settings?: AlertSettings;
+  }>(response);
+  // Ensure settings is explicitly null if not configured
+  return { configured: data.configured, settings: data.settings ?? null };
+};
+
+// --- Mutation Functions (Return the result from API) ---
+
+export const updateAlertSettings = async (
+  newSettings: AlertSettings
+): Promise<AlertSettings> => {
+  const response = await fetch("/api/alert-settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newSettings),
+  });
+  // Assuming the API returns the saved settings object on success
+  return handleResponse<AlertSettings>(response);
+};
+
+export const addFollowUp = async (
+  followUpData: Omit<FollowUp, "id">
+): Promise<FollowUp> => {
+  const response = await fetch("/api/followups", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(followUpData),
+  });
+  // Assuming the API returns the newly created follow-up object
+  return handleResponse<FollowUp>(response);
+};
+
+export const toggleInfractionAttended = async ({
+  infractionId,
+  attended,
+}: {
+  infractionId: string;
+  attended: boolean;
+}): Promise<{ hash: string; attended: boolean }> => {
+  const response = await fetch(`/api/infractions/${infractionId}`, {
+    // Corrected API route based on file structure
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attended }),
+  });
+  // Assuming API returns { hash, attended }
+  return handleResponse<{ hash: string; attended: boolean }>(response);
+};

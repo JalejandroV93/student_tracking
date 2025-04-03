@@ -1,69 +1,72 @@
 // src/app/dashboard/settings/page.tsx
 "use client";
 
-import { useEffect } from "react";
 import { SettingsForm } from "@/components/settings/SettingsForm";
-import { useSettingsStore } from "@/stores/settings.store";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert
-import { Terminal } from "lucide-react"; // Example icon
-import type { AlertSettings } from "@/types/dashboard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 import { SettingsFormSkeleton } from "@/components/settings/SettingsForm.skeleton";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchSettings, updateAlertSettings } from "@/lib/apiClient";
+import { toast } from "sonner";
+import type { AlertSettings } from "@/types/dashboard";
+
 export default function SettingsPage() {
-  const {
-    settings,
-    updateSettings,
-    fetchSettings,
-    loading,
-    error,
-    areSettingsConfigured,
-  } = useSettingsStore();
+ const queryClient = useQueryClient();
+ const {
+   data: settingsData, // Contains { configured: boolean, settings: AlertSettings | null }
+   isLoading: isLoadingSettings,
+   error: settingsError,
+   isFetching: isFetchingSettings, // Use for background refresh indicator if needed
+ } = useQuery({
+   queryKey: ["settings"],
+   queryFn: fetchSettings,
+   // staleTime: Infinity, // Settings might not change often, consider longer staleTime
+ });
 
-  useEffect(() => {
-    // Fetch settings when the component mounts if status is unknown or forced
-    if (areSettingsConfigured === null) {
-      fetchSettings();
-    }
-  }, [fetchSettings, areSettingsConfigured]); // Depend on areSettingsConfigured
+ const {
+   mutate: saveSettings,
+   isPending: isSaving, // Replaces isSaving prop logic
+ } = useMutation({
+   mutationFn: updateAlertSettings,
+   onSuccess: (savedSettings) => {
+     toast.success("Configuración guardada exitosamente!");
+     // Update the query cache with the saved data
+     queryClient.setQueryData(["settings"], { configured: true, settings: savedSettings });
+     // Optionally invalidate other queries that depend on settings
+     queryClient.invalidateQueries({ queryKey: ["alerts"] }); // Example: invalidate alerts calculation
+   },
+   onError: (error) => {
+     toast.error(`Error guardando configuración: ${error.message}`);
+   },
+ });
 
-  const handleSave = async (updatedSettingsData: AlertSettings) => {
-    await updateSettings(updatedSettingsData);
-    // Optionally trigger refetch of other data if needed after settings change
-    // useAlertsStore.getState().fetchAlertsData({ force: true });
-  };
 
-  // --- Loading State ---
-  if (loading && areSettingsConfigured === null) {
-    // Show loader only on initial check
-    return (
-      <SettingsFormSkeleton/>
-    );
-  }
-
-  // --- Error State ---
-  if (error) {
+ // Determine configuration status from the query data
+ const areSettingsConfigured = settingsData?.configured;
+ const currentSettings = settingsData?.settings ?? null; // Extract settings or null
+ if (isLoadingSettings) { // Simplified loading check
+   return <SettingsFormSkeleton />;
+ }
+if (settingsError) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-red-500">
         <Alert variant="destructive" className="max-w-md">
           <Terminal className="h-4 w-4" />
           <AlertTitle>Error al Cargar Configuración</AlertTitle>
           <AlertDescription>
-            {error} Intente recargar la página.
+           {settingsError.message}. Intente recargar la página.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  // --- Render Content ---
   return (
     <div className="space-y-6 w-full max-w-4xl">
-      {" "}
-      {/* Ensure content takes width */}
       <h1 className="text-3xl font-bold tracking-tight">
         Configuración de Alertas
       </h1>
-      {/* Show prompt if settings are explicitly not configured */}
-      {areSettingsConfigured === false && !loading && (
+     {areSettingsConfigured === false && !isLoadingSettings && ( // Check config status from query
         <Alert>
           <Terminal className="h-4 w-4" />
           <AlertTitle>Configuración Inicial Requerida</AlertTitle>
@@ -74,15 +77,10 @@ export default function SettingsPage() {
           </AlertDescription>
         </Alert>
       )}
-      {/* Render Form - always render if not erroring,
-                pass null if not configured, or the settings if configured */}
       <SettingsForm
-        // Pass null if not configured, otherwise pass settings.
-        // The form component needs to handle the null case for initial values.
-        currentSettings={areSettingsConfigured === true ? settings : null}
-        onSave={handleSave}
-        // Use loading state from store to disable button during save
-        isSaving={loading && areSettingsConfigured !== null} // Indicate saving when loading is true AFTER initial check
+       currentSettings={currentSettings} // Pass settings directly from query data
+       onSave={saveSettings} // Pass the mutate function
+       isSaving={isSaving} // Use mutation's pending state
       />
     </div>
   );
