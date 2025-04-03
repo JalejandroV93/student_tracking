@@ -3,23 +3,23 @@ import { create } from "zustand";
 import { toast } from "sonner";
 import type { Student, Infraction } from "@/types/dashboard";
 import { getStudentTypeICount, AlertStatus } from "@/lib/utils";
-import { getSectionCategory } from "@/lib/constantes";
-import { useSettingsStore } from "./settings.store"; // Import settings store
+import { getSectionCategory, CACHE_DURATION_MS } from "@/lib/constantes"; // Import constant
+import { useSettingsStore } from "./settings.store";
 
-// Define the structure for a student with their alert status
 interface StudentWithAlert extends Student {
   alertStatus: AlertStatus | null;
-  typeIICount: number; // Also useful to show this on the alerts list
+  typeIICount: number;
 }
 
 interface AlertsState {
-  students: Student[]; // All students (needed for filtering/display)
-  infractions: Infraction[]; // All infractions (needed for counts)
-  // Settings are now managed by useSettingsStore
-  loading: boolean;
+  students: Student[];
+  infractions: Infraction[];
+  loading: boolean; // For initial load
+  isRefetching: boolean; // For background refresh indication (optional)
   error: string | null;
-  fetchAlertsData: () => Promise<void>;
-  // Selector to get students with active alerts, calculated using current data and settings
+  hasFetchedOnce: boolean; // Flag to track initial fetch
+  lastFetchTimestamp: number | null; // Timestamp of last successful fetch
+  fetchAlertsData: (options?: { force?: boolean }) => Promise<void>; // Add options
   getStudentsWithAlerts: (section?: string | null) => StudentWithAlert[];
 }
 
@@ -27,21 +27,44 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
   students: [],
   infractions: [],
   loading: false,
+  isRefetching: false, // Initialize refetching flag
   error: null,
+  hasFetchedOnce: false, // Initialize fetch flag
+  lastFetchTimestamp: null, // Initialize timestamp
 
-  fetchAlertsData: async () => {
-    // Avoid refetch if data exists (basic cache)
-    // if (get().students.length > 0 && get().infractions.length > 0) {
-    //     set({ loading: false });
-    //     return;
-    // }
-    set({ loading: true, error: null });
+  fetchAlertsData: async (options = {}) => {
+    const { hasFetchedOnce, lastFetchTimestamp, loading, isRefetching } = get();
+    const now = Date.now();
+    const isCacheValid =
+      lastFetchTimestamp && now - lastFetchTimestamp < CACHE_DURATION_MS;
+
+    // Avoid fetching if already loading/refetching, or if cache is valid and not forced
+    if (
+      loading ||
+      isRefetching ||
+      (hasFetchedOnce && isCacheValid && !options.force)
+    ) {
+      // If data exists but cache is just considered valid, ensure loading is false
+      if (hasFetchedOnce && !loading && !isRefetching) {
+        set({ loading: false, isRefetching: false });
+      }
+      // console.log("AlertsStore: Skipping fetch (loading/refetching/cache valid)");
+      return;
+    }
+
+    const isInitialFetch = !hasFetchedOnce;
+
+    if (isInitialFetch) {
+      set({ loading: true, error: null });
+    } else {
+      set({ isRefetching: true }); // Indicate background activity
+    }
+
     try {
-      // Fetch necessary data: students and infractions
-      // Settings will be fetched separately by their own store/hook
+      // console.log(`AlertsStore: Fetching data (Initial: ${isInitialFetch}, Force: ${options.force})`);
       const [studentsRes, infractionsRes] = await Promise.all([
-        fetch("/api/students"), // Assuming this returns Student[]
-        fetch("/api/infractions"), // Assuming this returns Infraction[]
+        fetch("/api/students"),
+        fetch("/api/infractions"),
       ]);
 
       if (!studentsRes.ok || !infractionsRes.ok) {
@@ -53,47 +76,58 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
         infractionsRes.json(),
       ]);
 
-      // Assuming APIs return the transformed data
       set({
         students: studentsData as Student[],
         infractions: infractionsData as Infraction[],
-        loading: false,
+        loading: false, // Ensure loading is false after any fetch
+        isRefetching: false, // Ensure refetching is false
+        hasFetchedOnce: true, // Mark as fetched
+        lastFetchTimestamp: Date.now(), // Update timestamp
+        error: null, // Clear previous errors on success
       });
 
-      // Trigger settings fetch if not already done (or rely on component mounting)
+      // Trigger settings fetch if needed (can also rely on component mount)
       // useSettingsStore.getState().fetchSettings();
-
     } catch (error) {
       console.error("Error fetching alerts data:", error);
       const message =
         error instanceof Error ? error.message : "Failed to load alert data";
-      set({ loading: false, error: message });
-      toast.error(message);
+
+      if (isInitialFetch) {
+        // Only set blocking error state on initial fetch failure
+        set({ loading: false, isRefetching: false, error: message });
+        toast.error(`Error cargando datos iniciales: ${message}`);
+      } else {
+        // On background refresh failure, just log and maybe show a non-blocking toast
+        set({ isRefetching: false }); // Stop refetch indicator
+        toast.warning(`Error actualizando datos en segundo plano: ${message}`);
+        // Keep the stale data
+      }
     }
   },
 
+  // getStudentsWithAlerts remains the same conceptually
   getStudentsWithAlerts: (section = null) => {
     const { students, infractions } = get();
-    const { settings, getThresholdsForSection } = useSettingsStore.getState(); // Get settings state
+    const { settings, getThresholdsForSection } = useSettingsStore.getState();
 
-    if (!settings) return []; // Settings might not be loaded yet
+    if (!settings || !students.length || !infractions.length) return []; // Need data & settings
 
-    // 1. Filter students by section if provided
     const sectionStudents = section
       ? students.filter((student) => {
-           const sectionMap: Record<string, string> = {
-              preschool: "Preschool",
-              elementary: "Elementary",
-              middle: "Middle School",
-              high: "High School",
-            };
-           const targetSection = sectionMap[section];
-           return targetSection && getSectionCategory(student.grado) === targetSection;
+          const sectionMap: Record<string, string> = {
+            preschool: "Preschool",
+            elementary: "Elementary",
+            middle: "Middle School",
+            high: "High School",
+          };
+          const targetSection = sectionMap[section];
+          return (
+            targetSection && getSectionCategory(student.grado) === targetSection
+          );
         })
       : students;
 
-
-    // 2. Calculate alert status for each relevant student
     const studentsWithAlerts = sectionStudents
       .map((student): StudentWithAlert => {
         const typeICount = getStudentTypeICount(student.id, infractions);
@@ -103,7 +137,7 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
 
         const sectionCategory = getSectionCategory(student.grado);
         const { primary: primaryThreshold, secondary: secondaryThreshold } =
-            getThresholdsForSection(sectionCategory); // Use helper
+          getThresholdsForSection(sectionCategory);
 
         let alertStatus: AlertStatus | null = null;
         if (typeICount >= secondaryThreshold) {
@@ -118,17 +152,23 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
           typeIICount,
         };
       })
-      .filter((student) => student.alertStatus !== null); // Keep only those with alerts
+      .filter((student) => student.alertStatus !== null);
 
-      // 3. Sort (critical first)
-      return studentsWithAlerts.sort((a, b) => {
-        if (a.alertStatus?.level === "critical" && b.alertStatus?.level !== "critical") return -1;
-        if (a.alertStatus?.level !== "critical" && b.alertStatus?.level === "critical") return 1;
-        // Optional: secondary sort by count descending
-        if (a.alertStatus && b.alertStatus) {
-            return b.alertStatus.count - a.alertStatus.count;
-        }
-        return 0;
-      });
+    return studentsWithAlerts.sort((a, b) => {
+      if (
+        a.alertStatus?.level === "critical" &&
+        b.alertStatus?.level !== "critical"
+      )
+        return -1;
+      if (
+        a.alertStatus?.level !== "critical" &&
+        b.alertStatus?.level === "critical"
+      )
+        return 1;
+      if (a.alertStatus && b.alertStatus) {
+        return b.alertStatus.count - a.alertStatus.count;
+      }
+      return 0;
+    });
   },
 }));
