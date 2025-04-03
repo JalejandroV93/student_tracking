@@ -2,13 +2,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { useSettingsStore } from "@/stores/settings.store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert
 import { Terminal } from "lucide-react"; // Example icon
 import type { AlertSettings } from "@/types/dashboard";
-
+import { SettingsFormSkeleton } from "@/components/settings/SettingsForm.skeleton";
 export default function SettingsPage() {
   const {
     settings,
@@ -36,10 +35,7 @@ export default function SettingsPage() {
   if (loading && areSettingsConfigured === null) {
     // Show loader only on initial check
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-150px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span>Verificando configuración...</span>
-      </div>
+      <SettingsFormSkeleton/>
     );
   }
 

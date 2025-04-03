@@ -3,10 +3,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { CaseManagementList } from "@/components/case-management/CaseManagementList"; // Adjust path
 import { useCaseManagementStore } from "@/stores/case-management.store"; // Adjust path
-
+import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
 export default function CaseManagementAllSectionsPage() {
   const router = useRouter();
   const {
@@ -39,9 +38,7 @@ export default function CaseManagementAllSectionsPage() {
       </p>
 
       {loading && (
-         <div className="flex items-center justify-center pt-10">
-             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-         </div>
+         <CaseManagementListSkeleton/>
       )}
 
       {error && !loading && (

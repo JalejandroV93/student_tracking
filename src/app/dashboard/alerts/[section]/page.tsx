@@ -3,12 +3,11 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { AlertsList } from "@/components/alerts/AlertsList"; // Adjust path
 import { SectionSelector } from "@/components/shared/SectionSelector"; // Adjust path
 import { useAlertsStore } from "@/stores/alerts.store"; // Adjust path
 import { useSettingsStore } from "@/stores/settings.store"; // Adjust path
-
+import { AlertsListSkeleton } from "@/components/alerts/AlertsList.skeleton";
 // Helper to get section title
 const getSectionTitle = (sectionId: string | string[] | undefined): string => {
     const id = Array.isArray(sectionId) ? sectionId[0] : sectionId;
@@ -74,9 +73,7 @@ export default function AlertsSpecificSectionPage() {
       </p>
 
        {isLoading && (
-         <div className="flex items-center justify-center pt-10">
-             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-         </div>
+         <AlertsListSkeleton/>
       )}
 
       {error && !isLoading && (

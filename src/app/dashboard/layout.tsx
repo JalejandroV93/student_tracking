@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Sidebar no longer needs activePage props */}
         <DashboardSidebar />
         {/* Content is rendered directly by the page files */}
-        <main className="flex items-center align-middle p-4 lg:p-6 mx-auto">{children}</main>
+        <main className="p-2 flex-1">{children}</main>
         {/* Add Sonner Toaster here for global notifications */}
         <Toaster />
       </div>

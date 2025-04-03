@@ -7,7 +7,7 @@ import { SectionSelector } from "@/components/shared/SectionSelector";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { NIVELES } from "@/lib/constantes";
-
+import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
 export default function CaseManagementSectionPage() {
   const router = useRouter();
   const params = useParams();
@@ -52,9 +52,7 @@ export default function CaseManagementSectionPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        Loading...
-      </div>
+      <CaseManagementListSkeleton/>
     );
   }
 

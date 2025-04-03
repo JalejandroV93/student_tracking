@@ -7,12 +7,11 @@ import { useSettingsStore } from "@/stores/settings.store";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
+import { OverviewSkeleton } from "@/components/dashboard/Overview.skeleton";
 export default function DashboardPage() {
   const router = useRouter();
 
@@ -74,8 +73,8 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-150px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="w-[900px]">
+        <OverviewSkeleton />
       </div>
     );
   }

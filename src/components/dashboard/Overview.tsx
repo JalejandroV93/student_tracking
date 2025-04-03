@@ -18,7 +18,7 @@ import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
 import { useMemo, useState, useEffect } from "react";
 import { TrimestreSelector } from "./TrimestreSelector";
 import { useInfractionsStore } from "@/stores/infractions.store";
-
+import { OverviewSkeleton } from "./Overview.skeleton";
 interface OverviewProps {
   students: Student[];
   settings: AlertSettings; // Keep settings prop if needed by getStudentAlertStatus
@@ -177,7 +177,11 @@ console.log("Fetching infractions...", infractions);
 
   // Handle Loading/Error State for Infractions
   if (infractionsLoading) {
-    return <div>Loading infraction data...</div>; // Or a spinner component
+    return (
+      <div className="w-[900px]">
+        <OverviewSkeleton />
+      </div>
+    );
   }
 
   if (infractionsError) {

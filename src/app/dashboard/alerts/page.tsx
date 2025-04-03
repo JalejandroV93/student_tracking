@@ -3,7 +3,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { AlertsList } from "@/components/alerts/AlertsList";
 import { useAlertsStore } from "@/stores/alerts.store";
 import { useSettingsStore } from "@/stores/settings.store"; // Import settings store
@@ -11,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
+import { AlertsListSkeleton } from "@/components/alerts/AlertsList.skeleton";
 export default function AlertsAllSectionsPage() {
   const router = useRouter();
   const {
@@ -49,9 +48,7 @@ export default function AlertsAllSectionsPage() {
   // --- Loading State ---
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center pt-10 h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <AlertsListSkeleton/>
     );
   }
 
@@ -119,7 +116,7 @@ export default function AlertsAllSectionsPage() {
 
   // Fallback
   return (
-    <div className="flex items-center justify-center pt-10">Cargando...</div>
+    <AlertsListSkeleton/>
   );
 }
 
