@@ -109,10 +109,22 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
   // getStudentsWithAlerts remains the same conceptually
   getStudentsWithAlerts: (section = null) => {
     const { students, infractions } = get();
-    const { settings, getThresholdsForSection } = useSettingsStore.getState();
+    // Get settings state AND the helper function
+    const { settings, getThresholdsForSection, areSettingsConfigured } =
+      useSettingsStore.getState();
 
-    if (!settings || !students.length || !infractions.length) return []; // Need data & settings
+    // **Crucial Check:** If settings are not configured or not loaded yet, return empty list.
+    if (
+      areSettingsConfigured !== true ||
+      !settings ||
+      !students.length ||
+      !infractions.length
+    ) {
+      // console.log("AlertsStore: Settings not ready, cannot calculate alerts.");
+      return [];
+    }
 
+    // Filter students by section if provided
     const sectionStudents = section
       ? students.filter((student) => {
           const sectionMap: Record<string, string> = {
@@ -128,6 +140,7 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
         })
       : students;
 
+    // Map and filter students based on alerts
     const studentsWithAlerts = sectionStudents
       .map((student): StudentWithAlert => {
         const typeICount = getStudentTypeICount(student.id, infractions);
@@ -136,10 +149,19 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
         ).length;
 
         const sectionCategory = getSectionCategory(student.grado);
+        // Get thresholds using the helper (which now handles fallback internally)
+        const thresholds = getThresholdsForSection(sectionCategory);
+
+        // **Handle null thresholds**: If for some reason thresholds are null even if configured=true (shouldn't happen with current logic, but good defense)
+        if (!thresholds) {
+          return { ...student, alertStatus: null, typeIICount };
+        }
+
         const { primary: primaryThreshold, secondary: secondaryThreshold } =
-          getThresholdsForSection(sectionCategory);
+          thresholds;
 
         let alertStatus: AlertStatus | null = null;
+        // Apply thresholds
         if (typeICount >= secondaryThreshold) {
           alertStatus = { level: "critical", count: typeICount };
         } else if (typeICount >= primaryThreshold) {
@@ -152,7 +174,7 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
           typeIICount,
         };
       })
-      .filter((student) => student.alertStatus !== null);
+      .filter((student) => student.alertStatus !== null); // Filter out those without alerts
 
     return studentsWithAlerts.sort((a, b) => {
       if (

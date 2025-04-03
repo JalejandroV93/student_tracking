@@ -2,70 +2,88 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import type { AlertSettings } from "@/types/dashboard";
-import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
+// No longer need SECCIONES_ACADEMICAS here for defaults
 
 interface SettingsState {
-  settings: AlertSettings;
+  settings: AlertSettings | null; // Initialize as null
   loading: boolean;
   error: string | null;
-  fetchSettings: () => Promise<void>;
-  updateSettings: (newSettings: AlertSettings) => Promise<void>;
-  // Helper to get thresholds for a specific section, falling back to general
-  getThresholdsForSection: (sectionName: string) => { primary: number; secondary: number };
+  areSettingsConfigured: boolean | null; // null = unknown, false = not configured, true = configured
+  fetchSettings: (options?: { force?: boolean }) => Promise<void>; // Add force option
+  updateSettings: (newSettings: AlertSettings) => Promise<boolean>; // Return success boolean
+  getThresholdsForSection: (
+    sectionName: string
+  ) => { primary: number; secondary: number } | null; // Return null if not configured
 }
 
-const defaultSettings: AlertSettings = {
-    primary: { threshold: 3 },
-    secondary: { threshold: 5 },
-    sections: Object.values(SECCIONES_ACADEMICAS).reduce((acc, section) => {
-      acc[section] = { primary: 3, secondary: 5 }; // Default section values
-      return acc;
-    }, {} as Record<string, { primary: number; secondary: number }>),
-  };
-
-
 export const useSettingsStore = create<SettingsState>((set, get) => ({
-  settings: defaultSettings,
+  settings: null, // Start as null
   loading: false,
   error: null,
+  areSettingsConfigured: null, // Start as unknown
 
-  fetchSettings: async () => {
-    // Avoid refetch if settings are already loaded (basic cache)
-    // if (get().settings.primary.threshold !== defaultSettings.primary.threshold) {
-    //     set({ loading: false });
-    //     return;
-    // }
-    set({ loading: true, error: null });
+  fetchSettings: async (options = {}) => {
+    const { areSettingsConfigured, loading } = get();
+
+    // Basic cache check: if already configured and not forced, don't refetch unless loading
+    if (areSettingsConfigured === true && !options.force && !loading) {
+      // console.log("SettingsStore: Skipping fetch (already configured and not forced)");
+      // Ensure loading is false if we skip
+      if (loading) set({ loading: false });
+      return;
+    }
+    // Prevent duplicate fetches if already loading
+    if (loading) {
+      // console.log("SettingsStore: Skipping fetch (already loading)");
+      return;
+    }
+
+    set({ loading: true, error: null }); // Set loading true *only* when actually fetching
+
     try {
       const response = await fetch("/api/alert-settings");
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch settings: ${response.statusText}`
-        );
+        throw new Error(`Failed to fetch settings: ${response.statusText}`);
       }
-      const data: AlertSettings = await response.json();
+      const data = await response.json();
 
-      // Ensure all academic sections have entries, using defaults if missing
-      const completeSettings = { ...data, sections: { ...defaultSettings.sections } };
-       for (const sectionKey in data.sections) {
-            if (Object.prototype.hasOwnProperty.call(data.sections, sectionKey)) {
-                completeSettings.sections[sectionKey] = data.sections[sectionKey];
-            }
-       }
-
-
-      set({ settings: completeSettings, loading: false });
+      // API should return { configured: boolean, settings?: AlertSettings }
+      if (data.configured && data.settings) {
+        set({
+          settings: data.settings as AlertSettings,
+          loading: false,
+          areSettingsConfigured: true,
+          error: null,
+        });
+      } else {
+        // Explicitly not configured
+        set({
+          settings: null,
+          loading: false,
+          areSettingsConfigured: false,
+          error: null,
+        });
+        // Optional: Inform user if first time and not configured
+        // if (get().areSettingsConfigured === null) { // Check if it was the very first check
+        //    toast.info("Por favor, configure los umbrales de alerta iniciales.");
+        // }
+      }
     } catch (error) {
       console.error("Error fetching settings:", error);
       const message =
         error instanceof Error ? error.message : "Failed to load settings";
-      set({ loading: false, error: message, settings: defaultSettings }); // Revert to default on error
-      toast.error(message);
+      set({
+        loading: false,
+        error: message,
+        settings: null, // Ensure settings are null on error
+        areSettingsConfigured: null, // Status is unknown on error
+      });
+      toast.error(`Error cargando configuración: ${message}`);
     }
   },
 
   updateSettings: async (newSettings) => {
-    set({ loading: true });
+    set({ loading: true }); // Indicate saving process
     try {
       const response = await fetch("/api/alert-settings", {
         method: "POST",
@@ -74,32 +92,50 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       });
 
       if (!response.ok) {
-         const errorData = await response.json().catch(() => ({ error: 'Failed to update settings' }));
-        throw new Error(errorData.error || `Failed to update settings: ${response.statusText}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Failed to update settings" }));
+        throw new Error(
+          errorData.error || `Failed to update settings: ${response.statusText}`
+        );
       }
 
-      // Update local state immediately on success
-      set({ settings: newSettings, loading: false });
-      toast.success("Settings updated successfully!");
-      // Optionally refetch to confirm, but optimistic update is often fine here
-      // await get().fetchSettings();
+      const savedSettings = await response.json(); // API should return the saved data
+
+      // Optimistic update + confirmation from response
+      set({
+        settings: savedSettings, // Use the response data ideally
+        loading: false,
+        areSettingsConfigured: true, // Mark as configured upon successful save
+        error: null,
+      });
+      toast.success("Configuración guardada exitosamente!");
+      return true; // Indicate success
     } catch (error) {
       console.error("Error updating settings:", error);
       const message =
         error instanceof Error ? error.message : "Failed to update settings";
-      set({ loading: false }); // Revert loading state
-      toast.error(message);
-      // Optionally revert local state or refetch on error
-      await get().fetchSettings();
+      set({ loading: false, error: message }); // Keep potentially stale settings but show error
+      toast.error(`Error guardando configuración: ${message}`);
+      return false; // Indicate failure
     }
   },
 
   getThresholdsForSection: (sectionName: string) => {
-      const state = get();
-      const sectionSettings = state.settings.sections[sectionName];
-      return {
-          primary: sectionSettings?.primary ?? state.settings.primary.threshold,
-          secondary: sectionSettings?.secondary ?? state.settings.secondary.threshold,
-      };
-  }
+    const { settings, areSettingsConfigured } = get();
+
+    // Return null if settings are not loaded or not configured
+    if (!settings || areSettingsConfigured !== true) {
+      return null;
+    }
+
+    // Proceed if settings are loaded and configured
+    const sectionSettings = settings.sections[sectionName];
+
+    // Fallback logic remains, but only applies *after* confirming settings exist
+    return {
+      primary: sectionSettings?.primary ?? settings.primary.threshold,
+      secondary: sectionSettings?.secondary ?? settings.secondary.threshold,
+    };
+  },
 }));

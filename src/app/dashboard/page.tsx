@@ -2,24 +2,24 @@
 "use client";
 
 import { Overview } from "@/components/dashboard/Overview";
-import { useAlertsStore } from "@/stores/alerts.store"; // Use new store
-import { useSettingsStore } from "@/stores/settings.store"; // Use settings store
+import { useAlertsStore } from "@/stores/alerts.store";
+import { useSettingsStore } from "@/stores/settings.store";
 import { useEffect } from "react";
-import { toast } from "sonner"; // Use sonner directly
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react"; // For loading state
-import { getStudentTypeICount } from "@/lib/utils"; // Import helper if needed directly
-import { getSectionCategory } from "@/lib/constantes"; // Import helper
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const router = useRouter();
 
-  // --- Get state and actions from NEW stores ---
   const {
-    students,
-    infractions,
-    fetchAlertsData, // From alerts store (fetches students & infractions)
-    getStudentsWithAlerts, // Selector for alert logic
+    students, // From alerts store now
+    fetchAlertsData,
+    getStudentsWithAlerts,
     loading: alertsLoading,
     error: alertsError,
   } = useAlertsStore();
@@ -27,97 +27,125 @@ export default function DashboardPage() {
   const {
     settings,
     fetchSettings,
-    getThresholdsForSection, // Use this helper
     loading: settingsLoading,
     error: settingsError,
+    areSettingsConfigured, // Use the configuration status
   } = useSettingsStore();
-  // --- End store usage ---
 
   // Fetch data on mount
   useEffect(() => {
-    fetchAlertsData();
-    fetchSettings();
-  }, [fetchAlertsData, fetchSettings]);
-
- 
-  // --- Alert Calculation Logic (Re-usable Function) ---
-  // This logic is encapsulated better in useAlertsStore.getStudentsWithAlerts
-  // We pass a function definition to Overview that uses the store's helpers
-  const getStudentAlertStatus = (studentId: string) => {
-    if (!settings) return null; // Need settings
-
-    const student = students.find((s) => s.id === studentId);
-    if (!student) return null;
-
-    const typeICount = getStudentTypeICount(studentId, infractions);
-    const sectionCategory = getSectionCategory(student.grado);
-
-    // Use the helper from the settings store
-    const { primary: primaryThreshold, secondary: secondaryThreshold } =
-      getThresholdsForSection(sectionCategory);
-
-    if (typeICount >= secondaryThreshold) {
-      return { level: "critical" as const, count: typeICount };
-    } else if (typeICount >= primaryThreshold) {
-      return { level: "warning" as const, count: typeICount };
+    // Fetch settings first or concurrently
+    if (areSettingsConfigured === null) {
+      fetchSettings(); // Trigger fetch if status unknown
     }
-    return null;
+    // Fetch alert data (which includes students/infractions needed for alerts)
+    fetchAlertsData();
+  }, [fetchAlertsData, fetchSettings, areSettingsConfigured]);
+
+  const getStudentAlertStatus = (studentId: string) => {
+    // Delegate entirely to the alert store's selector which now handles settings check
+    const studentWithPossibleAlert = getStudentsWithAlerts().find(
+      (s) => s.id === studentId
+    );
+    return studentWithPossibleAlert?.alertStatus ?? null;
   };
-   // --- End Alert Calculation ---
 
-
-  // Effect for showing alert toast
+  // Effect for showing alert toast (only if settings are configured)
   useEffect(() => {
-     // Use the selector from the store
-     const studentsWithAlerts = getStudentsWithAlerts(); // Get all alerts
-     if (!alertsLoading && !settingsLoading && studentsWithAlerts.length > 0) {
-        toast.info(`Hay ${studentsWithAlerts.length} estudiantes con alertas activas.`);
-     }
-  }, [students, infractions, settings, getStudentsWithAlerts, alertsLoading, settingsLoading]); // Add loading states
+    if (areSettingsConfigured === true && !alertsLoading && !settingsLoading) {
+      const studentsWithAlerts = getStudentsWithAlerts();
+      if (studentsWithAlerts.length > 0) {
+        toast.info(
+          `Hay ${studentsWithAlerts.length} estudiantes con alertas activas.`
+        );
+      }
+    }
+  }, [
+    areSettingsConfigured,
+    getStudentsWithAlerts,
+    alertsLoading,
+    settingsLoading,
+  ]);
 
-  // Loading and Error Handling
-  const loading = alertsLoading || settingsLoading;
+  // --- Loading and Error Handling ---
+  const isLoading =
+    alertsLoading || (settingsLoading && areSettingsConfigured === null); // Loading if either is loading initially
   const error = alertsError || settingsError;
 
-  if (loading && (!students.length || !settings)) { // More robust initial loading check
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-150px)]">
-         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-destructive">
-         <p className="mb-4">{error}</p>
-         {/* Add a retry button */}
-         <button onClick={() => { fetchAlertsData(); fetchSettings(); }} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-             Reintentar
-         </button>
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
+        <Alert variant="destructive" className="max-w-md mb-4">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Error al Cargar Datos</AlertTitle>
+          <AlertDescription>
+            {error}. Intente recargar o contacte soporte.
+          </AlertDescription>
+        </Alert>
+        <Button
+          onClick={() => {
+            fetchSettings({ force: true });
+            fetchAlertsData({ force: true });
+          }}
+          variant="outline"
+        >
+          Reintentar Carga
+        </Button>
       </div>
     );
   }
 
-   // Ensure settings are loaded before rendering Overview
-   if (!settings) {
-       return (
-            <div className="flex items-center justify-center h-[calc(100vh-150px)] text-muted-foreground">
-                Cargando configuración...
-            </div>
-        );
-   }
+  // --- Handle Unconfigured State ---
+  if (areSettingsConfigured === false) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
+        <Alert className="max-w-md mb-4">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Configuración Requerida</AlertTitle>
+          <AlertDescription>
+            Los umbrales de alerta no han sido configurados. Algunas
+            funcionalidades del dashboard (como las alertas) no estarán
+            disponibles hasta que se configuren.
+          </AlertDescription>
+        </Alert>
+        <Link href="/dashboard/settings" passHref legacyBehavior>
+          <Button>Ir a Configuración</Button>
+        </Link>
+      </div>
+    );
+  }
 
+  // --- Render Overview ---
+  // Only render Overview if settings ARE configured and data is loaded
+  if (areSettingsConfigured === true && settings) {
+    return (
+      <div className="space-y-6 w-full">
+        {" "}
+        {/* Ensure overview takes width */}
+        <Overview
+          students={students} // Pass students fetched by alerts store
+          settings={settings} // Pass the loaded settings
+          getStudentAlertStatus={getStudentAlertStatus}
+          onSelectStudent={(studentId) => {
+            router.push(`/dashboard/students/${studentId}`);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Fallback if something unexpected happens (e.g., configured but settings are null)
   return (
-    <div className="space-y-6"> {/* Removed container/py-6 for consistency with other pages */}
-      <Overview
-        students={students}
-        settings={settings} // <-- Pass the settings from useSettingsStore
-        getStudentAlertStatus={getStudentAlertStatus} // Pass the calculation function
-        onSelectStudent={(studentId) => {
-          router.push(`/dashboard/students/${studentId}`);
-        }}
-      />
+    <div className="flex items-center justify-center h-[calc(100vh-150px)] text-muted-foreground">
+      Estado inesperado. Intentando cargar datos...
     </div>
   );
 }
