@@ -127,7 +127,7 @@ export default function DashboardPage() {
   if (areSettingsConfigured === true && settings) {
     return (
       <div className="space-y-6 w-full">
-        {" "}
+       
         {/* Ensure overview takes width */}
         <Overview
           students={students} // Pass students fetched by alerts store

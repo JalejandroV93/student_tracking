@@ -21,6 +21,7 @@ export function AlertsWidget({ studentsWithAlerts, onSelectStudent }: AlertsWidg
   // Data is already filtered and sorted (potentially by the store or parent component)
   // We just display the top N
   const topAlerts = studentsWithAlerts.slice(0, 5);
+  console.log("Top Alerts:", topAlerts); // Debugging line to check the data being passed
 
   return (
     <Card className="h-full flex flex-col"> {/* Ensure card takes full height if needed */}

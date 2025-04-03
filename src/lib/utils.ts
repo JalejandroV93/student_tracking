@@ -46,10 +46,12 @@ export function getStudentTypeICount(
   studentId: string,
   infractions: Infraction[] // Expect the transformed Infraction type
 ): number {
-  return infractions.filter(
-    (inf) =>
-      inf.studentId === studentId && inf.type === "Tipo I" && !inf.attended // <-- ADD !inf.attended
-  ).length;
+  const filtered = infractions.filter(
+  (inf) =>
+    inf.studentId === studentId && inf.type === "Tipo I" && !inf.attended
+);
+console.log(` -> Found ${filtered.length} unattended Type I infractions:`, filtered);
+return filtered.length;
 }
 
 export function getStudentTypeIICount(

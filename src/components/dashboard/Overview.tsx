@@ -43,7 +43,7 @@ export function Overview({
   useEffect(() => {
     fetchInfractions();
   }, [fetchInfractions]);
-console.log("Fetching infractions...", infractions);
+//console.log("Fetching infractions...", infractions);
   // Filter infractions by trimester first - This is the core fix
   const filteredInfractions = useMemo(() => {
     if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
@@ -64,9 +64,9 @@ console.log("Fetching infractions...", infractions);
       const valorEsperado = trimestreMap[currentTrimestre];
 
       // Comparaciones de depuración
-      console.log(
-        `Comparing: "${inf.trimester}" with expected "${valorEsperado}"`
-      );
+      // console.log(
+      //   `Comparing: "${inf.trimester}" with expected "${valorEsperado}"`
+      // );
 
       // Comparar con el valor mapeado
       return inf.trimester === valorEsperado;
