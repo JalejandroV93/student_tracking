@@ -1,14 +1,7 @@
 // src/components/dashboard/Overview.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertCircle,
-  AlertTriangle,
-  FileWarning,
-  Users,
-  Activity,
-  BellRing,
-  CalendarDays,
-} from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, BellRing, CalendarDays, FileWarning, Users } from "lucide-react";
+
 import type { Student, AlertSettings } from "@/types/dashboard";
 import type { AlertStatus } from "@/lib/utils";
 import { AlertsWidget } from "@/components/alerts/AlertsWidget";
@@ -19,6 +12,8 @@ import { useMemo, useState, useEffect } from "react";
 import { TrimestreSelector } from "./TrimestreSelector";
 import { useInfractionsStore } from "@/stores/infractions.store";
 import { OverviewSkeleton } from "./Overview.skeleton";
+import { useStudentsCount } from "@/hooks/use-students-count";
+
 interface OverviewProps {
   students: Student[];
   settings: AlertSettings; // Keep settings prop if needed by getStudentAlertStatus
@@ -40,10 +35,16 @@ export function Overview({
     error: infractionsError,
   } = useInfractionsStore(); // Get loading/error states
 
+  // Obtener el conteo total de estudiantes
+  const { 
+    data: totalStudentsCount = 0, 
+    isLoading: isLoadingStudentsCount 
+  } = useStudentsCount();
+
   useEffect(() => {
     fetchInfractions();
   }, [fetchInfractions]);
-//console.log("Fetching infractions...", infractions);
+
   // Filter infractions by trimester first - This is the core fix
   const filteredInfractions = useMemo(() => {
     if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
@@ -63,17 +64,9 @@ export function Overview({
       // Obtener el valor esperado del trimestre según lo seleccionado
       const valorEsperado = trimestreMap[currentTrimestre];
 
-      // Comparaciones de depuración
-      // console.log(
-      //   `Comparing: "${inf.trimester}" with expected "${valorEsperado}"`
-      // );
-
       // Comparar con el valor mapeado
       return inf.trimester === valorEsperado;
     });
-    // console.log(`Filtering for Trimestre '${currentTrimestre}': Found ${filtered.length} of ${infractions.length} infractions`);
-    // console.log('Sample matching infraction (if any):', filtered.find(inf => inf.trimester === currentTrimestre));
-    // console.log('Sample non-matching infraction (if any):', infractions.find(inf => inf.trimester !== currentTrimestre));
 
     return filtered;
   }, [infractions, currentTrimestre, infractionsLoading, infractionsError]); // Add loading/error dependencies
@@ -121,7 +114,6 @@ export function Overview({
       const sectionInfractions = filteredInfractions.filter(
         (inf) => inf.level === sectionName // `level` should match section names like "Elementary", "Middle School" etc.
       );
-      //   console.log(`Section: ${sectionName}, Trimestre: ${currentTrimestre}, Found ${sectionInfractions.length} infractions`);
 
       // 2. Get unique students involved in these specific infractions
       const sectionStudentIds = new Set(
@@ -161,7 +153,6 @@ export function Overview({
   }, [students, filteredInfractions, getStudentAlertStatus]); // Use filteredInfractions here
 
   // Calculate overall stats based on filtered infractions
-  const totalStudents = students.length; // Total students doesn't change with trimester filter
   const totalInfractions = filteredInfractions.length; // Use count from filtered list
 
   // Calculate filtered counts by type from the filtered list
@@ -212,7 +203,13 @@ export function Overview({
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalStudents}</div>
+            <div className="text-2xl font-bold">
+              {isLoadingStudentsCount ? (
+                <span className="text-muted-foreground">Cargando...</span>
+              ) : (
+                totalStudentsCount
+              )}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -249,17 +246,11 @@ export function Overview({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Casos Abiertos (Tipo II{" "}
-              
+              Casos Abiertos (Tipo II)
             </CardTitle>
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {/* This needs refinement - 'filteredTypeIICounts' is just the count of Type II *in the selected trimester*.
-                It doesn't represent currently 'open' cases which depend on follow-ups.
-                For a simple display, we show the count for the trimester.
-                A dedicated 'Case Management' store/view is better for true 'open cases'.
-             */}
             <div className="text-2xl font-bold">{filteredTypeIICounts}</div>
             <p className="text-xs text-muted-foreground">
               Faltas Tipo II en este período
@@ -279,7 +270,6 @@ export function Overview({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{filteredTypeICounts}</div>
-            
           </CardContent>
         </Card>
         <Card className="border-l-4 border-yellow-500">
@@ -291,7 +281,6 @@ export function Overview({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{filteredTypeIICounts}</div>
-            
           </CardContent>
         </Card>
         <Card className="border-l-4 border-red-500">
@@ -303,7 +292,6 @@ export function Overview({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{filteredTypeIIICounts}</div>
-            
           </CardContent>
         </Card>
       </div>
@@ -311,17 +299,14 @@ export function Overview({
       {/* Widgets: Alerts and Trends */}
       <div className="grid gap-6 lg:grid-cols-2">
         <AlertsWidget
-          // studentsWithAlerts is calculated based on ALL infractions, which is correct for alerts status
           studentsWithAlerts={studentsWithAlerts}
           onSelectStudent={onSelectStudent}
         />
-        {/* InfractionTrends should probably show ALL infractions regardless of trimester filter */}
         <InfractionTrends infractions={infractions} />
       </div>
 
       {/* Section Summaries - Uses sectionStats which is derived from filteredInfractions */}
       <div>
-        
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {sectionStats.map((section) => (
             <SectionOverview key={section.name} section={section} />

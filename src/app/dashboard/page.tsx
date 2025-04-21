@@ -12,11 +12,13 @@ import { Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { OverviewSkeleton } from "@/components/dashboard/Overview.skeleton";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
+
 export default function DashboardPage() {
   const router = useRouter();
 
   const {
-    students, // From alerts store now
+    students,
     fetchAlertsData,
     getStudentsWithAlerts,
     loading: alertsLoading,
@@ -28,7 +30,7 @@ export default function DashboardPage() {
     fetchSettings,
     loading: settingsLoading,
     error: settingsError,
-    areSettingsConfigured, // Use the configuration status
+    areSettingsConfigured,
   } = useSettingsStore();
 
   // Fetch data on mount
@@ -73,52 +75,56 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="w-[900px]">
+      <ContentLayout title="Resumen">
         <OverviewSkeleton />
-      </div>
+      </ContentLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-        <Alert variant="destructive" className="max-w-md mb-4">
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Error al Cargar Datos</AlertTitle>
-          <AlertDescription>
-            {error}. Intente recargar o contacte soporte.
-          </AlertDescription>
-        </Alert>
-        <Button
-          onClick={() => {
-            fetchSettings({ force: true });
-            fetchAlertsData({ force: true });
-          }}
-          variant="outline"
-        >
-          Reintentar Carga
-        </Button>
-      </div>
+      <ContentLayout title="Resumen">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
+          <Alert variant="destructive" className="max-w-md mb-4">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Error al Cargar Datos</AlertTitle>
+            <AlertDescription>
+              {error}. Intente recargar o contacte soporte.
+            </AlertDescription>
+          </Alert>
+          <Button
+            onClick={() => {
+              fetchSettings({ force: true });
+              fetchAlertsData({ force: true });
+            }}
+            variant="outline"
+          >
+            Reintentar Carga
+          </Button>
+        </div>
+      </ContentLayout>
     );
   }
 
   // --- Handle Unconfigured State ---
   if (areSettingsConfigured === false) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-        <Alert className="max-w-md mb-4">
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Configuración Requerida</AlertTitle>
-          <AlertDescription>
-            Los umbrales de alerta no han sido configurados. Algunas
-            funcionalidades del dashboard (como las alertas) no estarán
-            disponibles hasta que se configuren.
-          </AlertDescription>
-        </Alert>
-        <Link href="/dashboard/settings" passHref legacyBehavior>
-          <Button>Ir a Configuración</Button>
-        </Link>
-      </div>
+      <ContentLayout title="Resumen">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
+          <Alert className="max-w-md mb-4">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Configuración Requerida</AlertTitle>
+            <AlertDescription>
+              Los umbrales de alerta no han sido configurados. Algunas
+              funcionalidades del dashboard (como las alertas) no estarán
+              disponibles hasta que se configuren.
+            </AlertDescription>
+          </Alert>
+          <Link href="/dashboard/settings" passHref legacyBehavior>
+            <Button>Ir a Configuración</Button>
+          </Link>
+        </div>
+      </ContentLayout>
     );
   }
 
@@ -126,9 +132,7 @@ export default function DashboardPage() {
   // Only render Overview if settings ARE configured and data is loaded
   if (areSettingsConfigured === true && settings) {
     return (
-      <div className="space-y-6 w-full">
-       
-        {/* Ensure overview takes width */}
+      <ContentLayout title="Resumen">
         <Overview
           students={students} // Pass students fetched by alerts store
           settings={settings} // Pass the loaded settings
@@ -137,14 +141,16 @@ export default function DashboardPage() {
             router.push(`/dashboard/students/${studentId}`);
           }}
         />
-      </div>
+      </ContentLayout>
     );
   }
 
   // Fallback if something unexpected happens (e.g., configured but settings are null)
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-150px)] text-muted-foreground">
-      Estado inesperado. Intentando cargar datos...
-    </div>
+    <ContentLayout title="Resumen">
+      <div className="flex items-center justify-center h-[calc(100vh-250px)] text-muted-foreground">
+        Estado inesperado. Intentando cargar datos...
+      </div>
+    </ContentLayout>
   );
 }

@@ -11,6 +11,8 @@ import { Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertsListSkeleton } from "@/components/alerts/AlertsList.skeleton";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
+
 export default function AlertsAllSectionsPage() {
   const router = useRouter();
   const {
@@ -48,75 +50,82 @@ export default function AlertsAllSectionsPage() {
   // --- Loading State ---
   if (isLoading) {
     return (
-      <AlertsListSkeleton/>
+      <ContentLayout title="Alertas">
+        <AlertsListSkeleton />
+      </ContentLayout>
     );
   }
 
   // --- Error State ---
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-        <Alert variant="destructive" className="max-w-md mb-4">
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Error al Cargar Datos</AlertTitle>
-          <AlertDescription>
-            {error}. Intente recargar la página.
-          </AlertDescription>
-        </Alert>
-        <Button
-          onClick={() => {
-            fetchSettings({ force: true });
-            fetchAlertsData({ force: true });
-          }}
-          variant="outline"
-        >
-          Reintentar Carga
-        </Button>
-      </div>
+      <ContentLayout title="Alertas">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
+          <Alert variant="destructive" className="max-w-md mb-4">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Error al Cargar Datos</AlertTitle>
+            <AlertDescription>
+              {error}. Intente recargar la página.
+            </AlertDescription>
+          </Alert>
+          <Button
+            onClick={() => {
+              fetchSettings({ force: true });
+              fetchAlertsData({ force: true });
+            }}
+            variant="outline"
+          >
+            Reintentar Carga
+          </Button>
+        </div>
+      </ContentLayout>
     );
   }
 
   // --- Unconfigured State ---
   if (areSettingsConfigured === false) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-        <Alert className="max-w-md mb-4">
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Configuración Requerida</AlertTitle>
-          <AlertDescription>
-            Las alertas no pueden mostrarse porque los umbrales no han sido
-            configurados.
-          </AlertDescription>
-        </Alert>
-        <Link href="/dashboard/settings" passHref legacyBehavior>
-          <Button>Ir a Configuración</Button>
-        </Link>
-      </div>
+      <ContentLayout title="Alertas">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
+          <Alert className="max-w-md mb-4">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Configuración Requerida</AlertTitle>
+            <AlertDescription>
+              Las alertas no pueden mostrarse porque los umbrales no han sido
+              configurados.
+            </AlertDescription>
+          </Alert>
+          <Link href="/dashboard/settings" passHref legacyBehavior>
+            <Button>Ir a Configuración</Button>
+          </Link>
+        </div>
+      </ContentLayout>
     );
   }
 
   // --- Render Alerts List (only if configured) ---
   if (areSettingsConfigured === true) {
     return (
-      <div className="space-y-6 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">Alertas</h1>
+      <ContentLayout title="Alertas">
+        <div className="space-y-6 w-full">
+          <p className="text-sm text-muted-foreground">
+            Mostrando alertas activas para todas las secciones académicas según
+            la configuración actual.
+          </p>
+          <AlertsList
+            studentsWithAlerts={studentsWithAlerts}
+            onSelectStudent={handleSelectStudent}
+          />
         </div>
-        <p className="text-sm text-muted-foreground">
-          Mostrando alertas activas para todas las secciones académicas según la
-          configuración actual.
-        </p>
-        <AlertsList
-          studentsWithAlerts={studentsWithAlerts}
-          onSelectStudent={handleSelectStudent}
-        />
-      </div>
+      </ContentLayout>
     );
   }
 
   // Fallback
   return (
-    <AlertsListSkeleton/>
+    <ContentLayout title="Alertas">
+      <AlertsListSkeleton />
+    </ContentLayout>
   );
 }
 

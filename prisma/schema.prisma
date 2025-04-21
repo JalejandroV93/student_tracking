@@ -14,16 +14,21 @@ datasource db {
 }
 
 model Estudiantes {
-  id     Int      @id
+  id     Int      @id @unique
   codigo Int      @unique
   nombre String?
   grado  String?
   nivel  String?
   faltas Faltas[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  @@index([codigo], name: "idx_codigo")
+  @@index([grado], name: "idx_grado")
+  @@index([nivel], name: "idx_nivel_estudiante")
 }
 
 model Faltas {
-  hash                 String      @id
+  hash                 String      @id @unique
   id_estudiante        Int
   codigo_estudiante    Int
   tipo_falta           String?
@@ -39,6 +44,19 @@ model Faltas {
   attended_at         DateTime?
   casos                Casos[]
   estudiante           Estudiantes @relation(fields: [id_estudiante], references: [id])
+  created_at           DateTime   @default(now())
+  updated_at           DateTime   @updatedAt
+
+
+  @@index([id_estudiante], name: "idx_estudiante")
+  @@index([codigo_estudiante], name: "idx_codigo_estudiante")
+  @@index([tipo_falta], name: "idx_tipo_falta")
+  @@index([numero_falta], name: "idx_numero_falta")
+  @@index([fecha], name: "idx_fecha")
+  @@index([nivel], name: "idx_nivel")
+  @@index([trimestre], name: "idx_trimestre")
+  @@index([attended], name: "idx_attended")
+  @@index([created_at], name: "idx_created_at")
 }
 
 model Casos {
@@ -48,6 +66,9 @@ model Casos {
   estado       String         @default("Abierto")
   seguimientos Seguimientos[]
   falta        Faltas         @relation(fields: [hash_falta], references: [hash])
+
+  @@index([estado], name: "idx_estado")
+  @@index([hash_falta], name: "idx_hash_falta")
 }
 
 model Seguimientos {

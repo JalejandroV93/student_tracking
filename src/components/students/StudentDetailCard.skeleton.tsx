@@ -23,27 +23,27 @@ export function StudentDetailCardSkeleton() {
             <TableRow>
               <TableHead>
                 <Skeleton className="h-4 w-16" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Fecha */}
               <TableHead>
                 <Skeleton className="h-4 w-12" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Tipo */}
               <TableHead>
                 <Skeleton className="h-4 w-10" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Num */}
               <TableHead>
                 <Skeleton className="h-4 w-32" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Desc */}
               <TableHead>
                 <Skeleton className="h-4 w-24" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Seguimientos */}
               <TableHead className="text-right">
                 <Skeleton className="h-4 w-16 ml-auto" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Acciones */}
             </TableRow>
           </TableHeader>

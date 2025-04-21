@@ -137,15 +137,15 @@ export function StudentDetailCard({
                           {/* TooltipContent remains the same */}
                           <TooltipContent side="top" align="start">
                             <p className="max-w-xs break-words">
-                              <strong>Descripción:</strong>{" "}
+                              <strong>Descripción:</strong>
                               {infraction.description || "N/A"} <br />
-                              <strong>Detalles:</strong>{" "}
+                              <strong>Detalles:</strong>
                               {infraction.details || "N/A"} <br />
-                              <strong>Acciones:</strong>{" "}
+                              <strong>Acciones:</strong>
                               {infraction.remedialActions || "N/A"} <br />
-                              <strong>Autor:</strong>{" "}
+                              <strong>Autor:</strong>
                               {infraction.author || "N/A"} <br />
-                              <strong>Estado:</strong>{" "}
+                              <strong>Estado:</strong>
                               {infraction.attended ? "Atendida" : "Pendiente"}
                             </p>
                           </TooltipContent>
@@ -162,17 +162,17 @@ export function StudentDetailCard({
                                     <div className="text-xs cursor-help">
                                       <span className="font-medium">
                                         {followUp.followUpNumber}:
-                                      </span>{" "}
+                                      </span>
                                       {formatDate(followUp.date)}
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" align="start">
                                     <p className="max-w-xs break-words">
-                                      <strong>Fecha:</strong>{" "}
+                                      <strong>Fecha:</strong>
                                       {formatDate(followUp.date)} <br />
-                                      <strong>Autor:</strong>{" "}
+                                      <strong>Autor:</strong>
                                       {followUp.author || "N/A"} <br />
-                                      <strong>Detalles:</strong>{" "}
+                                      <strong>Detalles:</strong>
                                       {followUp.details || "N/A"}
                                     </p>
                                   </TooltipContent>

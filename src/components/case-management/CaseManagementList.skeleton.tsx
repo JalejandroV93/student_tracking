@@ -22,27 +22,27 @@ export function CaseManagementListSkeleton() {
             <TableRow>
               <TableHead>
                 <Skeleton className="h-4 w-24" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Estudiante */}
               <TableHead>
                 <Skeleton className="h-4 w-16" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Grado */}
               <TableHead>
                 <Skeleton className="h-4 w-20" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Fecha Falta */}
               <TableHead className="text-center">
                 <Skeleton className="h-4 w-24 mx-auto" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Seguimientos */}
               <TableHead>
                 <Skeleton className="h-4 w-16" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Estado */}
               <TableHead>
                 <Skeleton className="h-4 w-32" />
-              </TableHead>{" "}
+              </TableHead>
               {/* Próximo Seguimiento */}
             </TableRow>
           </TableHeader>
@@ -60,11 +60,11 @@ export function CaseManagementListSkeleton() {
                 </TableCell>
                 <TableCell className="text-center">
                   <Skeleton className="h-5 w-12 mx-auto rounded-md" />
-                </TableCell>{" "}
+                </TableCell>
                 {/* Badge */}
                 <TableCell>
                   <Skeleton className="h-5 w-16 rounded-md" />
-                </TableCell>{" "}
+                </TableCell>
                 {/* Badge */}
                 <TableCell>
                   <div className="flex items-center space-x-2">

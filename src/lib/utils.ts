@@ -50,7 +50,7 @@ export function getStudentTypeICount(
   (inf) =>
     inf.studentId === studentId && inf.type === "Tipo I" && !inf.attended
 );
-console.log(` -> Found ${filtered.length} unattended Type I infractions:`, filtered);
+//console.log(` -> Found ${filtered.length} unattended Type I infractions:`, filtered);
 return filtered.length;
 }
 

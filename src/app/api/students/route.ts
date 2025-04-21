@@ -13,6 +13,13 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
+    const countOnly = searchParams.get("countOnly");
+
+    // Si solo necesitamos el conteo, hacemos una consulta optimizada
+    if (countOnly === "true") {
+      const count = await prisma.estudiantes.count();
+      return NextResponse.json({ count });
+    }
 
     if (studentId) {
       // Fetch single student with infractions and follow-ups
@@ -74,7 +81,6 @@ export async function GET(request: Request) {
 
       // Transform students with their infractions
       const transformedStudents = students.map(transformStudent);
-
 
       return NextResponse.json(transformedStudents, {
         headers: {
