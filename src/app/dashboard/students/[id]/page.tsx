@@ -28,6 +28,7 @@ export default function StudentDetailsPage() {
     isLoading: detailLoading,
     error: detailError,
     isFetching: detailIsFetching,
+    refetch: refetchStudentDetails,
   } = useQuery({
     queryKey: ["students", studentId],
     queryFn: () => fetchStudentDetails(studentId),
@@ -40,8 +41,15 @@ export default function StudentDetailsPage() {
       toast.success("Seguimiento agregado exitosamente!");
       setFollowUpDialogOpen(false);
       setSelectedInfractionForFollowUp(null);
+
+      // Invalidar todas las consultas relacionadas para asegurar que los datos se actualicen
       queryClient.invalidateQueries({ queryKey: ["students", studentId] });
       queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["followups"] });
+      queryClient.invalidateQueries({ queryKey: ["infractions"] });
+
+      // Refrescar los datos del estudiante inmediatamente
+      refetchStudentDetails();
     },
     onError: (error) => {
       toast.error(`Error agregando seguimiento: ${error.message}`);
@@ -58,6 +66,9 @@ export default function StudentDetailsPage() {
         queryClient.invalidateQueries({ queryKey: ["students", studentId] });
         queryClient.invalidateQueries({ queryKey: ["infractions"] });
         queryClient.invalidateQueries({ queryKey: ["alerts"] });
+
+        // Refrescar los datos del estudiante inmediatamente
+        refetchStudentDetails();
       },
       onError: (error) => {
         toast.error(`Error actualizando estado: ${error.message}`);

@@ -12,6 +12,7 @@ export async function GET() {
       select: {
         hash: true,
         id_estudiante: true,
+        codigo_estudiante: true,
         tipo_falta: true,
         numero_falta: true,
         fecha: true,
@@ -21,17 +22,19 @@ export async function GET() {
         autor: true,
         trimestre: true,
         nivel: true,
+        attended: true,
       },
       orderBy: { fecha: "desc" },
     });
 
-    // Añadir el campo codigo_estudiante a cada infracción
-    const infractionsWithCode = infractions.map(infraction => ({
-      ...infraction,
-      codigo_estudiante: infraction.id_estudiante // Asumiendo que id_estudiante puede servir como código
-    }));
+    const transformedInfractions = infractions.map((infraction) => {
+      const studentId = `${infraction.id_estudiante}-${infraction.codigo_estudiante}`;
+      console.log(
+        `Transformando infracción: ${infraction.hash} para estudiante ID: ${studentId}`
+      );
 
-    const transformedInfractions = infractionsWithCode.map(transformInfraction);
+      return transformInfraction(infraction, studentId);
+    });
 
     return NextResponse.json(transformedInfractions);
   } catch (error) {

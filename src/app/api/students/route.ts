@@ -38,7 +38,7 @@ export async function GET(request: Request) {
                 },
               },
             },
-            orderBy: { fecha: 'desc' }
+            orderBy: { fecha: "desc" },
           },
         },
       });
@@ -55,16 +55,36 @@ export async function GET(request: Request) {
 
       // Transform infractions and follow-ups
       const transformedInfractions = student.faltas.map(transformInfraction);
-      const followUps = student.faltas.flatMap((falta) =>
-        falta.casos.flatMap((caso) => caso.seguimientos)
-      );
 
-      const transformedFollowUps = followUps.map(transformFollowUp);
+      // Mapeo para vincular correctamente cada seguimiento con su falta correspondiente
+      const followUps = [];
+      student.faltas.forEach((falta) => {
+        falta.casos.forEach((caso) => {
+          caso.seguimientos.forEach((seguimiento) => {
+            followUps.push({
+              id: `FUP${seguimiento.id_seguimiento}`,
+              infractionId: falta.hash, // Utilizamos el hash de la falta, no el id_caso
+              followUpNumber: seguimiento.tipo_seguimiento?.includes(
+                "Seguimiento"
+              )
+                ? parseInt(seguimiento.tipo_seguimiento.split(" ")[1], 10) ||
+                  seguimiento.id_seguimiento
+                : seguimiento.id_seguimiento,
+              date: seguimiento.fecha_seguimiento
+                ? seguimiento.fecha_seguimiento.toISOString().split("T")[0]
+                : "",
+              type: seguimiento.tipo_seguimiento ?? "",
+              details: seguimiento.detalles ?? "",
+              author: seguimiento.autor ?? "",
+            });
+          });
+        });
+      });
 
       return NextResponse.json({
         student: transformedStudent,
         infractions: transformedInfractions,
-        followUps: transformedFollowUps,
+        followUps: followUps,
       });
     } else {
       // Fetch all students with complete data
@@ -76,7 +96,7 @@ export async function GET(request: Request) {
           grado: true,
           nivel: true,
         },
-        orderBy: { nombre: 'asc' }
+        orderBy: { nombre: "asc" },
       });
 
       // Transform students with their infractions

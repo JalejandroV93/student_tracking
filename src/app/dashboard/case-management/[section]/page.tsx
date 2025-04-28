@@ -1,12 +1,11 @@
 // src/app/dashboard/case-management/[section]/page.tsx
 "use client";
-//Pendiente Refactorizar
+
 import { CaseManagementList } from "@/components/case-management/CaseManagementList";
-import useDashboardStore from "@/lib/store";
+import { useCaseManagementStore } from "@/stores/case-management.store";
 import { SectionSelector } from "@/components/shared/SectionSelector";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { NIVELES } from "@/lib/constantes";
 import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 
@@ -14,31 +13,18 @@ export default function CaseManagementSectionPage() {
   const router = useRouter();
   const params = useParams();
   const { section } = params;
-  const { students, infractions, followUps, fetchData, loading, error } =
-    useDashboardStore();
+  const { fetchCaseData, getCases, loading, error } = useCaseManagementStore();
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchCaseData();
+  }, [fetchCaseData]);
 
   const handleSelectStudent = (studentId: string) => {
     router.push(`/dashboard/students/${studentId}`);
   };
 
-  const filteredStudents = section
-    ? students.filter((student) => {
-        const sectionMap: Record<string, readonly string[]> = {
-          preschool: NIVELES["Preschool"],
-          elementary: NIVELES["Elementary"],
-          middle: NIVELES["Middle School"],
-          high: NIVELES["High School"],
-        };
-
-        return sectionMap[section as keyof typeof sectionMap]?.includes(
-          student.grado?.toLowerCase() || ""
-        );
-      })
-    : students;
+  // Conseguir los casos filtrados por sección usando el método del store
+  const cases = getCases(section as string);
 
   const getSectionTitle = (section: string | null): string => {
     const titles: Record<string, string> = {
@@ -87,9 +73,7 @@ export default function CaseManagementSectionPage() {
         </div>
 
         <CaseManagementList
-          students={filteredStudents}
-          infractions={infractions}
-          followUps={followUps}
+          cases={cases}
           onSelectStudent={handleSelectStudent}
         />
       </div>

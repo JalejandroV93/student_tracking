@@ -8,6 +8,7 @@ import { getSectionCategory } from "@/lib/constantes";
 
 interface StudentWithAlert extends Student {
   alertStatus: AlertStatus | null;
+  typeICount?: number;
   typeIICount: number;
 }
 

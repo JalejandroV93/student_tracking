@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getSectionCategory, AlertStatus } from "@/lib/constantes";
-import { getStudentTypeICount } from "@/lib/utils";
+import {
+  getStudentTypeICount,
+  transformInfraction,
+  transformStudent,
+} from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -29,7 +33,7 @@ export async function GET(request: Request) {
     }, {} as Record<string, { primary: number; secondary: number }>);
 
     // Fetch all students and infractions
-    const [students, infractions] = await Promise.all([
+    const [rawStudents, rawInfractions] = await Promise.all([
       prisma.estudiantes.findMany({
         select: {
           id: true,
@@ -41,11 +45,24 @@ export async function GET(request: Request) {
         orderBy: { nombre: "asc" },
       }),
       prisma.faltas.findMany({
+        where: {
+          // Solo queremos faltas no atendidas para las alertas
+          attended: false,
+        },
         include: {
           casos: true,
         },
       }),
     ]);
+
+    // Transformar estudiantes primero para tener IDs correctos
+    const students = rawStudents.map(transformStudent);
+
+    // Transformar las faltas al formato de Infraction con IDs de estudiantes correctos
+    const infractions = rawInfractions.map((infraction) => {
+      const studentId = `${infraction.id_estudiante}-${infraction.codigo_estudiante}`;
+      return transformInfraction(infraction, studentId);
+    });
 
     // Filter students by section if provided
     const sectionStudents = section
@@ -66,9 +83,12 @@ export async function GET(request: Request) {
     // Process alerts for each student
     const studentsWithAlerts = sectionStudents
       .map((student) => {
-        const typeICount = getStudentTypeICount(student.id, infractions);
+        const typeICount = getStudentTypeICount(
+          student.id, // Usar el ID formato correcto
+          infractions
+        );
         const typeIICount = infractions.filter(
-          (inf) => inf.estudianteId === student.id && inf.tipo === "Tipo II"
+          (inf) => inf.studentId === student.id && inf.type === "Tipo II"
         ).length;
 
         const sectionCategory = getSectionCategory(student.grado);
@@ -88,6 +108,7 @@ export async function GET(request: Request) {
         return {
           ...student,
           alertStatus,
+          typeICount,
           typeIICount,
         };
       })

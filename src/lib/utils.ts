@@ -47,11 +47,11 @@ export function getStudentTypeICount(
   infractions: Infraction[] // Expect the transformed Infraction type
 ): number {
   const filtered = infractions.filter(
-  (inf) =>
-    inf.studentId === studentId && inf.type === "Tipo I" && !inf.attended
-);
-//console.log(` -> Found ${filtered.length} unattended Type I infractions:`, filtered);
-return filtered.length;
+    (inf) =>
+      inf.studentId === studentId && inf.type === "Tipo I" && !inf.attended
+  );
+  //console.log(` -> Found ${filtered.length} unattended Type I infractions:`, filtered);
+  return filtered.length;
 }
 
 export function getStudentTypeIICount(
@@ -81,11 +81,12 @@ export function transformStudent(
 }
 
 export function transformInfraction(
-  infraction: Prisma.FaltasGetPayload<object>
+  infraction: Prisma.FaltasGetPayload<object>,
+  customStudentId?: string
 ): Infraction {
   return {
     id: infraction.hash,
-    studentId: String(infraction.id_estudiante),
+    studentId: customStudentId || String(infraction.id_estudiante),
     type: infraction.tipo_falta as "Tipo I" | "Tipo II" | "Tipo III",
     number: infraction.numero_falta?.toString() ?? "",
     date: infraction.fecha?.toISOString().split("T")[0] ?? "",
@@ -112,4 +113,3 @@ export function transformFollowUp(
     author: followUp.autor ?? "",
   };
 }
-
