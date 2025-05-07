@@ -14,14 +14,15 @@ datasource db {
 }
 
 model Estudiantes {
-  id     Int      @id @unique
-  codigo Int      @unique
-  nombre String?
-  grado  String?
-  nivel  String?
-  faltas Faltas[]
+  id         Int      @id @unique
+  codigo     Int      @unique
+  nombre     String?
+  grado      String?
+  nivel      String?
+  faltas     Faltas[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
   @@index([codigo], name: "idx_codigo")
   @@index([grado], name: "idx_grado")
   @@index([nivel], name: "idx_nivel_estudiante")
@@ -41,12 +42,11 @@ model Faltas {
   trimestre            String?
   nivel                String?
   attended             Boolean     @default(false)
-  attended_at         DateTime?
+  attended_at          DateTime?
   casos                Casos[]
   estudiante           Estudiantes @relation(fields: [id_estudiante], references: [id])
-  created_at           DateTime   @default(now())
-  updated_at           DateTime   @updatedAt
-
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @updatedAt
 
   @@index([id_estudiante], name: "idx_estudiante")
   @@index([codigo_estudiante], name: "idx_codigo_estudiante")
@@ -90,22 +90,21 @@ model AlertSettings {
   updated_at          DateTime @updatedAt
 }
 
-
 model User {
-  id                  String          @id @default(uuid())
-  username            String          @unique // Nombre recibido de Phidias
-  document            String          @unique // Email o documento del JWT
+  id                  String            @id @default(uuid())
+  username            String            @unique // Nombre recibido de Phidias
+  document            String            @unique // Email o documento del JWT
   fullName            String // Nombre completo
   email               String? // Email 
   phonenumber         String?
   role                Role // ADMIN o TEACHER
   password            String // Derivado del documento del JWT
   lastLogin           DateTime? // Última fecha de inicio de sesión
-  isBlocked           Boolean         @default(false) // Para bloquear usuarios
-  failedLoginAttempts Int             @default(0) // Intentos fallidos de inicio de sesión
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-
+  isBlocked           Boolean           @default(false) // Para bloquear usuarios
+  failedLoginAttempts Int               @default(0) // Intentos fallidos de inicio de sesión
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  AreaPermissions     AreaPermissions[]
 
   @@index([username])
   @@index([document])
@@ -122,4 +121,24 @@ enum Role {
   HIGH_SCHOOL_COORDINATOR
   PSYCHOLOGY
   STUDENT
+}
+
+model AreaPermissions {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  areaId    Int
+  canView   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  area Area @relation(fields: [areaId], references: [id])
+}
+
+model Area {
+  id              Int               @id @default(autoincrement())
+  name            String
+  code            String
+  createdAt       DateTime          @default(now())
+  AreaPermissions AreaPermissions[]
 }

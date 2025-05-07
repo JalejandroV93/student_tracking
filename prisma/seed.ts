@@ -1,45 +1,71 @@
 // prisma/seed.ts
-import { Prisma, PrismaClient, Role } from "@prisma/client";
-
-import * as bcrypt from "bcrypt";
+import { PrismaClient, Role } from "@prisma/client";
+import { hashPassword } from "../src/lib/auth";
 
 const prisma = new PrismaClient();
 
-async function main() {
-    console.log(`Start seeding ...`);
+async function seed() {
+  console.log("🌱 Iniciando siembra de datos...");
 
-    try {
-        // // --- Admin User ---
-        const adminPassword = "admin123"; // Esto debería cambiarse después del primer inicio de sesión
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  // Crear las áreas por defecto
+  const areas = [
+    { name: "Preescolar", code: "PRESCHOOL" },
+    { name: "Primaria", code: "ELEMENTARY" },
+    { name: "Secundaria", code: "MIDDLE" },
+    { name: "Bachillerato", code: "HIGH" },
+  ];
 
-        const existingAdmin = await prisma.user.findUnique({
-            where: { username: "admin" },
-        });
+  console.log("Creando áreas...");
+  for (const area of areas) {
+    const existingArea = await prisma.$queryRaw`
+      SELECT * FROM "Area" WHERE code = ${area.code}
+    `;
 
-        if (existingAdmin) {
-            console.warn("Admin user already exists. Skipping.");
-        } else {
-            const admin = await prisma.user.create({
-                data: {
-                    username: "admin",
-                    document: "admin",
-                    fullName: "Administrador del Sistema",
-                    email: "admin@sistema.com",
-                    role: Role.ADMIN,
-                    password: hashedPassword,
-                },
-            });
-            console.log(`Created admin user with id: ${admin.id}`);
-        }
-
-        console.log(`Seeding finished.`);
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
-    } finally {
-        await prisma.$disconnect();
+    if (!Array.isArray(existingArea) || existingArea.length === 0) {
+      await prisma.$executeRaw`
+        INSERT INTO "Area" (name, code, "createdAt") 
+        VALUES (${area.name}, ${area.code}, NOW())
+      `;
+      console.log(`✅ Área creada: ${area.name}`);
+    } else {
+      console.log(`⏩ Área ya existe: ${area.name}`);
     }
+  }
+
+  // Crear usuario administrador por defecto si no existe
+  const adminUsername = "admin";
+  const existingAdmin = await prisma.user.findUnique({
+    where: { username: adminUsername },
+  });
+
+  if (!existingAdmin) {
+    console.log("Creando usuario administrador...");
+    const hashedPassword = await hashPassword("admin123");
+
+    await prisma.user.create({
+      data: {
+        username: adminUsername,
+        fullName: "Administrador",
+        document: adminUsername,
+        email: "admin@example.com",
+        role: Role.ADMIN,
+        password: hashedPassword,
+      },
+    });
+
+    console.log("✅ Usuario administrador creado");
+  } else {
+    console.log("⏩ Usuario administrador ya existe");
+  }
+
+  console.log("✅ Siembra de datos completada");
 }
 
-main();
+seed()
+  .catch((error) => {
+    console.error("❌ Error en la siembra de datos:", error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

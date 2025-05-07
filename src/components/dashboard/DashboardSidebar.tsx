@@ -19,74 +19,124 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarTrigger,
-} from "@/components/ui/sidebar"; // Adjust path
-import { useState } from "react";
+} from "@/components/ui/sidebar";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from 'next/navigation'; // Import usePathname
+import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Role } from "@prisma/client";
 
-// No props needed anymore
-// interface DashboardSidebarProps {
-//   activePage: string;
-//   setActivePage: (page: string) => void;
-// }
-
+// Secciones académicas
 const sections = [
-  { id: "preschool", name: "Preescolar" },
-  { id: "elementary", name: "Primaria" },
-  { id: "middle", name: "Secundaria" },
-  { id: "high", name: "Bachillerato" }, // Corrected name
+  { id: "preschool", name: "Preescolar", areaCode: "PRESCHOOL" },
+  { id: "elementary", name: "Primaria", areaCode: "ELEMENTARY" },
+  { id: "middle", name: "Secundaria", areaCode: "MIDDLE" },
+  { id: "high", name: "Bachillerato", areaCode: "HIGH" },
 ];
 
-export function DashboardSidebar() {
-  const pathname = usePathname(); // Get current path
+// Tipo para usuario con permisos
+type UserWithPermissions = {
+  id: string;
+  username: string;
+  fullName: string;
+  role: Role;
+  permissions: { [areaCode: string]: boolean };
+};
 
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    alerts: pathname.startsWith('/dashboard/alerts'), // Initialize based on path
-    students: pathname.startsWith('/dashboard/students'), // Changed from 'history'
-    cases: pathname.startsWith('/dashboard/case-management'),
-    // reports: pathname.startsWith('/dashboard/reports'), // If reports section is added
+export function DashboardSidebar() {
+  const pathname = usePathname();
+  const [expandedMenus, setExpandedMenus] = useState({
+    alerts: false,
+    students: false,
+    cases: false,
   });
 
+  // Obtener usuario actual y sus permisos
+  const { data: currentUser, isLoading: userLoading } =
+    useQuery<UserWithPermissions>({
+      queryKey: ["currentUserWithPermissions"],
+      queryFn: async () => {
+        const response = await fetch("/api/v1/auth/me?includePermissions=true");
+        if (!response.ok) throw new Error("Error al obtener usuario");
+        return response.json();
+      },
+    });
+
+  // Expandir el menú activo automáticamente
+  useEffect(() => {
+    if (pathname.startsWith("/dashboard/alerts")) {
+      setExpandedMenus((prev) => ({ ...prev, alerts: true }));
+    } else if (pathname.startsWith("/dashboard/students")) {
+      setExpandedMenus((prev) => ({ ...prev, students: true }));
+    } else if (pathname.startsWith("/dashboard/case-management")) {
+      setExpandedMenus((prev) => ({ ...prev, cases: true }));
+    }
+  }, [pathname]);
+
+  // Funciones útiles
   const toggleMenu = (menu: string) => {
     setExpandedMenus((prev) => ({
       ...prev,
-      [menu]: !prev[menu],
+      [menu]: !prev[menu as keyof typeof prev],
     }));
   };
 
-  // Helper to determine if a link is active
-  const isActive = (href: string) => pathname === href;
-  // Helper to determine if a submenu group is active
-  const isSubMenuActive = (basePath: string) => pathname.startsWith(basePath);
+  const isActive = (path: string) => {
+    return pathname === path;
+  };
 
+  const isSubMenuActive = (path: string) => {
+    return pathname.startsWith(path);
+  };
+
+  // Función para verificar permisos de área
+  const hasPermission = (areaCode: string): boolean => {
+    // Administrador siempre tiene acceso
+    if (currentUser?.role === "ADMIN") return true;
+
+    // Verificar permisos específicos
+    return currentUser?.permissions?.[areaCode] || false;
+  };
+
+  // Filtrar secciones según permisos
+  const filteredSections = sections.filter((section) =>
+    hasPermission(section.areaCode)
+  );
 
   return (
     <Sidebar>
-      <SidebarHeader className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-2">
-          <FileText className="h-6 w-6" />
-          <span className="text-lg font-semibold">Sistema Faltas</span> {/* Use semibold */}
+      <SidebarHeader>
+        <div className="p-4">
+          <Link href="/dashboard">
+            <h1 className="text-xl font-semibold">Student Tracking</h1>
+          </Link>
         </div>
-        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {/* Overview Link */}
+          {/* Dashboard Link */}
           <SidebarMenuItem>
-             <Link href="/dashboard" passHref legacyBehavior>
-              <SidebarMenuButton variant={isActive('/dashboard') ? 'primary' : 'default'}>
+            <Link href="/dashboard" passHref legacyBehavior>
+              <SidebarMenuButton
+                variant={isActive("/dashboard") ? "primary" : "default"}
+              >
                 <Home className="h-5 w-5" />
                 <span>Resumen</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
 
-          {/* Alertas Menu */}
+          {/* Alerts Menu */}
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => toggleMenu("alerts")} variant={isSubMenuActive('/dashboard/alerts') ? 'secondary' : 'default'}>
+            <SidebarMenuButton
+              onClick={() => toggleMenu("alerts")}
+              variant={
+                isSubMenuActive("/dashboard/alerts") ? "secondary" : "default"
+              }
+            >
               <AlertTriangle className="h-5 w-5" />
               <span>Alertas</span>
               <ChevronDown
@@ -97,21 +147,34 @@ export function DashboardSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
 
-          {/* Use Collapsible or simply conditional rendering */}
           {expandedMenus.alerts && (
             <SidebarMenuSub>
               <SidebarMenuSubItem>
                 <Link href="/dashboard/alerts" passHref legacyBehavior>
-                  <SidebarMenuSubButton variant={isActive('/dashboard/alerts') ? 'secondary' : 'default'}>
+                  <SidebarMenuSubButton
+                    variant={
+                      isActive("/dashboard/alerts") ? "secondary" : "default"
+                    }
+                  >
                     Todas las secciones
                   </SidebarMenuSubButton>
                 </Link>
               </SidebarMenuSubItem>
-              {sections.map((section) => (
+              {filteredSections.map((section) => (
                 <SidebarMenuSubItem key={section.id}>
-                  <Link href={`/dashboard/alerts/${section.id}`} passHref legacyBehavior>
-                    <SidebarMenuSubButton variant={isActive(`/dashboard/alerts/${section.id}`) ? 'secondary' : 'default'}>
-                       {section.name}
+                  <Link
+                    href={`/dashboard/alerts/${section.id}`}
+                    passHref
+                    legacyBehavior
+                  >
+                    <SidebarMenuSubButton
+                      variant={
+                        isActive(`/dashboard/alerts/${section.id}`)
+                          ? "secondary"
+                          : "default"
+                      }
+                    >
+                      {section.name}
                     </SidebarMenuSubButton>
                   </Link>
                 </SidebarMenuSubItem>
@@ -120,8 +183,13 @@ export function DashboardSidebar() {
           )}
 
           {/* Estudiantes Menu */}
-           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => toggleMenu("students")} variant={isSubMenuActive('/dashboard/students') ? 'secondary' : 'default'}>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => toggleMenu("students")}
+              variant={
+                isSubMenuActive("/dashboard/students") ? "secondary" : "default"
+              }
+            >
               <Users className="h-5 w-5" />
               <span>Estudiantes</span>
               <ChevronDown
@@ -133,23 +201,50 @@ export function DashboardSidebar() {
           </SidebarMenuItem>
 
           {expandedMenus.students && (
-             <SidebarMenuSub>
-               <SidebarMenuSubItem>
-                {/* Link to the main student search/list page */}
-                 <Link href="/dashboard/students" passHref legacyBehavior>
-                  <SidebarMenuSubButton variant={isActive('/dashboard/students') ? 'secondary' : 'default'}>
-                    Buscar / Historial
+            <SidebarMenuSub>
+              <SidebarMenuSubItem>
+                <Link href="/dashboard/students" passHref legacyBehavior>
+                  <SidebarMenuSubButton
+                    variant={
+                      isActive("/dashboard/students") ? "secondary" : "default"
+                    }
+                  >
+                    Todos los estudiantes
                   </SidebarMenuSubButton>
                 </Link>
               </SidebarMenuSubItem>
-              {/* Sub-items for sections might not be needed here if search covers all */}
+              {filteredSections.map((section) => (
+                <SidebarMenuSubItem key={section.id}>
+                  <Link
+                    href={`/dashboard/students/section/${section.id}`}
+                    passHref
+                    legacyBehavior
+                  >
+                    <SidebarMenuSubButton
+                      variant={
+                        isActive(`/dashboard/students/section/${section.id}`)
+                          ? "secondary"
+                          : "default"
+                      }
+                    >
+                      {section.name}
+                    </SidebarMenuSubButton>
+                  </Link>
+                </SidebarMenuSubItem>
+              ))}
             </SidebarMenuSub>
           )}
 
-
-          {/* Case Management Menu */}
+          {/* Gestión de Casos Menu */}
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => toggleMenu("cases")} variant={isSubMenuActive('/dashboard/case-management') ? 'secondary' : 'default'}>
+            <SidebarMenuButton
+              onClick={() => toggleMenu("cases")}
+              variant={
+                isSubMenuActive("/dashboard/case-management")
+                  ? "secondary"
+                  : "default"
+              }
+            >
               <CalendarDays className="h-5 w-5" />
               <span>Gestión de Casos</span>
               <ChevronDown
@@ -164,15 +259,31 @@ export function DashboardSidebar() {
             <SidebarMenuSub>
               <SidebarMenuSubItem>
                 <Link href="/dashboard/case-management" passHref legacyBehavior>
-                  <SidebarMenuSubButton variant={isActive('/dashboard/case-management') ? 'secondary' : 'default'}>
+                  <SidebarMenuSubButton
+                    variant={
+                      isActive("/dashboard/case-management")
+                        ? "secondary"
+                        : "default"
+                    }
+                  >
                     Todas las secciones
                   </SidebarMenuSubButton>
                 </Link>
               </SidebarMenuSubItem>
-              {sections.map((section) => (
+              {filteredSections.map((section) => (
                 <SidebarMenuSubItem key={section.id}>
-                  <Link href={`/dashboard/case-management/${section.id}`} passHref legacyBehavior>
-                    <SidebarMenuSubButton variant={isActive(`/dashboard/case-management/${section.id}`) ? 'secondary' : 'default'}>
+                  <Link
+                    href={`/dashboard/case-management/${section.id}`}
+                    passHref
+                    legacyBehavior
+                  >
+                    <SidebarMenuSubButton
+                      variant={
+                        isActive(`/dashboard/case-management/${section.id}`)
+                          ? "secondary"
+                          : "default"
+                      }
+                    >
                       {section.name}
                     </SidebarMenuSubButton>
                   </Link>
@@ -181,15 +292,21 @@ export function DashboardSidebar() {
             </SidebarMenuSub>
           )}
 
-            {/* Settings Link */}
-          <SidebarMenuItem>
-            <Link href="/dashboard/settings" passHref legacyBehavior>
-              <SidebarMenuButton variant={isActive('/dashboard/settings') ? 'primary' : 'default'}>
-                <Cog className="h-5 w-5" />
-                <span>Configuración</span>
-              </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
+          {/* Settings Link - solo visible para administradores */}
+          {currentUser?.role === "ADMIN" && (
+            <SidebarMenuItem>
+              <Link href="/dashboard/settings" passHref legacyBehavior>
+                <SidebarMenuButton
+                  variant={
+                    isActive("/dashboard/settings") ? "primary" : "default"
+                  }
+                >
+                  <Cog className="h-5 w-5" />
+                  <span>Configuración</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
