@@ -65,7 +65,7 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
         queryParams.append("section", options.section);
       }
 
-      const response = await fetch(`/api/alerts?${queryParams.toString()}`);
+      const response = await fetch(`/api/v1/alerts?${queryParams.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch alerts data");

@@ -22,12 +22,12 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // --- Fetching Functions ---
 
 export const fetchStudentsList = async (): Promise<Student[]> => {
-  const response = await fetch("/api/students");
+  const response = await fetch("/api/v1/students");
   return handleResponse<Student[]>(response);
 };
 
 export const fetchStudentCount = async (): Promise<number> => {
-  const response = await fetch("/api/students?countOnly=true");
+  const response = await fetch("/api/v1/students?countOnly=true");
   const data = await handleResponse<{ count: number }>(response);
   return data.count;
 };
@@ -40,7 +40,7 @@ export const fetchStudentDetails = async (
   followUps: FollowUp[];
 }> => {
   if (!studentId) throw new Error("Student ID is required");
-  const response = await fetch(`/api/students?studentId=${studentId}`);
+  const response = await fetch(`/api/v1/students?studentId=${studentId}`);
   // The API returns an object { student, infractions, followUps }
   return handleResponse<{
     student: Student;
@@ -50,12 +50,12 @@ export const fetchStudentDetails = async (
 };
 
 export const fetchInfractions = async (): Promise<Infraction[]> => {
-  const response = await fetch("/api/infractions");
+  const response = await fetch("/api/v1/infractions");
   return handleResponse<Infraction[]>(response);
 };
 
 export const fetchFollowUps = async (): Promise<FollowUp[]> => {
-  const response = await fetch("/api/followups");
+  const response = await fetch("/api/v1/followups");
   return handleResponse<FollowUp[]>(response);
 };
 
@@ -64,7 +64,7 @@ export const fetchSettings = async (): Promise<{
   configured: boolean;
   settings: AlertSettings | null;
 }> => {
-  const response = await fetch("/api/alert-settings");
+  const response = await fetch("/api/v1/alert-settings");
   const data = await handleResponse<{
     configured: boolean;
     settings?: AlertSettings;
@@ -78,7 +78,7 @@ export const fetchSettings = async (): Promise<{
 export const updateAlertSettings = async (
   newSettings: AlertSettings
 ): Promise<AlertSettings> => {
-  const response = await fetch("/api/alert-settings", {
+  const response = await fetch("/api/v1/alert-settings", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(newSettings),
@@ -90,7 +90,7 @@ export const updateAlertSettings = async (
 export const addFollowUp = async (
   followUpData: Omit<FollowUp, "id">
 ): Promise<FollowUp> => {
-  const response = await fetch("/api/followups", {
+  const response = await fetch("/api/v1/followups", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(followUpData),
@@ -106,7 +106,7 @@ export const toggleInfractionAttended = async ({
   infractionId: string;
   attended: boolean;
 }): Promise<{ hash: string; attended: boolean }> => {
-  const response = await fetch(`/api/infractions/${infractionId}`, {
+  const response = await fetch(`/api/v1/infractions/${infractionId}`, {
     // Corrected API route based on file structure
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

@@ -70,7 +70,7 @@ export function getSectionCategory(grado: string | undefined): string {
 
   // Primero intentamos una coincidencia exacta
   for (const category in NIVELES) {
-    if (NIVELES[category as keyof typeof NIVELES].includes(gradoLower)) {
+    if (NIVELES[category as keyof typeof NIVELES].includes(gradoLower as any)) {
       return category;
     }
   }

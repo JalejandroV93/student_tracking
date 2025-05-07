@@ -104,7 +104,7 @@ export const useStudentsStore = create<StudentsState>((set, get) => ({
 
     try {
       // console.log(`StudentsStore (List): Fetching data (Initial: ${isInitialFetch}, Force: ${options.force})`);
-      const response = await fetch("/api/students");
+      const response = await fetch("/api/v1/students");
       if (!response.ok) {
         throw new Error(`Failed to fetch students: ${response.statusText}`);
       }
@@ -217,7 +217,7 @@ export const useStudentsStore = create<StudentsState>((set, get) => ({
 
     try {
       // console.log(`StudentsStore (Detail ${studentId}): Fetching data (Initial: ${isInitialFetchForThisStudent}, Force: ${options.force})`);
-      const response = await fetch(`/api/students?studentId=${studentId}`);
+      const response = await fetch(`/api/v1/students?studentId=${studentId}`);
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Estudiante no encontrado (ID: ${studentId})`);
@@ -284,7 +284,7 @@ export const useStudentsStore = create<StudentsState>((set, get) => ({
   addFollowUp: async (followUpData) => {
     set({ detailLoading: true }); // Keep indicating activity during add
     try {
-      const response = await fetch("/api/followups", {
+      const response = await fetch("/api/v1/followups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(followUpData),
@@ -348,7 +348,7 @@ export const useStudentsStore = create<StudentsState>((set, get) => ({
     // set({ detailLoading: true }); // Or use a more granular flag
 
     try {
-      const response = await fetch(`/api/infractions/${infractionId}/attend`, {
+      const response = await fetch(`/api/v1/infractions/${infractionId}/attend`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ attended: newState }),

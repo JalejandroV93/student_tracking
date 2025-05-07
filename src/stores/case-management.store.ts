@@ -50,9 +50,9 @@ export const useCaseManagementStore = create<CaseManagementState>(
       try {
         // Fetch students, infractions, and follow-ups
         const [studentsRes, infractionsRes, followUpsRes] = await Promise.all([
-          fetch("/api/students"),
-          fetch("/api/infractions"),
-          fetch("/api/followups"),
+          fetch("/api/v1/students"),
+          fetch("/api/v1/infractions"),
+          fetch("/api/v1/followups"),
         ]);
 
         if (!studentsRes.ok || !infractionsRes.ok || !followUpsRes.ok) {

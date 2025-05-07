@@ -89,3 +89,37 @@ model AlertSettings {
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 }
+
+
+model User {
+  id                  String          @id @default(uuid())
+  username            String          @unique // Nombre recibido de Phidias
+  document            String          @unique // Email o documento del JWT
+  fullName            String // Nombre completo
+  email               String? // Email 
+  phonenumber         String?
+  role                Role // ADMIN o TEACHER
+  password            String // Derivado del documento del JWT
+  lastLogin           DateTime? // Última fecha de inicio de sesión
+  isBlocked           Boolean         @default(false) // Para bloquear usuarios
+  failedLoginAttempts Int             @default(0) // Intentos fallidos de inicio de sesión
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+
+  @@index([username])
+  @@index([document])
+  @@index([role]) // Add index for role-based filtering
+  @@index([isBlocked]) // Add index for filtering blocked users
+}
+
+enum Role {
+  ADMIN
+  USER
+  ELEMENTARY_COORDINATOR
+  PRESCHOOL_COORDINATOR
+  MIDDLE_SCHOOL_COORDINATOR
+  HIGH_SCHOOL_COORDINATOR
+  PSYCHOLOGY
+  STUDENT
+}

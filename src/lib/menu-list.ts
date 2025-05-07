@@ -2,7 +2,7 @@ import {
   AlertTriangle,
   Users,
   Settings,
-  FileText,
+  
   LayoutGrid,
   CalendarDays,
   LucideIcon,
