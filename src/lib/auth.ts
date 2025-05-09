@@ -1,13 +1,13 @@
 // Use jose-based functions
-import { PhidiasPayload, UserPayload } from '@/types/user';
-import { Role } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { PhidiasPayload, UserPayload } from "@/types/user";
+import { Role } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 
 // src/lib/auth.ts (Server-Side Authentication Logic)
 
-import { prisma } from './prisma';
-import { verifyToken } from './tokens';
+import { prisma } from "./prisma";
+import { verifyToken } from "./tokens";
 
 const FAILED_ATTEMPTS_THRESHOLD = 5;
 const SALT_ROUNDS = 10;
@@ -17,7 +17,10 @@ export const hashPassword = async (password: string) => {
 };
 
 // Validates credentials for traditional login.
-export const validateCredentials = async (username: string, password: string): Promise<UserPayload> => {
+export const validateCredentials = async (
+  username: string,
+  password: string
+): Promise<UserPayload> => {
   if (!username || !password) {
     throw new Error("Credenciales incompletas");
   }
@@ -32,7 +35,7 @@ export const validateCredentials = async (username: string, password: string): P
       isBlocked: true,
       fullName: true,
       document: true,
-      failedLoginAttempts: true
+      failedLoginAttempts: true,
     },
   });
 
@@ -53,7 +56,9 @@ export const validateCredentials = async (username: string, password: string): P
       where: { id: user.id },
       data: {
         failedLoginAttempts: { increment: 1 },
-        isBlocked: { set: user.failedLoginAttempts + 1 >= FAILED_ATTEMPTS_THRESHOLD }, // Block if threshold reached.
+        isBlocked: {
+          set: user.failedLoginAttempts + 1 >= FAILED_ATTEMPTS_THRESHOLD,
+        }, // Block if threshold reached.
       },
     });
     throw new Error("Credenciales inválidas");
@@ -70,7 +75,7 @@ export const validateCredentials = async (username: string, password: string): P
     id: user.id,
     username: user.username,
     role: user.role,
-    fullName: user.fullName,  // Assuming 'nombre' is the full name
+    fullName: user.fullName, // Assuming 'nombre' is the full name
     document: user.document,
   };
 
@@ -79,7 +84,7 @@ export const validateCredentials = async (username: string, password: string): P
 
 // Retrieves the currently authenticated user from the cookie (server-side).
 export const getCurrentUser = async (): Promise<UserPayload | null> => {
-  const token = (await cookies()).get('auth_token')?.value;
+  const token = (await cookies()).get("auth_token")?.value;
   if (!token) {
     return null;
   }
@@ -92,77 +97,76 @@ export const getCurrentUser = async (): Promise<UserPayload | null> => {
   }
 };
 
-
-
-
 // Handles SSO login/registration via JWT.  This is a server-side function.
-export const handleSSOLogin = async (jwtToken: string): Promise<UserPayload> => {
-    let decodedToken: PhidiasPayload;
-    try {
-        decodedToken = await verifyToken<PhidiasPayload>(jwtToken);
+export const handleSSOLogin = async (
+  jwtToken: string
+): Promise<UserPayload> => {
+  let decodedToken: PhidiasPayload;
+  try {
+    decodedToken = await verifyToken<PhidiasPayload>(jwtToken);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-        throw new Error("Token JWT inválido");
-    }
+  } catch (error) {
+    throw new Error("Token JWT inválido");
+  }
 
-    if (!decodedToken || !decodedToken.email) {
-      throw new Error("Token JWT inválido o incompleto.");
-    }
+  if (!decodedToken || !decodedToken.email) {
+    throw new Error("Token JWT inválido o incompleto.");
+  }
 
+  // Check if the user already exists.
+  let user = await prisma.user.findUnique({
+    where: { document: String(decodedToken.email) },
+    select: {
+      // Select only what you need
+      id: true,
+      username: true,
+      role: true,
+      fullName: true,
+      document: true,
+      isBlocked: true,
+    },
+  });
 
-    // Check if the user already exists.
-    let user = await prisma.user.findUnique({
-        where: { document: String(decodedToken.email) },
-        select: {  // Select only what you need
-            id: true,
-            username: true,
-            role: true,
-            fullName: true,
-            document: true,
-            isBlocked: true
-        }
+  if (!user) {
+    // Create the user if they don't exist.  Assume TEACHER role for new SSO users.
+    // You might need more sophisticated role logic here.
+    user = await prisma.user.create({
+      data: {
+        username: decodedToken.name, // From JWT
+        document: String(decodedToken.email), // Unique identifier from JWT
+        fullName: String(decodedToken.name), // Use nombre, fallback to username
+        role: "USER", // Default role for new SSO users
+        password: await hashPassword(String(decodedToken.email)), // Use document as a temporary password
+        lastLogin: new Date(),
+        isBlocked: false,
+      },
+      select: {
+        // Same select as above
+        id: true,
+        username: true,
+        role: true,
+        fullName: true,
+        document: true,
+        isBlocked: true,
+      },
     });
+  }
 
-    if (!user) {
-        // Create the user if they don't exist.  Assume TEACHER role for new SSO users.
-        // You might need more sophisticated role logic here.
-        user = await prisma.user.create({
-            data: {
-                username: decodedToken.name,   // From JWT
-                document: String(decodedToken.email), // Unique identifier from JWT
-                fullName: String(decodedToken.name),  // Use nombre, fallback to username
-                role: 'USER',       // Default role for new SSO users
-                password: await hashPassword(String(decodedToken.email)),  // Use document as a temporary password
-                lastLogin: new Date(),
-                isBlocked: false
-            },
-            select: { // Same select as above
-                id: true,
-                username: true,
-                role: true,
-                fullName: true,
-                document: true,
-                isBlocked: true
-            }
-        });
-    }
+  if (user.isBlocked) {
+    throw new Error("Cuenta bloqueada temporalmente");
+  }
+  // Update lastLogin on every successful SSO login.
+  await prisma.user.update({
+    where: { document: String(decodedToken.email) },
+    data: { lastLogin: new Date() },
+  });
 
-     if (user.isBlocked) {
-        throw new Error("Cuenta bloqueada temporalmente");
-    }
-    // Update lastLogin on every successful SSO login.
-    await prisma.user.update({
-      where: { document: String(decodedToken.email) },
-      data: { lastLogin: new Date() },
-    });
-
-
-    // Return a consistent user payload.
-    return {
-      id: user.id,
-      username: user.username,
-      role: user.role as Role,
-      fullName: user.fullName,
-      document: user.document,
-    };
+  // Return a consistent user payload.
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role as Role,
+    fullName: user.fullName,
+    document: user.document,
+  };
 };

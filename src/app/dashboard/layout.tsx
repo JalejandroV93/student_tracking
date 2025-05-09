@@ -28,7 +28,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               (!getOpenState() ? "lg:ml-[90px]" : "lg:ml-72")
           )}
         >
-          {children}
+          
+            {children}
+      
         </main>
         <footer
           className={cn(

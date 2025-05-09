@@ -1,13 +1,6 @@
-import {
-  AlertTriangle,
-  Users,
-  Settings,
-  LayoutGrid,
-  CalendarDays,
-  LucideIcon,
-} from "lucide-react";
-import { Role } from "@prisma/client";
 import { UserPayload } from "@/types/user";
+import { Role } from "@prisma/client";
+import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, Settings, Users } from "lucide-react";
 
 type Submenu = {
   href: string;
@@ -162,10 +155,20 @@ export function getMenuList(
       groupLabel: "Configuración",
       menus: [
         {
-          href: "/dashboard/settings",
+          href: "",
           label: "Configuración",
           icon: Settings,
           active: pathname.startsWith("/dashboard/settings"),
+          submenus: [
+            {
+              href: "/dashboard/settings",
+              label: "Alertas",
+            },
+            {
+              href: "/dashboard/settings/users",
+              label: "Usuarios",
+            },
+          ],
         },
       ],
     });

@@ -1,6 +1,7 @@
+import { toast } from "sonner";
 // src/stores/alerts.store.ts
 import { create } from "zustand";
-import { toast } from "sonner";
+
 import type { Student } from "@/types/dashboard";
 import { AlertStatus } from "@/lib/utils";
 import { CACHE_DURATION_MS } from "@/lib/constantes";

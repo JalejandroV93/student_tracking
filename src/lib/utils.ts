@@ -65,9 +65,13 @@ export function getStudentTypeIICount(
 }
 
 // Data transformation function
-export function transformStudent(
-  student: Prisma.EstudiantesGetPayload<object>
-): Student {
+export function transformStudent(student: {
+  id: number;
+  codigo: number;
+  nombre: string | null;
+  grado: string | null;
+  nivel: string | null;
+}): Student {
   if (!student) {
     throw new Error("Student data is required");
   }

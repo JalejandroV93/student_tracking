@@ -1,5 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,37 +18,24 @@ export function CaseManagementListSkeleton() {
   return (
     <Card>
       <CardHeader>
-        {/* Title is often in the page, skeleton for description */}
-        <Skeleton className="h-4 w-full" />
+        {/* Keep the static description visible */}
+        <CardDescription>
+          Listado de faltas Tipo II y el estado de sus seguimientos requeridos.
+          Los casos abiertos y atrasados aparecen primero.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <Skeleton className="h-4 w-24" />
-              </TableHead>
-              {/* Estudiante */}
-              <TableHead>
-                <Skeleton className="h-4 w-16" />
-              </TableHead>
-              {/* Grado */}
-              <TableHead>
-                <Skeleton className="h-4 w-20" />
-              </TableHead>
-              {/* Fecha Falta */}
-              <TableHead className="text-center">
-                <Skeleton className="h-4 w-24 mx-auto" />
-              </TableHead>
-              {/* Seguimientos */}
-              <TableHead>
-                <Skeleton className="h-4 w-16" />
-              </TableHead>
-              {/* Estado */}
-              <TableHead>
-                <Skeleton className="h-4 w-32" />
-              </TableHead>
-              {/* Próximo Seguimiento */}
+              {/* Keep all table headers as actual text */}
+              <TableHead>Estudiante</TableHead>
+              <TableHead>Grado</TableHead>
+              <TableHead>Fecha Falta</TableHead>
+              <TableHead className="text-center">Seguimientos</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Próximo Seguimiento</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,13 +51,14 @@ export function CaseManagementListSkeleton() {
                   <Skeleton className="h-5 w-20" />
                 </TableCell>
                 <TableCell className="text-center">
-                  <Skeleton className="h-5 w-12 mx-auto rounded-md" />
+                  <div className="flex items-center justify-center space-x-1">
+                    <Skeleton className="h-5 w-12 rounded-md" />
+                    <Skeleton className="h-7 w-7 rounded-md" />
+                  </div>
                 </TableCell>
-                {/* Badge */}
                 <TableCell>
                   <Skeleton className="h-5 w-16 rounded-md" />
                 </TableCell>
-                {/* Badge */}
                 <TableCell>
                   <div className="flex items-center space-x-2">
                     <Skeleton className="h-4 w-4 rounded-full" /> {/* Icon */}
@@ -74,6 +67,9 @@ export function CaseManagementListSkeleton() {
                       <Skeleton className="h-3 w-24 mt-1" />
                     </div>
                   </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Skeleton className="h-8 w-24 ml-auto rounded-md" />
                 </TableCell>
               </TableRow>
             ))}

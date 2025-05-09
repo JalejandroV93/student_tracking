@@ -1,8 +1,7 @@
-// src/app/api/infractions/route.ts - Corrected Mapping
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
 import { transformInfraction } from "@/lib/utils";
+import { PrismaClient } from "@prisma/client";
+// src/app/api/infractions/route.ts
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -23,15 +22,18 @@ export async function GET() {
         trimestre: true,
         nivel: true,
         attended: true,
+        created_at: true,
+        updated_at: true,
+        attended_at: true,
       },
       orderBy: { fecha: "desc" },
     });
 
     const transformedInfractions = infractions.map((infraction) => {
       const studentId = `${infraction.id_estudiante}-${infraction.codigo_estudiante}`;
-      console.log(
+      /* console.log(
         `Transformando infracción: ${infraction.hash} para estudiante ID: ${studentId}`
-      );
+      ); */
 
       return transformInfraction(infraction, studentId);
     });

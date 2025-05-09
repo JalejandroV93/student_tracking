@@ -24,11 +24,11 @@ const updateUserSchema = z.object({
 // GET: Obtener un usuario específico
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
-
+    const { id } = await params;
+    const userId = id as string; 
     // Verificar autenticación y permisos
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -82,11 +82,11 @@ export async function GET(
 // PUT: Actualizar un usuario
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
-
+    const { id } = await params;
+    const userId = id as string; // Asegurarse de que el ID es un string
     // Verificar autenticación y permisos
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -143,6 +143,7 @@ export async function PUT(
     }
 
     // Preparar datos para actualizar
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {
       username,
       fullName,
@@ -155,20 +156,6 @@ export async function PUT(
       updateData.password = await hashPassword(password);
     }
 
-    // Actualizar el usuario
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        fullName: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
 
     // Actualizar permisos de área
     if (areaPermissions && areaPermissions.length > 0) {
@@ -212,11 +199,11 @@ export async function PUT(
 // DELETE: Eliminar un usuario
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
-
+    const { id } = await params;
+    const userId = id as string; // Asegurarse de que el ID es un string
     // Verificar autenticación y permisos
     const currentUser = await getCurrentUser();
     if (!currentUser) {

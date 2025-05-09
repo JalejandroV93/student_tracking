@@ -7,7 +7,7 @@ import { UserPayload } from "@/types/user";
 export async function getCurrentUser(): Promise<UserPayload | null> {
   try {
     const cookieStore = cookies();
-    const token = cookieStore.get("auth_token")?.value;
+    const token = (await cookieStore).get("auth_token")?.value;
 
     if (!token) {
       return null;

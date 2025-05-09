@@ -104,7 +104,7 @@ export function FollowUpDialog({
         details: "",
       });
     }
-  }, [isOpen, availableFollowUpNumbers, form.reset]);
+  }, [isOpen, availableFollowUpNumbers, form]);
 
   const handleFormSubmit = (values: FollowUpFormData) => {
     const newFollowUpData: Omit<FollowUp, "id"> = {

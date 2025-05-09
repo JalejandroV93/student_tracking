@@ -1,11 +1,8 @@
-import { NextResponse } from "next/server";
+import { getSectionCategory } from "@/lib/constantes";
+import { getStudentTypeICount, transformInfraction, transformStudent } from "@/lib/utils";
+import { AlertStatus } from "@/lib/utils";
 import { PrismaClient } from "@prisma/client";
-import { getSectionCategory, AlertStatus } from "@/lib/constantes";
-import {
-  getStudentTypeICount,
-  transformInfraction,
-  transformStudent,
-} from "@/lib/utils";
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 

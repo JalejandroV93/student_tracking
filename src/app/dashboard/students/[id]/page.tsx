@@ -37,7 +37,7 @@ export default function StudentDetailsPage() {
 
   const { mutate: saveFollowUp, isPending: isAddingFollowUp } = useMutation({
     mutationFn: addFollowUp,
-    onSuccess: (newFollowUp) => {
+    onSuccess: () => {
       toast.success("Seguimiento agregado exitosamente!");
       setFollowUpDialogOpen(false);
       setSelectedInfractionForFollowUp(null);

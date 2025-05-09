@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge";
 import { Role } from "@prisma/client";
 import { UserModal } from "@/components/settings/UserModal";
 import { ConfirmationModal } from "@/components/settings/ConfirmationModal";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 // Definiciones de tipos
 type User = {
@@ -143,7 +145,7 @@ export default function UsersManagementPage() {
   };
 
   return (
-    <ContentLayout title="Gestión de Usuarios">
+    <ContentLayout title="Gestión de Usuarios del Sistema">
       <div className="space-y-6 w-full">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -159,10 +161,7 @@ export default function UsersManagementPage() {
             </Button>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="text-center py-4">Cargando usuarios...</div>
-            ) : (
-              <Table>
+          <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nombre</TableHead>
@@ -174,7 +173,39 @@ export default function UsersManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users && users.length > 0 ? (
+                  {isLoading ? (
+                    // Skeleton loader para 5 filas mientras carga
+                    Array(5)
+                      .fill(null)
+                      .map((_, index) => (
+                        <TableRow key={`skeleton-${index}`}>
+                          <TableCell>
+                            <Skeleton className="h-6 w-32" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-40" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-28 rounded-full" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Skeleton className="h-6 w-16 rounded-full" />
+                              <Skeleton className="h-6 w-16 rounded-full" />
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  ) : users && users.length > 0 ? (
                     users.map((user: User) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
@@ -234,7 +265,7 @@ export default function UsersManagementPage() {
                   )}
                 </TableBody>
               </Table>
-            )}
+            
           </CardContent>
         </Card>
       </div>

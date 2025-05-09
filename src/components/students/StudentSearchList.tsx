@@ -1,12 +1,12 @@
-// src/components/students/StudentSearchList.tsx
 "use client";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Use ScrollArea for long lists
-import { Search,  UserX, RefreshCw } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, UserX, RefreshCw } from "lucide-react";
 import type { Student } from "@/types/dashboard";
 import { StudentSearchListSkeleton } from "./StudentSearchList.skeleton";
+
 interface StudentSearchListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -27,8 +27,14 @@ export function StudentSearchList({
   isFetching,
 }: StudentSearchListProps) {
   if (isLoading) {
-    return <StudentSearchListSkeleton />;
+    return (
+      <StudentSearchListSkeleton
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+      />
+    );
   }
+
   return (
     <Card>
       <CardHeader>
@@ -54,7 +60,7 @@ export function StudentSearchList({
           </div>
         )}
         {!isLoading && !error && (
-          <ScrollArea className="h-[400px] border rounded-md">
+          <ScrollArea className="h-[calc(700px_-_1rem)] border rounded-md">
             {students.length > 0 ? (
               <ul className="divide-y">
                 {students.map((student) => (

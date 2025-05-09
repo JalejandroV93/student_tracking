@@ -1,9 +1,21 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, getUserAreaPermissions } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { UserPayload } from "@/types/user";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+
+// Definir interfaces para el tipado de Prisma
+interface PrismaAreaPermission {
+  id: number;
+  areaId: number;
+  canView: boolean;
+  area?: {
+    id: number;
+    code: string;
+    name: string;
+  };
+}
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +31,7 @@ export async function GET(request: Request) {
       url.searchParams.get("includePermissions") === "true";
 
     // Obtener el usuario completo desde Prisma
-    const fullUser = await prisma.user.findUnique({
+    const fullUser = (await prisma.user.findUnique({
       where: { id: user.id },
       select: {
         id: true,
@@ -32,14 +44,23 @@ export async function GET(request: Request) {
         ...(includePermissions
           ? {
               AreaPermissions: {
-                include: {
-                  area: true,
+                select: {
+                  id: true,
+                  areaId: true,
+                  canView: true,
+                  area: {
+                    select: {
+                      id: true,
+                      code: true,
+                      name: true,
+                    },
+                  },
                 },
               },
             }
           : {}),
       },
-    });
+    })) as UserPayload;
 
     if (!fullUser) {
       return NextResponse.json(null, { status: 404 });
@@ -59,11 +80,17 @@ export async function GET(request: Request) {
         });
       } else if (fullUser.AreaPermissions) {
         // Mapear permisos por área
-        fullUser.AreaPermissions.forEach((permission) => {
-          if (permission.canView) {
-            permissionsByArea[permission.area.code] = true;
+        (fullUser.AreaPermissions as PrismaAreaPermission[]).forEach(
+          (permission) => {
+            if (permission.canView) {
+              // Obtener el área para el código
+              const area = permission.area || {
+                code: `area-${permission.areaId}`,
+              };
+              permissionsByArea[area.code] = true;
+            }
           }
-        });
+        );
       }
 
       // Respuesta con permisos

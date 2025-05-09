@@ -1,11 +1,7 @@
+import { transformInfraction, transformStudent } from "@/lib/utils";
+import { PrismaClient } from "@prisma/client";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import {
-  transformFollowUp,
-  transformInfraction,
-  transformStudent,
-} from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -54,10 +50,20 @@ export async function GET(request: Request) {
       const transformedStudent = transformStudent(student);
 
       // Transform infractions and follow-ups
-      const transformedInfractions = student.faltas.map(transformInfraction);
+      const transformedInfractions = student.faltas.map((falta) =>
+        transformInfraction(falta, String(student.id))
+      );
 
       // Mapeo para vincular correctamente cada seguimiento con su falta correspondiente
-      const followUps = [];
+      const followUps: {
+        id: string;
+        infractionId: string; // Utilizamos el hash de la falta, no el id_caso
+        followUpNumber: number;
+        date: string;
+        type: string;
+        details: string;
+        author: string;
+      }[] = [];
       student.faltas.forEach((falta) => {
         falta.casos.forEach((caso) => {
           caso.seguimientos.forEach((seguimiento) => {

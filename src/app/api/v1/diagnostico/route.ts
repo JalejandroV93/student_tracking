@@ -1,5 +1,5 @@
+import { Casos, PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     });
 
     // 3. Buscar todos los casos para esta falta (si existe)
-    let casosPorFalta = [];
+    let casosPorFalta: Casos[] = [];
     if (falta) {
       casosPorFalta = await prisma.casos.findMany({
         where: {

@@ -1,7 +1,7 @@
 // src/lib/constantes.ts
 export const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
-export const NIVELES = {
+export const NIVELES: Record<string, readonly string[]> = {
   Preschool: [
     "kinder 4 a",
     "kinder 4 b",
@@ -70,14 +70,14 @@ export function getSectionCategory(grado: string | undefined): string {
 
   // Primero intentamos una coincidencia exacta
   for (const category in NIVELES) {
-    if (NIVELES[category as keyof typeof NIVELES].includes(gradoLower)) {
+    if (NIVELES[category].includes(gradoLower)) {
       return category;
     }
   }
 
   // Si no hay coincidencia exacta, intentamos una coincidencia parcial
   for (const category in NIVELES) {
-    const niveles = NIVELES[category as keyof typeof NIVELES];
+    const niveles = NIVELES[category];
     const match = niveles.find((nivel) => {
       const nivelBase = nivel.split(" ")[0]; // Obtiene la primera palabra (ej: "sexto" de "sexto a")
       return gradoLower.startsWith(nivelBase);
