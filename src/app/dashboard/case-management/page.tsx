@@ -3,17 +3,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CaseManagementList } from "@/components/case-management/CaseManagementList"; // Adjust path
-import { useCaseManagementStore } from "@/stores/case-management.store"; // Adjust path
+import { CaseManagementList } from "@/components/case-management/CaseManagementList";
+import { useCaseManagementStore } from "@/stores/case-management.store";
 import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
+
 export default function CaseManagementAllSectionsPage() {
   const router = useRouter();
-  const {
-    fetchCaseData,
-    getCases,
-    loading,
-    error,
-  } = useCaseManagementStore();
+  const { fetchCaseData, getCases, loading, error } = useCaseManagementStore();
 
   useEffect(() => {
     fetchCaseData();
@@ -26,31 +23,26 @@ export default function CaseManagementAllSectionsPage() {
     router.push(`/dashboard/students/${studentId}`);
   };
 
-
   return (
-    <div className="space-y-6">
-       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-         <h1 className="text-3xl font-bold tracking-tight">Gestión de Casos (Tipo II)</h1>
-         {/* Optional: Add SectionSelector here */}
-       </div>
-      <p className="text-sm text-muted-foreground">
-         Seguimiento de faltas Tipo II para todas las secciones.
-      </p>
+    <ContentLayout title="Gestión de Casos (Tipo II)">
+      <div className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          Seguimiento de faltas Tipo II para todas las secciones.
+        </p>
 
-      {loading && (
-         <CaseManagementListSkeleton/>
-      )}
+        {loading && <CaseManagementListSkeleton />}
 
-      {error && !loading && (
+        {error && !loading && (
           <div className="text-destructive text-center pt-10">{error}</div>
-      )}
+        )}
 
-      {!loading && !error && (
-         <CaseManagementList
-             cases={cases} // Pass the calculated cases
-             onSelectStudent={handleSelectStudent}
-         />
-      )}
-    </div>
+        {!loading && !error && (
+          <CaseManagementList
+            cases={cases}
+            onSelectStudent={handleSelectStudent}
+          />
+        )}
+      </div>
+    </ContentLayout>
   );
 }

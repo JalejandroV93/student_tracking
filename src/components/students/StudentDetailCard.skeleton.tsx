@@ -1,5 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,74 +18,72 @@ import {
 export function StudentDetailCardSkeleton() {
   return (
     <Card>
-      <CardHeader>
-        <Skeleton className="h-7 w-1/2" /> {/* Name */}
-        <Skeleton className="h-4 w-3/4 mt-2" /> {/* Details */}
+      <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <CardTitle className="text-2xl">
+            <Skeleton className="h-8 w-64" /> {/* Student name */}
+          </CardTitle>
+          <CardDescription>
+            <Skeleton className="h-4 w-72 mt-2" /> {/* Student details */}
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-6 w-1/4 mb-3 mt-2" /> {/* History Title */}
+        <h3 className="text-lg font-semibold mb-3 mt-2">Historial de Faltas</h3>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <Skeleton className="h-4 w-16" />
-              </TableHead>{" "}
-              {/* Fecha */}
-              <TableHead>
-                <Skeleton className="h-4 w-12" />
-              </TableHead>{" "}
-              {/* Tipo */}
-              <TableHead>
-                <Skeleton className="h-4 w-10" />
-              </TableHead>{" "}
-              {/* Num */}
-              <TableHead>
-                <Skeleton className="h-4 w-32" />
-              </TableHead>{" "}
-              {/* Desc */}
-              <TableHead>
-                <Skeleton className="h-4 w-24" />
-              </TableHead>{" "}
-              {/* Seguimientos */}
-              <TableHead className="text-right">
-                <Skeleton className="h-4 w-16 ml-auto" />
-              </TableHead>{" "}
-              {/* Acciones */}
+              <TableHead>Fecha</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Num.</TableHead>
+              <TableHead>Descripción</TableHead>
+              <TableHead>Seguimientos (Tipo II)</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from({ length: 4 }).map(
-              (
-                _,
-                index // Repeat for infractions
-              ) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Skeleton className="h-5 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16 rounded-md" />
-                  </TableCell>
-                  {/* Badge */}
-                  <TableCell>
-                    <Skeleton className="h-5 w-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-full" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-4 w-12 rounded-md" /> {/* Badge */}
+            {Array.from({ length: 4 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Skeleton className="h-5 w-20" /> {/* Date */}
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-6 w-16 rounded-full" />{" "}
+                  {/* Type badge */}
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-8" /> {/* Number */}
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-[180px]" /> {/* Description */}
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <Skeleton className="h-5 w-12 rounded-full" />{" "}
+                      {/* Follow-up count */}
+                      <Skeleton className="h-5 w-20 rounded-full" />{" "}
+                      {/* Status badge */}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Skeleton className="h-8 w-8 ml-auto" /> {/* Button */}
-                  </TableCell>
-                </TableRow>
-              )
-            )}
+                    <Skeleton className="h-16 w-full rounded-md" />{" "}
+                    {/* Follow-up details */}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-6 w-20 rounded-full" />{" "}
+                  {/* Status badge */}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Skeleton className="h-8 w-8 rounded-md" />{" "}
+                    {/* Action button */}
+                    <Skeleton className="h-8 w-8 rounded-md" />{" "}
+                    {/* Action button */}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </CardContent>

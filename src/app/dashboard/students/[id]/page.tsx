@@ -1,118 +1,193 @@
 // src/app/dashboard/students/[id]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StudentDetailCard } from "@/components/students/StudentDetailCard"; // Adjust path
-import { FollowUpDialog } from "@/components/students/FollowUpDialog"; // Adjust path
-import { useStudentsStore } from "@/stores/students.store"; // Adjust path
+import { StudentDetailCard } from "@/components/students/StudentDetailCard";
+import { FollowUpDialog } from "@/components/students/FollowUpDialog";
 import type { FollowUp, Infraction } from "@/types/dashboard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchStudentDetails,
+  addFollowUp,
+  toggleInfractionAttended,
+} from "@/lib/apiClient";
+import { toast } from "sonner";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
 
 export default function StudentDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const studentId = params.id as string;
+  const queryClient = useQueryClient();
 
   const {
-    selectedStudentData,
-    fetchStudentDetails,
-    addFollowUp,
-    detailLoading,
-    detailError,
-  } = useStudentsStore();
+    data: studentDetailsData,
+    isLoading: detailLoading,
+    error: detailError,
+    isFetching: detailIsFetching,
+    refetch: refetchStudentDetails,
+  } = useQuery({
+    queryKey: ["students", studentId],
+    queryFn: () => fetchStudentDetails(studentId),
+    enabled: !!studentId,
+  });
+
+  const { mutate: saveFollowUp, isPending: isAddingFollowUp } = useMutation({
+    mutationFn: addFollowUp,
+    onSuccess: () => {
+      toast.success("Seguimiento agregado exitosamente!");
+      setFollowUpDialogOpen(false);
+      setSelectedInfractionForFollowUp(null);
+
+      // Invalidar todas las consultas relacionadas para asegurar que los datos se actualicen
+      queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["followups"] });
+      queryClient.invalidateQueries({ queryKey: ["infractions"] });
+
+      // Refrescar los datos del estudiante inmediatamente
+      refetchStudentDetails();
+    },
+    onError: (error) => {
+      toast.error(`Error agregando seguimiento: ${error.message}`);
+    },
+  });
+
+  const { mutate: toggleAttended, isPending: isTogglingAttended } = useMutation(
+    {
+      mutationFn: toggleInfractionAttended,
+      onSuccess: (data, variables) => {
+        toast.success(
+          `Falta marcada como ${variables.attended ? "Atendida" : "Pendiente"}.`
+        );
+        queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+        queryClient.invalidateQueries({ queryKey: ["infractions"] });
+        queryClient.invalidateQueries({ queryKey: ["alerts"] });
+
+        // Refrescar los datos del estudiante inmediatamente
+        refetchStudentDetails();
+      },
+      onError: (error) => {
+        toast.error(`Error actualizando estado: ${error.message}`);
+      },
+    }
+  );
 
   const [isFollowUpDialogOpen, setFollowUpDialogOpen] = useState(false);
-  const [selectedInfractionForFollowUp, setSelectedInfractionForFollowUp] = useState<Infraction | null>(null);
-
-  useEffect(() => {
-    if (studentId) {
-      fetchStudentDetails(studentId);
-    }
-    // No cleanup needed to clear student on unmount, handled by store/list page
-  }, [studentId, fetchStudentDetails]);
-
+  const [selectedInfractionForFollowUp, setSelectedInfractionForFollowUp] =
+    useState<Infraction | null>(null);
 
   const handleOpenFollowUpDialog = (infraction: Infraction) => {
-      setSelectedInfractionForFollowUp(infraction);
-      setFollowUpDialogOpen(true);
+    setSelectedInfractionForFollowUp(infraction);
+    setFollowUpDialogOpen(true);
   };
 
-   const handleAddFollowUp = async (followUpData: Omit<FollowUp, "id">) => {
-       const result = await addFollowUp(followUpData);
-       if (result) {
-            setFollowUpDialogOpen(false); // Close dialog on success
-            setSelectedInfractionForFollowUp(null);
-            // Data updates handled by the store automatically
-       }
-        // Error handling is done within the store action (toast)
-   };
+  const handleAddFollowUp = async (followUpData: Omit<FollowUp, "id">) => {
+    saveFollowUp(followUpData);
+  };
+
+  const handleToggleAttended = (infraction: Infraction) => {
+    toggleAttended({
+      infractionId: infraction.id,
+      attended: !infraction.attended,
+    });
+  };
+
+  const isActionLoading =
+    isAddingFollowUp || isTogglingAttended || detailIsFetching;
+
+  const student = studentDetailsData?.student;
+  const infractions = studentDetailsData?.infractions ?? [];
+  const followUps = studentDetailsData?.followUps ?? [];
 
   if (detailLoading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-150px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <ContentLayout title="Detalles del Estudiante">
+        <div className="flex items-center justify-center h-[calc(100vh-250px)]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </ContentLayout>
     );
   }
 
   if (detailError) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-         <p className="text-destructive mb-4">{detailError}</p>
-         <Button variant="outline" onClick={() => router.back()}>
-             <ArrowLeft className="mr-2 h-4 w-4" /> Volver
-         </Button>
-      </div>
+      <ContentLayout title="Detalles del Estudiante">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
+          <p className="text-destructive mb-4">{detailError.message}</p>
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Volver
+          </Button>
+        </div>
+      </ContentLayout>
     );
   }
 
-  if (!selectedStudentData.student) {
-    // This might happen briefly or if fetch failed silently
+  if (!student && !detailLoading) {
     return (
-         <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center">
-             <p className="text-muted-foreground mb-4">No se encontró información del estudiante.</p>
-             <Button variant="outline" onClick={() => router.push('/dashboard/students')}>
-                 <ArrowLeft className="mr-2 h-4 w-4" /> Buscar Estudiantes
-             </Button>
-         </div>
+      <ContentLayout title="Detalles del Estudiante">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
+          <p className="text-muted-foreground mb-4">
+            No se encontró información del estudiante.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/dashboard/students")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Buscar Estudiantes
+          </Button>
+        </div>
+      </ContentLayout>
     );
   }
 
   // Sort infractions by date, newest first
-  const sortedInfractions = [...selectedStudentData.infractions].sort(
+  const sortedInfractions = [...infractions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
   return (
-    <div className="space-y-6">
-         <Button variant="outline" size="sm" onClick={() => router.back()} className="mb-4">
-             <ArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
-         </Button>
+    <ContentLayout title={`Estudiante: ${student?.name || ""}`}>
+      <div className="space-y-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
+        </Button>
 
         {/* Student Detail Card */}
-        <StudentDetailCard
-            student={selectedStudentData.student}
-            infractions={sortedInfractions} // Pass sorted infractions
-            followUps={selectedStudentData.followUps}
-            onAddFollowUpClick={handleOpenFollowUpDialog} // Pass handler to open dialog
-        />
+        {student && (
+          <StudentDetailCard
+            student={student}
+            infractions={sortedInfractions}
+            followUps={followUps}
+            onAddFollowUpClick={handleOpenFollowUpDialog}
+            onToggleAttendedClick={handleToggleAttended}
+            isActionLoading={isActionLoading}
+          />
+        )}
 
         {/* Follow Up Dialog */}
-        {selectedInfractionForFollowUp && selectedStudentData.student && (
-             <FollowUpDialog
-                isOpen={isFollowUpDialogOpen}
-                onOpenChange={setFollowUpDialogOpen}
-                infraction={selectedInfractionForFollowUp}
-                studentName={selectedStudentData.student.name} // Pass student name for context/author
-                existingFollowUps={selectedStudentData.followUps.filter(
-                    (f) => f.infractionId === selectedInfractionForFollowUp.id
-                )}
-                onSubmit={handleAddFollowUp}
-                isSubmitting={detailLoading} // Use detailLoading to indicate submission process
-            />
+        {selectedInfractionForFollowUp && student && (
+          <FollowUpDialog
+            isOpen={isFollowUpDialogOpen}
+            onOpenChange={setFollowUpDialogOpen}
+            infraction={selectedInfractionForFollowUp}
+            studentName={student.name}
+            existingFollowUps={followUps.filter(
+              (f) => f.infractionId === selectedInfractionForFollowUp.id
+            )}
+            onSubmit={handleAddFollowUp}
+            isSubmitting={isAddingFollowUp}
+          />
         )}
-    </div>
+      </div>
+    </ContentLayout>
   );
 }

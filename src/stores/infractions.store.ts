@@ -17,7 +17,7 @@ export const useInfractionsStore = create<InfractionsState>((set) => ({
   fetchInfractions: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/infractions");
+      const response = await fetch("/api/v1/infractions");
       if (!response.ok) {
         throw new Error(`Failed to fetch infractions: ${response.statusText}`);
       }

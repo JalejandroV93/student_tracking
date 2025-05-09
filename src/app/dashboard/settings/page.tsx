@@ -1,89 +1,89 @@
 // src/app/dashboard/settings/page.tsx
 "use client";
 
-import { useEffect } from "react";
-import { SettingsForm } from "@/components/settings/SettingsForm";
-import { useSettingsStore } from "@/stores/settings.store";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert
-import { Terminal } from "lucide-react"; // Example icon
-import type { AlertSettings } from "@/types/dashboard";
-import { SettingsFormSkeleton } from "@/components/settings/SettingsForm.skeleton";
+import { SettingsForm } from "@/components/settings/alerts/SettingsForm";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
+import { SettingsFormSkeleton } from "@/components/settings/alerts/SettingsForm.skeleton";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchSettings, updateAlertSettings } from "@/lib/apiClient";
+import { toast } from "sonner";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
+
+
 export default function SettingsPage() {
+  const queryClient = useQueryClient();
   const {
-    settings,
-    updateSettings,
-    fetchSettings,
-    loading,
-    error,
-    areSettingsConfigured,
-  } = useSettingsStore();
+    data: settingsData, // Contains { configured: boolean, settings: AlertSettings | null }
+    isLoading: isLoadingSettings,
+    error: settingsError,
+  } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+  });
 
-  useEffect(() => {
-    // Fetch settings when the component mounts if status is unknown or forced
-    if (areSettingsConfigured === null) {
-      fetchSettings();
-    }
-  }, [fetchSettings, areSettingsConfigured]); // Depend on areSettingsConfigured
+  const { mutate: saveSettings, isPending: isSaving } = useMutation({
+    mutationFn: updateAlertSettings,
+    onSuccess: (savedSettings) => {
+      toast.success("Configuración guardada exitosamente!");
+      queryClient.setQueryData(["settings"], {
+        configured: true,
+        settings: savedSettings,
+      });
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+    },
+    onError: (error) => {
+      toast.error(`Error guardando configuración: ${error.message}`);
+    },
+  });
 
-  const handleSave = async (updatedSettingsData: AlertSettings) => {
-    await updateSettings(updatedSettingsData);
-    // Optionally trigger refetch of other data if needed after settings change
-    // useAlertsStore.getState().fetchAlertsData({ force: true });
-  };
+  const areSettingsConfigured = settingsData?.configured;
+  const currentSettings = settingsData?.settings ?? null;
 
-  // --- Loading State ---
-  if (loading && areSettingsConfigured === null) {
-    // Show loader only on initial check
+  if (isLoadingSettings) {
     return (
-      <SettingsFormSkeleton/>
+      <ContentLayout title="Configuración General">
+        <SettingsFormSkeleton />
+      </ContentLayout>
     );
   }
 
-  // --- Error State ---
-  if (error) {
+  if (settingsError) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-red-500">
-        <Alert variant="destructive" className="max-w-md">
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Error al Cargar Configuración</AlertTitle>
-          <AlertDescription>
-            {error} Intente recargar la página.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <ContentLayout title="Configuración General">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-red-500">
+          <Alert variant="destructive" className="max-w-md">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Error al Cargar Configuración</AlertTitle>
+            <AlertDescription>
+              {settingsError.message}. Intente recargar la página.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </ContentLayout>
     );
   }
 
-  // --- Render Content ---
   return (
-    <div className="space-y-6 w-full max-w-4xl">
-      {" "}
-      {/* Ensure content takes width */}
-      <h1 className="text-3xl font-bold tracking-tight">
-        Configuración de Alertas
-      </h1>
-      {/* Show prompt if settings are explicitly not configured */}
-      {areSettingsConfigured === false && !loading && (
-        <Alert>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Configuración Inicial Requerida</AlertTitle>
-          <AlertDescription>
-            Parece que es la primera vez que utiliza esta sección o la
-            configuración no se encontró. Por favor, defina los umbrales de
-            alerta primarios y secundarios para continuar.
-          </AlertDescription>
-        </Alert>
-      )}
-      {/* Render Form - always render if not erroring,
-                pass null if not configured, or the settings if configured */}
-      <SettingsForm
-        // Pass null if not configured, otherwise pass settings.
-        // The form component needs to handle the null case for initial values.
-        currentSettings={areSettingsConfigured === true ? settings : null}
-        onSave={handleSave}
-        // Use loading state from store to disable button during save
-        isSaving={loading && areSettingsConfigured !== null} // Indicate saving when loading is true AFTER initial check
-      />
-    </div>
+    <ContentLayout title="Configuración General">
+        
+          {areSettingsConfigured === false && !isLoadingSettings && (
+            <Alert className="mb-6">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Configuración Inicial Requerida</AlertTitle>
+              <AlertDescription>
+                Parece que es la primera vez que utiliza esta sección o la
+                configuración no se encontró. Por favor, defina los umbrales de
+                alerta primarios y secundarios para continuar.
+              </AlertDescription>
+            </Alert>
+          )}
+          <SettingsForm
+            currentSettings={currentSettings}
+            onSave={saveSettings}
+            isSaving={isSaving}
+          />
+        
+    </ContentLayout>
   );
 }

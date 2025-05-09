@@ -1,19 +1,37 @@
-"use client";
-// Importar el router correcto para App Router
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+// 6. app/page.tsx - Página principal refactorizada
+"use client"
 
-export default function HomePage() {
-  const router = useRouter();
+import { motion } from "framer-motion"
+import { Card } from "@/components/ui/card"
+import { useResponsiveAnimation } from "@/hooks/useResponsiveAnimation"
+import { LoginForm } from "@/components/auth/LoginForm"
+import { LoginHeader } from "@/components/auth/LoginHeader"
+import { BorderBeam } from "@/components/magicui/border-beam";
 
-  // Usar useEffect para redirigir
-  useEffect(() => {
-    router.push("/dashboard");
-  }, [router]);
-
+export default function LoginPage() {
+  const { controls } = useResponsiveAnimation()
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Bienvenido</h1>
-    </div>
+      <div className="min-h-screen flex items-center justify-center p-4 relative">
+
+          {/* Content */}
+          <motion.div
+              initial={{ y: 0 }}
+              animate={controls}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="w-full max-w-md rounded-xl shadow-md z-10"
+          >
+              <Card className="relative overflow-hidden border-none">
+                  <LoginHeader />
+                  <LoginForm />
+                  <BorderBeam
+                      duration={6}
+                      size={400}
+                      className="from-transparent via-red-500 to-transparent"
+                  />
+                  
+              </Card>
+          </motion.div>
+
+      </div>
   );
 }

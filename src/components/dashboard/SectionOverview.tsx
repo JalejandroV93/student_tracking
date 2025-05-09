@@ -1,65 +1,66 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { School } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { School } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { NumberTicker } from "@/components/magicui/number-ticker"
 
 interface SectionStats {
-  name: string;
-  studentCount: number;
-  typeI: number;
-  typeII: number;
-  typeIII: number;
-  total: number;
-  alertsCount: number;
+  name: string
+  studentCount: number
+  typeI: number
+  typeII: number
+  typeIII: number
+  total: number
+  alertsCount: number
 }
 
 interface SectionOverviewProps {
-  section: SectionStats;
+  section: SectionStats
 }
 
 export function SectionOverview({ section }: SectionOverviewProps) {
   // Calcular el porcentaje de cada tipo de falta
-  const totalInfractions = section.total || 1; // Evitar división por cero
-  const typeIPercent = Math.round((section.typeI / totalInfractions) * 100);
-  const typeIIPercent = Math.round((section.typeII / totalInfractions) * 100);
-  const typeIIIPercent = Math.round((section.typeIII / totalInfractions) * 100);
-console.log("section:", section);
+  const totalInfractions = section.total || 1 // Evitar división por cero
+  const typeIPercent = Math.round((section.typeI / totalInfractions) * 100)
+  const typeIIPercent = Math.round((section.typeII / totalInfractions) * 100)
+  const typeIIIPercent = Math.round((section.typeIII / totalInfractions) * 100)
+
   // Determinar el color de la tarjeta basado en la sección
   const getSectionColor = (name: string): string => {
     switch (name) {
       case "Preschool":
-        return "border-purple-500";
+        return "border-purple-500"
       case "Elementary":
-        return "border-green-500";
-      case "Middle School": // Corrected case
-        return "border-blue-500";
-      case "High School": // Corrected case
-        return "border-orange-500";
+        return "border-green-500"
+      case "Middle School":
+        return "border-blue-500"
+      case "High School":
+        return "border-orange-500"
       default:
-        return "border-gray-500";
+        return "border-gray-500"
     }
-  };
+  }
 
-  const borderColor = getSectionColor(section.name);
+  const borderColor = getSectionColor(section.name)
 
   return (
     <Card className={`border-l-4 ${borderColor}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-xl font-bold">{section.name}</CardTitle>
+          <CardTitle className="text-lg font-bold">{section.name}</CardTitle>
           <CardDescription>{section.studentCount} estudiantes</CardDescription>
         </div>
-        <School className="h-8 w-8 text-muted-foreground" />
+        <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2 h-12 w-12">
+          <School className="h-6 w-6 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">Total de faltas:</span>
-          <span className="text-2xl font-bold">{section.total}</span>
+          <NumberTicker
+            value={section.total}
+            startValue={section.total / 2}
+            className="whitespace-pre-wrap text-lg font-medium tracking-tighter text-black dark:text-white"
+          />
         </div>
 
         <div className="space-y-2">
@@ -90,11 +91,9 @@ console.log("section:", section);
 
         <div className="flex justify-between items-center pt-2 border-t">
           <span className="text-sm font-medium">Alertas activas:</span>
-          <span className="text-lg font-bold text-amber-600">
-            {section.alertsCount}
-          </span>
+          <span className="text-lg font-bold text-amber-600">{section.alertsCount}</span>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

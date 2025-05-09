@@ -36,14 +36,15 @@ import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
-
 // Schema for follow-up form validation
 const followUpFormSchema = z.object({
-  followUpNumber: z.coerce.number({ // Coerce to number for easier comparison
+  followUpNumber: z.coerce.number({
+    // Coerce to number for easier comparison
     required_error: "Seleccione el número de seguimiento",
   }),
-  date: z.string().refine((date) => !!date, { // Basic check for non-empty date string
-      message: "Seleccione la fecha del seguimiento",
+  date: z.string().refine((date) => !!date, {
+    // Basic check for non-empty date string
+    message: "Seleccione la fecha del seguimiento",
   }),
   details: z
     .string()
@@ -72,10 +73,14 @@ export function FollowUpDialog({
   onSubmit,
   isSubmitting,
 }: FollowUpDialogProps) {
-
   // Determine available follow-up numbers
   const availableFollowUpNumbers = useMemo(() => {
-    const existingNumbers = new Set(existingFollowUps.map((f) => f.followUpNumber));
+    // Obtenemos los números ya utilizados
+    const existingNumbers = new Set(
+      existingFollowUps.map((f) => f.followUpNumber)
+    );
+
+    // Devolvemos los números que faltan entre 1, 2 y 3
     return [1, 2, 3].filter((num) => !existingNumbers.has(num));
   }, [existingFollowUps]);
 
@@ -89,17 +94,17 @@ export function FollowUpDialog({
     },
   });
 
-   // Reset form when dialog opens or infraction changes
-   // Also set default followUpNumber if available
-   useMemo(() => {
-        if (isOpen) {
-            form.reset({
-                followUpNumber: availableFollowUpNumbers[0] ?? undefined,
-                date: new Date().toISOString().split("T")[0],
-                details: "",
-            });
-        }
-   }, [isOpen, availableFollowUpNumbers, form.reset]);
+  // Reset form when dialog opens or infraction changes
+  // Also set default followUpNumber if available
+  useMemo(() => {
+    if (isOpen) {
+      form.reset({
+        followUpNumber: availableFollowUpNumbers[0] ?? undefined,
+        date: new Date().toISOString().split("T")[0],
+        details: "",
+      });
+    }
+  }, [isOpen, availableFollowUpNumbers, form]);
 
   const handleFormSubmit = (values: FollowUpFormData) => {
     const newFollowUpData: Omit<FollowUp, "id"> = {
@@ -107,23 +112,27 @@ export function FollowUpDialog({
       followUpNumber: values.followUpNumber,
       date: values.date,
       details: values.details,
-      type: infraction.type, // Copy infraction type? Or define follow-up types?
+      type: infraction.type, // Copy infraction type
       author: studentName, // Or logged-in user if available
     };
+
     onSubmit(newFollowUpData); // Call the submission function passed from props
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]"> {/* Slightly wider */}
+      <DialogContent className="sm:max-w-[480px]">
+        {" "}
+        {/* Slightly wider */}
         <DialogHeader>
           <DialogTitle>Registrar Seguimiento</DialogTitle>
           <DialogDescription>
-             Para la falta {infraction.type} - {infraction.number} de <strong>{studentName}</strong> del {formatDate(infraction.date)}.
-             Quedan {availableFollowUpNumbers.length} seguimiento(s) pendiente(s).
+            Para la falta {infraction.type} - {infraction.number} de{" "}
+            <strong>{studentName}</strong> del {formatDate(infraction.date)}.
+            Quedan {availableFollowUpNumbers.length} seguimiento(s)
+            pendiente(s).
           </DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleFormSubmit)}
@@ -136,10 +145,12 @@ export function FollowUpDialog({
                 <FormItem>
                   <FormLabel>Número de Seguimiento</FormLabel>
                   <Select
-                     onValueChange={(value) => field.onChange(Number(value))} // Convert back to number
-                     value={field.value?.toString()} // Ensure value is string for Select
-                     disabled={availableFollowUpNumbers.length === 0 || isSubmitting}
-                   >
+                    onValueChange={(value) => field.onChange(Number(value))} // Convert back to number
+                    value={field.value?.toString()} // Ensure value is string for Select
+                    disabled={
+                      availableFollowUpNumbers.length === 0 || isSubmitting
+                    }
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccione el número" />
@@ -151,9 +162,11 @@ export function FollowUpDialog({
                           Seguimiento {num}
                         </SelectItem>
                       ))}
-                       {availableFollowUpNumbers.length === 0 && (
-                           <SelectItem value="-" disabled>No hay seguimientos disponibles</SelectItem>
-                       )}
+                      {availableFollowUpNumbers.length === 0 && (
+                        <SelectItem value="-" disabled>
+                          No hay seguimientos disponibles
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   {/* <FormDescription>
@@ -171,13 +184,13 @@ export function FollowUpDialog({
                 <FormItem>
                   <FormLabel>Fecha del Seguimiento</FormLabel>
                   <FormControl>
-                     {/* Using Shadcn Input for consistency */}
-                     <Input
-                        type="date"
-                        {...field}
-                        disabled={isSubmitting}
-                        max={new Date().toISOString().split("T")[0]} // Prevent future dates
-                      />
+                    {/* Using Shadcn Input for consistency */}
+                    <Input
+                      type="date"
+                      {...field}
+                      disabled={isSubmitting}
+                      max={new Date().toISOString().split("T")[0]} // Prevent future dates
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,16 +216,23 @@ export function FollowUpDialog({
               )}
             />
 
-            <DialogFooter className="pt-4"> {/* Add padding top */}
-               <DialogClose asChild>
-                 <Button type="button" variant="outline" disabled={isSubmitting}>
-                    Cancelar
-                 </Button>
-               </DialogClose>
-               <Button type="submit" disabled={isSubmitting || availableFollowUpNumbers.length === 0}>
-                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                 Guardar Seguimiento
-               </Button>
+            <DialogFooter className="pt-4">
+              {" "}
+              {/* Add padding top */}
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isSubmitting}>
+                  Cancelar
+                </Button>
+              </DialogClose>
+              <Button
+                type="submit"
+                disabled={isSubmitting || availableFollowUpNumbers.length === 0}
+              >
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Guardar Seguimiento
+              </Button>
             </DialogFooter>
           </form>
         </Form>

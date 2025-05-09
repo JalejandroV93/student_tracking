@@ -1,0 +1,35 @@
+
+services:
+  # Aplicación Next.js
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3000"  # Mapear puerto 3002 del host al 3000 del contenedor
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/student_tracking
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - AUTH_SECRET=${AUTH_SECRET}
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=student_tracking
+    ports:
+      - "5433:5432"  # Mapear a un puerto diferente (5433) para evitar conflictos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:  # Volumen persistente para los datos de PostgreSQL

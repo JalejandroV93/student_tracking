@@ -1,11 +1,11 @@
-// src/components/students/StudentSearchList.tsx
 "use client";
 
-import { Card, CardContent, CardHeader  } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Use ScrollArea for long lists
-import { Search, Loader2, UserX } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, UserX, RefreshCw } from "lucide-react";
 import type { Student } from "@/types/dashboard";
+import { StudentSearchListSkeleton } from "./StudentSearchList.skeleton";
 
 interface StudentSearchListProps {
   searchQuery: string;
@@ -14,6 +14,7 @@ interface StudentSearchListProps {
   onSelectStudent: (student: Student) => void;
   isLoading: boolean;
   error: string | null;
+  isFetching: boolean;
 }
 
 export function StudentSearchList({
@@ -23,42 +24,45 @@ export function StudentSearchList({
   onSelectStudent,
   isLoading,
   error,
+  isFetching,
 }: StudentSearchListProps) {
+  if (isLoading) {
+    return (
+      <StudentSearchListSkeleton
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+      />
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        {/* <CardTitle>Buscar Estudiante</CardTitle> */}
-         <div className="relative">
-            <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar por nombre o ID..."
-              className="pl-8 w-full" // Take full width
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              aria-label="Buscar estudiante"
-            />
-          </div>
-        {/* <CardDescription>
-          Ingrese nombre o ID para encontrar un estudiante.
-        </CardDescription> */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar por nombre o ID..."
+            className="pl-8 w-full" // Take full width
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            aria-label="Buscar estudiante"
+          />
+        </div>
+        {isFetching && !isLoading && (
+          <RefreshCw className="absolute right-2.5 top-3 h-4 w-4 text-muted-foreground animate-spin" />
+        )}
       </CardHeader>
       <CardContent>
-        {isLoading && (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
-        {error && !isLoading && (
+        {error && (
           <div className="flex justify-center items-center h-40 text-destructive">
             {error}
           </div>
         )}
         {!isLoading && !error && (
-          <ScrollArea className="h-[400px] border rounded-md"> {/* Set max height and scroll */}
+          <ScrollArea className="h-[calc(700px_-_1rem)] border rounded-md">
             {students.length > 0 ? (
-              <ul className="divide-y"> {/* Use divide for separation */}
+              <ul className="divide-y">
                 {students.map((student) => (
                   <li key={student.id}>
                     <button
@@ -80,7 +84,7 @@ export function StudentSearchList({
                 <UserX className="w-10 h-10 mb-3" />
                 {searchQuery
                   ? `No se encontraron estudiantes para "${searchQuery}"`
-                  : "No hay estudiantes para mostrar."}
+                  : "No hay estudiantes registrados o la lista está vacía."}
               </div>
             )}
           </ScrollArea>

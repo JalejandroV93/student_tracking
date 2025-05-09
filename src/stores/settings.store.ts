@@ -41,7 +41,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ loading: true, error: null }); // Set loading true *only* when actually fetching
 
     try {
-      const response = await fetch("/api/alert-settings");
+      const response = await fetch("/api/v1/alert-settings");
       if (!response.ok) {
         throw new Error(`Failed to fetch settings: ${response.statusText}`);
       }
@@ -85,7 +85,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   updateSettings: async (newSettings) => {
     set({ loading: true }); // Indicate saving process
     try {
-      const response = await fetch("/api/alert-settings", {
+      const response = await fetch("/api/v1/alert-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSettings),
