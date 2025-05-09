@@ -2,8 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Instalar herramientas necesarias
-RUN apk add --no-cache tzdata curl postgresql-client cron
+# Instalar herramientas necesarias (busybox-suid en lugar de cron)
+RUN apk add --no-cache tzdata curl postgresql-client busybox-suid
 
 # Configurar zona horaria para Colombia (America/Bogota)
 ENV TZ=America/Bogota
