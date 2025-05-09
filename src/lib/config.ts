@@ -1,6 +1,6 @@
 // src/lib/config.ts
 
-const getEnvVar = (key: string): string => {
+export const getEnvVar = (key: string): string => {
     //console.log(`Getting environment variable: ${key}`);
     const value = process.env[key];
     if (!value) {

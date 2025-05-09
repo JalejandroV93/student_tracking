@@ -142,3 +142,12 @@ model Area {
   createdAt       DateTime          @default(now())
   AreaPermissions AreaPermissions[]
 }
+
+// Modelo para rastrear las sincronizaciones
+model SyncMetadata {
+  id                   Int      @id @default(autoincrement())
+  tabla                String   @unique
+  ultima_actualizacion DateTime
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+}
