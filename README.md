@@ -53,8 +53,23 @@ docker-compose exec app npm run sync
 Los logs de sincronización se almacenan en la carpeta `logs/`:
 
 ```bash
-# Ver los logs más recientes
+# Ver los logs de sincronización del día
 docker-compose exec app cat /app/logs/sync-$(date +%Y-%m-%d).log
+
+# Ver los logs del cron
+docker-compose exec app cat /app/logs/cron.log
+```
+
+### Solución de problemas
+
+Si necesitas verificar que el cron está configurado correctamente:
+
+```bash
+# Ver tareas de cron configuradas
+docker-compose exec app cat /etc/crontabs/root
+
+# Verificar procesos en ejecución (incluido crond)
+docker-compose exec app ps -ef
 ```
 
 ## Estructura del Proyecto
@@ -75,7 +90,6 @@ La aplicación utiliza:
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
-components.json, eslint.config.mjs, next.config.ts, postcss.config.mjs, tsconfig.json, prisma/migrations/, src/components/ui/
 First, run the development server:
 
 ```bash
