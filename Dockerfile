@@ -8,6 +8,9 @@ RUN apk add --no-cache tzdata curl postgresql-client busybox-suid
 # Configurar zona horaria para Colombia (America/Bogota)
 ENV TZ=America/Bogota
 
+# Crear directorio de logs
+RUN mkdir -p /app/logs && chmod 777 /app/logs
+
 # Copiar archivos de dependencias
 COPY package.json bun.lock ./
 
@@ -21,7 +24,7 @@ COPY . .
 RUN npx prisma generate
 
 # Agregar el script de sincronización al crontab
-RUN echo "0 6 * * * cd /app && npm run sync >> /var/log/cron.log 2>&1" > /etc/crontabs/root
+RUN echo "0 6 * * * cd /app && npm run sync >> /app/logs/cron.log 2>&1" > /etc/crontabs/root
 
 # Exponer puerto
 EXPOSE 3000
