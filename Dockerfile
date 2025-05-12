@@ -51,6 +51,8 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/src ./src
 
 # Agregar el script de sincronización al crontab
 RUN echo "0 6 * * * cd /app && yarn run sync >> /app/logs/cron.log 2>&1" > /etc/cron.d/app-cron
