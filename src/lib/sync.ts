@@ -15,6 +15,21 @@ export async function sincronizarDesdeSupabase() {
     // 2. Sincronizar faltas
     await sincronizarFaltas();
 
+    // 3. Sincronizar casos
+    await sincronizarCasos();
+
+    // 4. Sincronizar seguimientos
+    await sincronizarSeguimientos();
+
+    // 5. Sincronizar usuarios
+    await sincronizarUsuarios();
+
+    // 6. Sincronizar áreas
+    await sincronizarAreas();
+
+    // 7. Sincronizar permisos de áreas
+    await sincronizarAreaPermissions();
+
     console.log(
       `[${new Date().toISOString()}] Sincronización completada exitosamente`
     );
@@ -171,6 +186,329 @@ async function sincronizarFaltas() {
   await actualizarUltimaActualizacion("faltas", new Date());
   console.log(
     `[${new Date().toISOString()}] Actualización de faltas completada`
+  );
+}
+
+async function sincronizarCasos() {
+  // Obtener última fecha de actualización
+  const ultimaActualizacion = await obtenerUltimaActualizacion("casos");
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando casos desde: ${
+      ultimaActualizacion || "inicio"
+    }`
+  );
+
+  // Obtener casos actualizados desde Supabase
+  const { data: casos, error } = await supabase
+    .from("casos")
+    .select("*")
+    .gt("updated_at", ultimaActualizacion || "1970-01-01");
+
+  if (error) {
+    console.error(
+      `[${new Date().toISOString()}] Error obteniendo casos:`,
+      error
+    );
+    throw error;
+  }
+
+  if (!casos?.length) {
+    console.log(
+      `[${new Date().toISOString()}] No hay nuevos casos para sincronizar`
+    );
+    return;
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando ${casos.length} casos`
+  );
+
+  for (const caso of casos) {
+    await prisma.casos.upsert({
+      where: { id_caso: caso.id_caso },
+      update: {
+        hash_falta: caso.hash_falta,
+        fecha_inicio: caso.fecha_inicio ? new Date(caso.fecha_inicio) : null,
+        estado: caso.estado,
+      },
+      create: {
+        id_caso: caso.id_caso,
+        hash_falta: caso.hash_falta,
+        fecha_inicio: caso.fecha_inicio ? new Date(caso.fecha_inicio) : null,
+        estado: caso.estado || "Abierto",
+      },
+    });
+  }
+
+  // Actualizar fecha de última sincronización
+  await actualizarUltimaActualizacion("casos", new Date());
+  console.log(
+    `[${new Date().toISOString()}] Actualización de casos completada`
+  );
+}
+
+async function sincronizarSeguimientos() {
+  // Obtener última fecha de actualización
+  const ultimaActualizacion = await obtenerUltimaActualizacion("seguimientos");
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando seguimientos desde: ${
+      ultimaActualizacion || "inicio"
+    }`
+  );
+
+  // Obtener seguimientos actualizados desde Supabase
+  const { data: seguimientos, error } = await supabase
+    .from("seguimientos")
+    .select("*")
+    .gt("updated_at", ultimaActualizacion || "1970-01-01");
+
+  if (error) {
+    console.error(
+      `[${new Date().toISOString()}] Error obteniendo seguimientos:`,
+      error
+    );
+    throw error;
+  }
+
+  if (!seguimientos?.length) {
+    console.log(
+      `[${new Date().toISOString()}] No hay nuevos seguimientos para sincronizar`
+    );
+    return;
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando ${
+      seguimientos.length
+    } seguimientos`
+  );
+
+  for (const seguimiento of seguimientos) {
+    await prisma.seguimientos.upsert({
+      where: { id_seguimiento: seguimiento.id_seguimiento },
+      update: {
+        id_caso: seguimiento.id_caso,
+        tipo_seguimiento: seguimiento.tipo_seguimiento,
+        fecha_seguimiento: seguimiento.fecha_seguimiento
+          ? new Date(seguimiento.fecha_seguimiento)
+          : null,
+        detalles: seguimiento.detalles,
+        autor: seguimiento.autor,
+      },
+      create: {
+        id_seguimiento: seguimiento.id_seguimiento,
+        id_caso: seguimiento.id_caso,
+        tipo_seguimiento: seguimiento.tipo_seguimiento,
+        fecha_seguimiento: seguimiento.fecha_seguimiento
+          ? new Date(seguimiento.fecha_seguimiento)
+          : null,
+        detalles: seguimiento.detalles,
+        autor: seguimiento.autor,
+      },
+    });
+  }
+
+  // Actualizar fecha de última sincronización
+  await actualizarUltimaActualizacion("seguimientos", new Date());
+  console.log(
+    `[${new Date().toISOString()}] Actualización de seguimientos completada`
+  );
+}
+
+async function sincronizarUsuarios() {
+  // Obtener última fecha de actualización
+  const ultimaActualizacion = await obtenerUltimaActualizacion("usuarios");
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando usuarios desde: ${
+      ultimaActualizacion || "inicio"
+    }`
+  );
+
+  // Obtener usuarios actualizados desde Supabase
+  const { data: usuarios, error } = await supabase
+    .from("user")
+    .select("*")
+    .gt("updatedAt", ultimaActualizacion || "1970-01-01");
+
+  if (error) {
+    console.error(
+      `[${new Date().toISOString()}] Error obteniendo usuarios:`,
+      error
+    );
+    throw error;
+  }
+
+  if (!usuarios?.length) {
+    console.log(
+      `[${new Date().toISOString()}] No hay nuevos usuarios para sincronizar`
+    );
+    return;
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando ${usuarios.length} usuarios`
+  );
+
+  for (const usuario of usuarios) {
+    await prisma.user.upsert({
+      where: { id: usuario.id },
+      update: {
+        username: usuario.username,
+        document: usuario.document,
+        fullName: usuario.fullName,
+        email: usuario.email,
+        phonenumber: usuario.phonenumber,
+        role: usuario.role,
+        password: usuario.password,
+        lastLogin: usuario.lastLogin ? new Date(usuario.lastLogin) : null,
+        isBlocked: usuario.isBlocked,
+        failedLoginAttempts: usuario.failedLoginAttempts,
+        updatedAt: new Date(),
+      },
+      create: {
+        id: usuario.id,
+        username: usuario.username,
+        document: usuario.document,
+        fullName: usuario.fullName,
+        email: usuario.email,
+        phonenumber: usuario.phonenumber,
+        role: usuario.role,
+        password: usuario.password,
+        lastLogin: usuario.lastLogin ? new Date(usuario.lastLogin) : null,
+        isBlocked: usuario.isBlocked || false,
+        failedLoginAttempts: usuario.failedLoginAttempts || 0,
+        createdAt: new Date(usuario.createdAt),
+        updatedAt: new Date(usuario.updatedAt),
+      },
+    });
+  }
+
+  // Actualizar fecha de última sincronización
+  await actualizarUltimaActualizacion("usuarios", new Date());
+  console.log(
+    `[${new Date().toISOString()}] Actualización de usuarios completada`
+  );
+}
+
+async function sincronizarAreas() {
+  // Obtener última fecha de actualización
+  const ultimaActualizacion = await obtenerUltimaActualizacion("areas");
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando áreas desde: ${
+      ultimaActualizacion || "inicio"
+    }`
+  );
+
+  // Obtener áreas actualizadas desde Supabase
+  const { data: areas, error } = await supabase
+    .from("area")
+    .select("*")
+    .gt("updatedAt", ultimaActualizacion || "1970-01-01");
+
+  if (error) {
+    console.error(
+      `[${new Date().toISOString()}] Error obteniendo áreas:`,
+      error
+    );
+    throw error;
+  }
+
+  if (!areas?.length) {
+    console.log(
+      `[${new Date().toISOString()}] No hay nuevas áreas para sincronizar`
+    );
+    return;
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando ${areas.length} áreas`
+  );
+
+  for (const area of areas) {
+    await prisma.area.upsert({
+      where: { id: area.id },
+      update: {
+        name: area.name,
+        code: area.code,
+      },
+      create: {
+        id: area.id,
+        name: area.name,
+        code: area.code,
+        createdAt: new Date(area.createdAt),
+      },
+    });
+  }
+
+  // Actualizar fecha de última sincronización
+  await actualizarUltimaActualizacion("areas", new Date());
+  console.log(
+    `[${new Date().toISOString()}] Actualización de áreas completada`
+  );
+}
+
+async function sincronizarAreaPermissions() {
+  // Obtener última fecha de actualización
+  const ultimaActualizacion = await obtenerUltimaActualizacion(
+    "area_permissions"
+  );
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando permisos de área desde: ${
+      ultimaActualizacion || "inicio"
+    }`
+  );
+
+  // Obtener permisos de área actualizados desde Supabase
+  const { data: permisos, error } = await supabase
+    .from("areapermissions")
+    .select("*")
+    .gt("updatedAt", ultimaActualizacion || "1970-01-01");
+
+  if (error) {
+    console.error(
+      `[${new Date().toISOString()}] Error obteniendo permisos de área:`,
+      error
+    );
+    throw error;
+  }
+
+  if (!permisos?.length) {
+    console.log(
+      `[${new Date().toISOString()}] No hay nuevos permisos de área para sincronizar`
+    );
+    return;
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] Sincronizando ${
+      permisos.length
+    } permisos de área`
+  );
+
+  for (const permiso of permisos) {
+    await prisma.areaPermissions.upsert({
+      where: { id: permiso.id },
+      update: {
+        userId: permiso.userId,
+        areaId: permiso.areaId,
+        canView: permiso.canView,
+        updatedAt: new Date(),
+      },
+      create: {
+        id: permiso.id,
+        userId: permiso.userId,
+        areaId: permiso.areaId,
+        canView: permiso.canView || false,
+        createdAt: new Date(permiso.createdAt),
+        updatedAt: new Date(permiso.updatedAt),
+      },
+    });
+  }
+
+  // Actualizar fecha de última sincronización
+  await actualizarUltimaActualizacion("area_permissions", new Date());
+  console.log(
+    `[${new Date().toISOString()}] Actualización de permisos de área completada`
   );
 }
 
