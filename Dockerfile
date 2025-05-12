@@ -26,6 +26,7 @@ COPY . .
 
 # Generar Prisma
 RUN yarn run prisma:generate
+RUN npx prisma generate
 
 # Ejecuta el script de build
 RUN yarn build
