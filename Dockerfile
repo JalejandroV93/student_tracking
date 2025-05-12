@@ -36,7 +36,7 @@ FROM node:24-slim AS runner
 WORKDIR /app
 
 # Instalar herramientas necesarias para crontab
-RUN apt-get update && apt-get install -y cron tzdata curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y cron tzdata curl procps && rm -rf /var/lib/apt/lists/*
 
 # Configurar zona horaria para Colombia (America/Bogota)
 ENV TZ=America/Bogota
