@@ -25,6 +25,10 @@ echo "Base de datos lista"
 echo "Ejecutando migraciones de Prisma..."
 yarn run prisma:migrate
 
+# Ejecutar script de semilla
+echo "Ejecutando script de semilla..."
+yarn run prisma:seed
+
 # Iniciar la aplicación Next.js
 echo "Iniciando la aplicación..."
 yarn run start 
