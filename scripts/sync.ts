@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { sincronizarDesdeSupabase } from "../src/lib/sync";
+import { prisma } from "../src/lib/prisma";
 import fs from "fs";
 import path from "path";
 
@@ -26,12 +27,43 @@ function escribirLog(mensaje: string) {
   console.log(mensaje);
 }
 
+async function actualizarEstadoSincronizacion(
+  syncId: number | null,
+  estatus: string,
+  error?: string
+) {
+  if (!syncId) return;
+
+  try {
+    await prisma.syncHistory.update({
+      where: { id: syncId },
+      data: {
+        status: estatus,
+        completedAt: new Date(),
+        error: error,
+      },
+    });
+  } catch (err) {
+    console.error("Error actualizando estado de sincronización:", err);
+  }
+}
+
 async function main() {
-  escribirLog("Iniciando proceso de sincronización");
+  // Obtener ID de sincronización si existe (pasado como argumento)
+  const syncId = process.argv.length > 2 ? parseInt(process.argv[2], 10) : null;
+
+  escribirLog(
+    "Iniciando proceso de sincronización" + (syncId ? ` (ID: ${syncId})` : "")
+  );
 
   try {
     await sincronizarDesdeSupabase();
     escribirLog("Sincronización completada exitosamente");
+
+    if (syncId) {
+      await actualizarEstadoSincronizacion(syncId, "success");
+    }
+
     process.exit(0);
   } catch (error) {
     const errorMessage =
@@ -41,6 +73,11 @@ async function main() {
     escribirLog(
       `Stack: ${error instanceof Error ? error.stack : "No disponible"}`
     );
+
+    if (syncId) {
+      await actualizarEstadoSincronizacion(syncId, "error", errorMessage);
+    }
+
     process.exit(1);
   }
 }
