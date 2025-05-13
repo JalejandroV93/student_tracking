@@ -27,7 +27,7 @@ yarn run prisma:migrate
 
 # Ejecutar script de semilla
 echo "Ejecutando script de semilla..."
-yarn run prisma:seed
+yarn run seed
 
 # Iniciar la aplicación Next.js
 echo "Iniciando la aplicación..."
