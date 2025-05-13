@@ -15,7 +15,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { useSyncInfo } from "@/hooks/useSyncInfo";
 import { SyncStatusTable } from "@/components/admin/SyncStatusTable";
 import { SyncHistoryTable } from "@/components/admin/SyncHistoryTable";
-import { ContentLayoutSkeleton } from "@/components/admin/content-layout-skeleton"
+import { ContentLayoutSkeleton } from "@/components/admin/content-layout-skeleton";
 
 export default function SyncPage() {
   const {
@@ -44,9 +44,7 @@ export default function SyncPage() {
   };
 
   if (isLoading) {
-    return (
-      <ContentLayoutSkeleton title="Administración de Sincronización" />
-    );
+    return <ContentLayoutSkeleton title="Administración de Sincronización" />;
   }
 
   if (error) {

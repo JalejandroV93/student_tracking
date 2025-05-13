@@ -9,10 +9,7 @@ export async function POST() {
     // Verificar que el usuario es administrador
     const user = await getCurrentUser();
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     // Verificar si ya hay una sincronización en curso
@@ -24,9 +21,9 @@ export async function POST() {
 
     if (currentSync) {
       return NextResponse.json(
-        { 
-          error: "Ya hay una sincronización en curso", 
-          syncId: currentSync.id 
+        {
+          error: "Ya hay una sincronización en curso",
+          syncId: currentSync.id,
         },
         { status: 409 }
       );
@@ -89,4 +86,4 @@ export async function POST() {
       { status: 500 }
     );
   }
-} 
+}
