@@ -1,6 +1,6 @@
 "use client";
 
-import {  useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,7 +18,6 @@ import {
 import {
   Form,
   FormControl,
-  
   FormField,
   FormItem,
   FormLabel,
@@ -36,6 +35,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import { KeyIcon } from "lucide-react";
+import { useSession } from "@/hooks/auth-client";
 
 // Esquema de validación
 const userSchema = z.object({
@@ -94,6 +95,8 @@ interface UserModalProps {
 
 export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
   const isEdit = !!user;
+  const { session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   // Obtener áreas
   const { data: areas, isLoading: areasLoading } = useQuery({
@@ -133,6 +136,34 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
           : "Usuario creado correctamente"
       );
       onSuccess();
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  // Mutation para resetear contraseña (solo admin)
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (newPassword: string) => {
+      if (!user) return;
+
+      const response = await fetch(`/api/v1/users/${user.id}/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ newPassword }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error al resetear la contraseña");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Contraseña restablecida correctamente");
     },
     onError: (error) => {
       toast.error(`Error: ${error.message}`);
@@ -195,6 +226,23 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
 
   const currentRole = form.watch("role");
 
+  // Función para manejar el reseteo de contraseña
+  const handleResetPassword = () => {
+    if (!user) return;
+
+    // Generar una contraseña aleatoria de 10 caracteres
+    const randomPassword = Math.random().toString(36).slice(-10);
+
+    resetPasswordMutation.mutate(randomPassword);
+
+    // Mostrar la contraseña generada
+    toast.info(`Nueva contraseña: ${randomPassword}`, {
+      duration: 10000, // Mostrar por 10 segundos
+      description:
+        "Copie esta contraseña y compártala con el usuario de forma segura.",
+    });
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -211,6 +259,24 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Botón para resetear contraseña (solo para admin) */}
+            {isEdit && isAdmin && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleResetPassword}
+                disabled={resetPasswordMutation.isPending}
+              >
+                {resetPasswordMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <KeyIcon className="mr-2 h-4 w-4" />
+                )}
+                Restablecer contraseña
+              </Button>
+            )}
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* Nombre de usuario */}
               <FormField

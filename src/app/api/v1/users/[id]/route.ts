@@ -93,10 +93,14 @@ export async function PUT(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Solo administradores pueden actualizar usuarios
-    if (currentUser.role !== "ADMIN") {
+    // Verificar si es el usuario actual o un administrador
+    const isOwnUser = currentUser.id === userId;
+    const isAdmin = currentUser.role === "ADMIN";
+
+    // Solo administradores o el propio usuario pueden actualizar su perfil
+    if (!isAdmin && !isOwnUser) {
       return NextResponse.json(
-        { error: "No tienes permisos para actualizar usuarios" },
+        { error: "No tienes permisos para actualizar este usuario" },
         { status: 403 }
       );
     }
@@ -148,17 +152,26 @@ export async function PUT(
       username,
       fullName,
       email,
-      role,
     };
+
+    // Solo los administradores pueden actualizar roles
+    if (isAdmin) {
+      updateData.role = role;
+    }
 
     // Si se proporciona una nueva contraseña, actualizarla
     if (password) {
       updateData.password = await hashPassword(password);
     }
 
+    // Actualizar el usuario
+    await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
 
-    // Actualizar permisos de área
-    if (areaPermissions && areaPermissions.length > 0) {
+    // Solo los administradores pueden actualizar permisos de área
+    if (isAdmin && areaPermissions && areaPermissions.length > 0) {
       // Eliminar permisos existentes
       await prisma.areaPermissions.deleteMany({
         where: { userId },

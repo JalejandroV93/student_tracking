@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid, LogOut, Settings } from "lucide-react";
+import { LayoutGrid, LogOut, Settings, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -72,6 +72,12 @@ export function UserNav() {
             <Link href="/dashboard" className="flex items-center">
               <LayoutGrid className="w-4 h-4 mr-3 text-muted-foreground" />
               Resumen
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="hover:cursor-pointer" asChild>
+            <Link href="/dashboard/profile" className="flex items-center">
+              <User className="w-4 h-4 mr-3 text-muted-foreground" />
+              Mi Perfil
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="hover:cursor-pointer" asChild>
