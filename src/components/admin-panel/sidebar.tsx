@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
-import { FileText } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "../ui/logo";
 
 export function Sidebar() {
   const sidebar = useStore(useSidebar, (x) => x);
@@ -35,17 +35,7 @@ export function Sidebar() {
           asChild
         >
           <Link href="/dashboard" className="flex items-center gap-2">
-            <FileText className="w-6 h-6 mr-1" />
-            <h1
-              className={cn(
-                "font-bold text-lg whitespace-nowrap transition-[transform,opacity,display] ease-in-out duration-300",
-                !getOpenState()
-                  ? "-translate-x-96 opacity-0 hidden"
-                  : "translate-x-0 opacity-100"
-              )}
-            >
-              Sistema Faltas
-            </h1>
+            <Logo className="w-22 h-22 mr-1 mt-5" />
           </Link>
         </Button>
         <Menu isOpen={getOpenState()} />

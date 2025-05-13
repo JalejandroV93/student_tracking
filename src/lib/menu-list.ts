@@ -5,7 +5,6 @@ import {
   CalendarDays,
   LayoutGrid,
   LucideIcon,
-  Settings,
   Users,
   Database,
 } from "lucide-react";
@@ -82,7 +81,7 @@ export function getMenuList(
       menus: [
         {
           href: "/dashboard",
-          label: "Resumen",
+          label: "Inicio",
           icon: LayoutGrid,
           active: pathname === "/dashboard",
         },
@@ -163,20 +162,16 @@ export function getMenuList(
       groupLabel: "Configuración",
       menus: [
         {
-          href: "",
-          label: "Configuración",
-          icon: Settings,
+          href: "/dashboard/settings",
+          label: "Alertas",
+          icon: AlertTriangle,
           active: pathname.startsWith("/dashboard/settings"),
-          submenus: [
-            {
-              href: "/dashboard/settings",
-              label: "Alertas",
-            },
-            {
-              href: "/dashboard/settings/users",
-              label: "Usuarios",
-            },
-          ],
+        },
+        {
+          href: "/dashboard/settings/users",
+          label: "Usuarios",
+          icon: Users,
+          active: pathname.startsWith("/dashboard/settings/users"),
         },
         {
           href: "/dashboard/admin/sync",
