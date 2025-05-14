@@ -16,6 +16,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./logs:/app/logs
+    networks:
+      - default
+      - n8n_network
 
   # Base de datos PostgreSQL
   db:
@@ -29,6 +32,15 @@ services:
       - "5433:5432"  # Mapear a un puerto diferente (5433) para evitar conflictos
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+      - n8n_network
 
 volumes:
   postgres_data:  # Volumen persistente para los datos de PostgreSQL
+
+networks:
+  default:
+  n8n_network:
+    external: true
+    name: n8n_default
