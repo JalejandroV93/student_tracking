@@ -1,6 +1,6 @@
 {
   "name": "student_tracking",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -9,8 +9,7 @@
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate deploy",
-    "sync": "tsx scripts/sync.ts"
+    "prisma:migrate": "prisma migrate deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
