@@ -59,5 +59,5 @@ ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 EXPOSE 3000
 
 # Script de inicio para cron y aplicación
-CMD ["sh", "-c", "yarn run prisma:migrate && yarn run seed && yarn run start"]
+CMD ["sh", "-c", "yarn run prisma:migrate && yarn run start"]
 
