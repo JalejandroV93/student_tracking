@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   LucideIcon,
   Users,
-  Database,
 } from "lucide-react";
 
 type Submenu = {
@@ -172,13 +171,8 @@ export function getMenuList(
           label: "Usuarios",
           icon: Users,
           active: pathname.startsWith("/dashboard/settings/users"),
-        },
-        {
-          href: "/dashboard/admin/sync",
-          label: "Sincronización BD",
-          icon: Database,
-          active: pathname.startsWith("/dashboard/admin/sync"),
-        },
+        }
+        
       ],
     });
   }
