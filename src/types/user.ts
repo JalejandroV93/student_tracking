@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Role } from "@prisma/client";
-import { JWTPayload } from "jose";
+import { Role } from '@prisma/client';
+import { JWTPayload } from 'jose';
 
 export interface Area {
   id: number;
@@ -22,9 +22,9 @@ export interface UserPayload extends JWTPayload {
   document: string;
   fullName: string;
   role: Role;
-  email?: string; //Added
+  email?: string;    //Added
   phonenumber?: string; //Added
-  AreaPermissions: AreaPermission[]; // Asegurar que no sea opcional
+  AreaPermissions?: AreaPermission[]; // Add this line
   [key: string]: any; // Añade esta línea
 }
 

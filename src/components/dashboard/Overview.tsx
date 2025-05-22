@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Activity,
+  Activity, // Keep one Activity
   AlertCircle,
   AlertTriangle,
   BellRing,
@@ -11,161 +11,82 @@ import {
   Users,
 } from "lucide-react";
 
-import type { Student, AlertSettings } from "@/types/dashboard";
+// Assuming Student type is defined elsewhere, e.g., in types/dashboard or similar
+import type { Student } from "@/types/dashboard"; 
 import type { AlertStatus } from "@/lib/utils";
 import { AlertsWidget } from "@/components/alerts/AlertsWidget";
 import { InfractionTrends } from "@/components/dashboard/InfractionTrends";
 import { SectionOverview } from "@/components/dashboard/SectionOverview";
-import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
-import { useMemo, useState, useEffect, useCallback } from "react";
+// SECCIONES_ACADEMICAS might not be needed if sectionStatsList provides all necessary info
+// import { SECCIONES_ACADEMICAS } from "@/lib/constantes"; 
+import { useMemo, useState, useEffect } from "react";
 import { TrimestreSelector } from "./TrimestreSelector";
 import { useInfractionsStore } from "@/stores/infractions.store";
 import { OverviewSkeleton } from "./Overview.skeleton";
-import { useStudentsCount } from "@/hooks/use-students-count";
+// useStudentsCount hook is removed as allStudentsCount is now a prop
 import { NumberTicker } from "@/components/magicui/number-ticker";
-import { useAuth } from "@/components/providers/AuthProvider";
+
+// This should match the SectionStats from useDashboardData
+export interface SectionStats { // Export if needed by parent, or keep local
+  name: string;
+  code: string;
+  studentCount: number;
+  typeI: number;
+  typeII: number;
+  typeIII: number;
+  totalInfractions: number;
+  alertsCount: number;
+}
 
 interface OverviewProps {
-  students: Student[];
-  settings: AlertSettings; // Keep settings prop if needed by getStudentAlertStatus
-  getStudentAlertStatus: (studentId: string) => AlertStatus | null;
+  studentsWithAlerts: Student[]; 
+  sectionStatsList: SectionStats[];
+  allStudentsCount: number;
+  getStudentAlertStatus: (studentId: string) => AlertStatus | null; 
   onSelectStudent: (studentId: string) => void;
 }
 
 export function Overview({
-  students,
-  // settings, // settings might not be needed directly if getStudentAlertStatus gets it from its own store context
-  getStudentAlertStatus,
+  studentsWithAlerts,
+  sectionStatsList,
+  allStudentsCount,
+  getStudentAlertStatus, 
   onSelectStudent,
 }: OverviewProps) {
-  const [currentTrimestre, setCurrentTrimestre] = useState<string>("all"); // Ensure it's string
+  const [currentTrimestre, setCurrentTrimestre] = useState<string>("all");
   const {
-    infractions,
+    infractions, 
     fetchInfractions,
     loading: infractionsLoading,
     error: infractionsError,
-  } = useInfractionsStore(); // Get loading/error states
-  const { user } = useAuth(); // Obtener el usuario para los permisos
-
-  // Obtener el conteo total de estudiantes
-  const { data: totalStudentsCount = 0, isLoading: isLoadingStudentsCount } =
-    useStudentsCount();
+  } = useInfractionsStore();
 
   useEffect(() => {
-    fetchInfractions();
+    fetchInfractions(); 
   }, [fetchInfractions]);
 
-  // Filter infractions by trimester first - This is the core fix
+  // Filter infractions by trimester first for KPI cards that depend on trimester
   const filteredInfractions = useMemo(() => {
-    if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
+    if (infractionsLoading || infractionsError) return [];
     if (currentTrimestre === "all") {
-      // console.log(`Filtering for 'all': ${infractions.length} total infractions`);
       return infractions;
     }
-    // Ensure we compare string to string and handle potential null/empty strings from DB
-    const filtered = infractions.filter((inf) => {
-      // Mapeo de valores numéricos a nombres de trimestre
-      const trimestreMap: Record<string, string> = {
-        "1": "Primer Trimestre",
-        "2": "Segundo Trimestre",
-        "3": "Tercer Trimestre",
-      };
+    const trimestreMap: Record<string, string> = {
+      "1": "Primer Trimestre",
+      "2": "Segundo Trimestre",
+      "3": "Tercer Trimestre",
+    };
+    const valorEsperado = trimestreMap[currentTrimestre];
+    return infractions.filter((inf) => inf.trimester === valorEsperado);
+  }, [infractions, currentTrimestre, infractionsLoading, infractionsError]);
 
-      // Obtener el valor esperado del trimestre según lo seleccionado
-      const valorEsperado = trimestreMap[currentTrimestre];
+  // studentsWithAlerts is passed as a prop.
+  // getStudentAlertStatus is passed as a prop.
+  // sectionStatsList is passed as a prop.
+  // allStudentsCount is passed as a prop.
 
-      // Comparar con el valor mapeado
-      return inf.trimester === valorEsperado;
-    });
-
-    return filtered;
-  }, [infractions, currentTrimestre, infractionsLoading, infractionsError]); // Add loading/error dependencies
-
-  // Calculate students with alerts using the passed function (uses ALL infractions for calculation, not filtered ones)
-  const studentsWithAlerts = useMemo(
-    () => {
-      if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
-      return (
-        students
-          .map((student) => ({
-            ...student,
-            // This function internally uses the *complete* infractions list from its store context (e.g., useAlertsStore)
-            // or it should receive the complete list if not using a separate store.
-            // Assuming getStudentAlertStatus correctly uses the full infraction list.
-            alertStatus: getStudentAlertStatus(student.id),
-          }))
-          .filter((student) => student.alertStatus !== null)
-          // Sort critical alerts first
-          .sort((a, b) => {
-            if (
-              a.alertStatus?.level === "critical" &&
-              b.alertStatus?.level !== "critical"
-            )
-              return -1;
-            if (
-              a.alertStatus?.level !== "critical" &&
-              b.alertStatus?.level === "critical"
-            )
-              return 1;
-            if (a.alertStatus && b.alertStatus)
-              return b.alertStatus.count - a.alertStatus.count; // Higher count first
-            return 0;
-          })
-      );
-    },
-    [students, getStudentAlertStatus, infractionsLoading, infractionsError] // Depends on students and the alert function logic (which implicitly depends on infractions/settings)
-  );
-
-  // Calculate statistics by section using the *filtered* infractions
-  const sectionStats = useMemo(() => {
-    // Base the calculation ONLY on the already filtered infractions for the selected trimester
-    return Object.values(SECCIONES_ACADEMICAS).map((sectionName) => {
-      // 1. Filter the *already trimester-filtered* infractions by section
-      const sectionInfractions = filteredInfractions.filter(
-        (inf) => inf.level === sectionName // `level` should match section names like "Elementary", "Middle School" etc.
-      );
-
-      // 2. Get unique students involved in these specific infractions
-      const sectionStudentIds = new Set(
-        sectionInfractions.map((inf) => inf.studentId)
-      );
-      const sectionStudents = students.filter((student) =>
-        sectionStudentIds.has(student.id)
-      );
-
-      // 3. Count infractions by type within this filtered set
-      const typeI = sectionInfractions.filter(
-        (inf) => inf.type === "Tipo I"
-      ).length;
-      const typeII = sectionInfractions.filter(
-        (inf) => inf.type === "Tipo II"
-      ).length;
-      const typeIII = sectionInfractions.filter(
-        (inf) => inf.type === "Tipo III"
-      ).length;
-
-      // 4. Count alerts for students active in this section *during this trimester*
-      //    (This requires checking alerts based on *all* infractions for that student up to now)
-      const alertsCount = sectionStudents.filter(
-        (student) => getStudentAlertStatus(student.id) !== null
-      ).length;
-
-      return {
-        name: sectionName,
-        studentCount: sectionStudents.length, // Students with infractions in this section/trimester
-        typeI,
-        typeII,
-        typeIII,
-        total: typeI + typeII + typeIII,
-        alertsCount, // Total active alerts for students involved in this section/trimester
-      };
-    });
-  }, [students, filteredInfractions, getStudentAlertStatus]); // Use filteredInfractions here
-
-  // Calculate overall stats based on filtered infractions
-  const totalInfractions = filteredInfractions.length; // Use count from filtered list
-
-  // Calculate filtered counts by type from the filtered list
+  // Calculate overall stats based on filteredInfractions for KPI cards
+  const totalInfractions = filteredInfractions.length;
   const filteredTypeICounts = filteredInfractions.filter(
     (inf) => inf.type === "Tipo I"
   ).length;
@@ -176,39 +97,10 @@ export function Overview({
     (inf) => inf.type === "Tipo III"
   ).length;
 
-  // Helper para verificar permisos de área
-  const hasAreaPermission = useCallback(
-    (sectionName: string): boolean => {
-      // Administrador siempre tiene acceso a todas las áreas
-      if (user?.role === "ADMIN") return true;
-
-      // Si no hay permisos de área definidos, asumimos que no tiene acceso
-      if (!user?.AreaPermissions || user.AreaPermissions.length === 0)
-        return false;
-
-      // Mapeo de nombres de sección a códigos de área (ajustar según la configuración real)
-      const sectionToAreaCode: Record<string, string> = {
-        Preschool: "PRESCHOOL",
-        Elementary: "ELEMENTARY",
-        "Middle School": "MIDDLE_SCHOOL",
-        "High School": "HIGH_SCHOOL",
-      };
-
-      const areaCode = sectionToAreaCode[sectionName];
-      if (!areaCode) return false;
-
-      // Verificar si el usuario tiene permiso para ver esta área específica
-      return user.AreaPermissions.some(
-        (permission) => permission.area.code === areaCode && permission.canView
-      );
-    },
-    [user]
-  );
-
-  // Handle Loading/Error State for Infractions
+  // Handle Loading/Error State for Infractions (which impacts KPI cards)
   if (infractionsLoading) {
     return (
-      <div className="w-[900px]">
+      <div className="w-full"> {/* Ensure skeleton takes full width */}
         <OverviewSkeleton />
       </div>
     );
@@ -217,7 +109,7 @@ export function Overview({
   if (infractionsError) {
     return (
       <div className="text-destructive">
-        Error loading infractions: {infractionsError}
+        Error loading infraction data for KPIs: {infractionsError.toString()}
       </div>
     );
   }
@@ -232,7 +124,7 @@ export function Overview({
         />
       </div>
 
-      {/* Main KPI Cards - Use calculated stats based on filteredInfractions */}
+      {/* Main KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -242,11 +134,8 @@ export function Overview({
           </CardHeader>
           <CardContent className="flex items-center justify-between pt-0">
             <div className="text-xl font-bold">
-              {isLoadingStudentsCount ? (
-                <span className="text-muted-foreground">Cargando...</span>
-              ) : (
-                <NumberTicker value={totalStudentsCount} />
-              )}
+              {/* Assuming allStudentsCount comes directly as a number, not from a hook here */}
+              <NumberTicker value={allStudentsCount} />
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <Users className="h-6 w-6 text-primary" />
@@ -371,14 +260,14 @@ export function Overview({
         <InfractionTrends infractions={infractions} />
       </div>
 
-      {/* Section Summaries - Uses sectionStats which is derived from filteredInfractions */}
+      {/* Section Summaries - Uses sectionStatsList prop */}
       <div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {sectionStats
-            .filter((section) => hasAreaPermission(section.name))
-            .map((section) => (
-              <SectionOverview key={section.name} section={section} />
-            ))}
+          {sectionStatsList.map((section) => (
+            <SectionOverview key={section.code} section={section} /> 
+            // Use section.code for key if name might not be unique, or section.name if it is.
+            // Assuming code is unique per area.
+          ))}
         </div>
       </div>
     </div>

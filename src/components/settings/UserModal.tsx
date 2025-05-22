@@ -202,27 +202,8 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
   // Actualizar permisos de área cuando se cargan las áreas
   useEffect(() => {
     if (areas && areas.length > 0) {
-      if (isEdit && user) {
-        // Para usuarios existentes, asegurar que todas las áreas estén presentes
-        const currentPermissions = form.getValues("areaPermissions") || [];
-        const currentAreaIdsMap = new Map(
-          currentPermissions.map((p) => [p.areaId, p.canView])
-        );
-
-        // Añadir áreas que falten en los permisos actuales
-        const updatedPermissions = areas.map((area) => {
-          const existingCanView = currentAreaIdsMap.has(area.id)
-            ? currentAreaIdsMap.get(area.id)
-            : false;
-
-          return {
-            areaId: area.id,
-            canView: existingCanView || false,
-          };
-        });
-
-        form.setValue("areaPermissions", updatedPermissions);
-      } else if (!isEdit) {
+      // Si es edición, los permisos ya están configurados
+      if (!isEdit) {
         // Para nuevos usuarios, inicializar todos los permisos en false
         const initialPermissions = areas.map((area) => ({
           areaId: area.id,
@@ -232,26 +213,9 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
         form.setValue("areaPermissions", initialPermissions);
       }
     }
-  }, [areas, form, isEdit, user]);
+  }, [areas, form, isEdit]);
 
   const onSubmit = (data: UserFormData) => {
-    // Asegurarse de que todos los permisos tengan el areaId correcto
-    if (areas && areas.length > 0) {
-      const updatedPermissions = areas.map((area) => {
-        // Encontrar el permiso correspondiente en el form data
-        const permissionForArea = data.areaPermissions.find(
-          (p) => p.areaId === area.id
-        );
-
-        return {
-          areaId: area.id,
-          canView: permissionForArea ? permissionForArea.canView : false,
-        };
-      });
-
-      data.areaPermissions = updatedPermissions;
-    }
-
     userMutation.mutate(data);
   };
 
@@ -425,48 +389,39 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                     Permisos por Área
                   </h3>
                   <div className="grid grid-cols-1 gap-3">
-                    {areas.map((area) => {
-                      // Encontrar el índice del permiso para este área
-                      const permIndex = form
-                        .getValues("areaPermissions")
-                        .findIndex((p) => p.areaId === area.id);
-
-                      if (permIndex === -1) return null;
-
-                      return (
-                        <div
-                          key={area.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <FormField
-                            control={form.control}
-                            name={`areaPermissions.${permIndex}.canView`}
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={(checked) => {
-                                      field.onChange(checked);
-                                      // Asegurarse de que el areaId esté configurado
-                                      form.setValue(
-                                        `areaPermissions.${permIndex}.areaId`,
-                                        area.id
-                                      );
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel className="cursor-pointer">
-                                    {area.name}
-                                  </FormLabel>
-                                </div>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      );
-                    })}
+                    {areas.map((area, index) => (
+                      <div
+                        key={area.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <FormField
+                          control={form.control}
+                          name={`areaPermissions.${index}.canView`}
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={(checked) => {
+                                    field.onChange(checked);
+                                    // Asegurarse de que el areaId esté configurado
+                                    form.setValue(
+                                      `areaPermissions.${index}.areaId`,
+                                      area.id
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="cursor-pointer">
+                                  {area.name}
+                                </FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>

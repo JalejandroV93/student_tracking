@@ -8,27 +8,16 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogClose,
+  DialogTrigger, // Not used for controlled dialog, but part of the component
+  DialogFooter, // Not directly used, form has its own
+  DialogClose, // For explicit close button if needed
 } from "@/components/ui/dialog";
 import AreaList from "@/components/settings/areas/AreaList";
-import AreaForm, {
-  Area,
-  AreaFormData,
-} from "@/components/settings/areas/AreaForm";
+import AreaForm, { Area, AreaFormData } from "@/components/settings/areas/AreaForm";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Role } from "@prisma/client";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { ContentLayout } from "@/components/admin-panel/content-layout";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation"; // For redirect
 
 const AreasPage = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -51,7 +40,7 @@ const AreasPage = () => {
       const data = await response.json();
       setAreas(data);
     } catch (error: any) {
-      toast.error(`Error al cargar áreas: ${error.message}`);
+      toast.error(`Failed to fetch areas: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -66,12 +55,11 @@ const AreasPage = () => {
   // Admin Protection
   useEffect(() => {
     if (!authLoading && (!user || user.role !== Role.ADMIN)) {
-      toast.error(
-        "Acceso denegado: Debes ser Administrador para ver esta página."
-      );
-      router.push("/dashboard");
+      toast.error("Access Denied: You must be an Admin to view this page.");
+      router.push("/dashboard"); // Redirect to a safe page
     }
   }, [user, authLoading, router]);
+
 
   const handleOpenModalForCreate = () => {
     setEditingArea(undefined);
@@ -104,15 +92,10 @@ const AreasPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.error ||
-            `Error al ${editingArea ? "actualizar" : "crear"} área`
-        );
+        throw new Error(errorData.error || `Failed to ${editingArea ? 'update' : 'create'} area`);
       }
 
-      toast.success(
-        `Área ${editingArea ? "actualizada" : "creada"} exitosamente!`
-      );
+      toast.success(`Area ${editingArea ? 'updated' : 'created'} successfully!`);
       fetchAreas(); // Refresh the list
       handleCloseModal();
     } catch (error: any) {
@@ -130,106 +113,51 @@ const AreasPage = () => {
       });
 
       if (!response.ok) {
-        if (
-          response.status === 409 ||
-          response.status === 404 ||
-          response.status === 403 ||
-          response.status === 401
-        ) {
+        // For 204 No Content, response.ok is true, but response.json() will fail.
+        // So we check for specific error statuses that might return JSON.
+        if (response.status === 409 || response.status === 404 || response.status === 403 || response.status === 401) {
           const errorData = await response.json();
-          throw new Error(errorData.error || "Error al eliminar el área.");
+          throw new Error(errorData.error || "Failed to delete area due to server error.");
         }
-        if (response.status !== 204) {
-          throw new Error(
-            `Error al eliminar el área. Código: ${response.status}`
-          );
+        if (response.status !== 204) { // If not 204, and not handled above, throw generic.
+             throw new Error(`Failed to delete area. Status: ${response.status}`);
         }
       }
-      toast.success("Área eliminada exitosamente!");
-      fetchAreas();
+      toast.success("Area deleted successfully!");
+      fetchAreas(); // Refresh the list
     } catch (error: any) {
-      toast.error(`Error al eliminar área: ${error.message}`);
-      throw error;
+      toast.error(`Failed to delete area: ${error.message}`);
+      throw error; // Re-throw to allow AreaList to handle its state if needed
     }
   };
 
-  if (authLoading) {
-    return (
-      <ContentLayout title="Gestión de Áreas">
-        <div className="flex items-center justify-center w-full h-64">
-          <Skeleton className="h-12 w-12 rounded-full" />
-        </div>
-      </ContentLayout>
-    );
+  if (authLoading || (!user && !authLoading)) { // Show loading while auth is checked or if no user (before redirect effect runs)
+    return <p>Loading user data...</p>;
+  }
+  
+  if (user && user.role !== Role.ADMIN) {
+    return <p>Access Denied. You must be an Admin to manage Areas.</p>; // Fallback message if redirect hasn't happened
   }
 
-  if (user && user.role !== Role.ADMIN) {
-    return (
-      <ContentLayout title="Acceso Denegado">
-        <p>Acceso Denegado. Debes ser Administrador para gestionar Áreas.</p>
-      </ContentLayout>
-    );
-  }
 
   return (
-    <ContentLayout title="Gestión de Áreas">
-      <div className="space-y-6 w-full">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Áreas del Sistema</CardTitle>
-              <CardDescription>
-                Administra las áreas disponibles para los usuarios
-              </CardDescription>
-            </div>
-            <Button onClick={handleOpenModalForCreate} className="ml-auto">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nueva Área
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {Array(4)
-                  .fill(null)
-                  .map((_, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div>
-                        <Skeleton className="h-6 w-40 mb-2" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                      <div className="flex space-x-2">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            ) : (
-              <AreaList
-                areas={areas}
-                onEdit={handleOpenModalForEdit}
-                onDelete={handleDeleteArea}
-              />
-            )}
-          </CardContent>
-        </Card>
+    <div className="container mx-auto py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Manage Areas</h1>
+        <Button onClick={handleOpenModalForCreate}>Add New Area</Button>
       </div>
+
+      {isLoading ? (
+        <p>Loading areas...</p>
+      ) : (
+        <AreaList areas={areas} onEdit={handleOpenModalForEdit} onDelete={handleDeleteArea} />
+      )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingArea ? "Editar Área" : "Agregar Nueva Área"}
-            </DialogTitle>
-            {editingArea && (
-              <DialogDescription>
-                Editando: {editingArea.name} ({editingArea.code})
-              </DialogDescription>
-            )}
+            <DialogTitle>{editingArea ? "Edit Area" : "Add New Area"}</DialogTitle>
+            {editingArea && <DialogDescription>Editing: {editingArea.name} ({editingArea.code})</DialogDescription>}
           </DialogHeader>
           <AreaForm
             initialData={editingArea}
@@ -239,7 +167,7 @@ const AreasPage = () => {
           />
         </DialogContent>
       </Dialog>
-    </ContentLayout>
+    </div>
   );
 };
 

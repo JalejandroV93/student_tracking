@@ -103,8 +103,16 @@ export async function POST(request: Request) {
       currentUser.role !== Role.ADMIN &&
       currentUser.role !== Role.PSYCHOLOGY
     ) {
+      // Define Coordinator Roles
+      const coordinatorRoles = [
+        Role.ELEMENTARY_COORDINATOR,
+        Role.PRESCHOOL_COORDINATOR,
+        Role.MIDDLE_SCHOOL_COORDINATOR,
+        Role.HIGH_SCHOOL_COORDINATOR,
+      ];
+
       const areaPermissions = await prisma.areaPermissions.findMany({
-        where: { userId: currentUser.id, canView: true }, // Assuming canView implies canEdit for now
+        where: { userId: currentUser.id, canView: true }, 
         include: { area: true },
       });
       const permittedAreaNames = areaPermissions.map(
@@ -118,6 +126,7 @@ export async function POST(request: Request) {
         );
       }
 
+      // Determine targetNivel
       if (body.infractionId) {
         const falta = await prisma.faltas.findUnique({
           where: { hash: body.infractionId },
@@ -135,9 +144,18 @@ export async function POST(request: Request) {
         }
       }
 
+      // Check 1: canView permission for the targetNivel
       if (!targetNivel || !permittedAreaNames.includes(targetNivel)) {
         return NextResponse.json(
-          { error: "No tiene permiso para agregar seguimientos a infracciones de este nivel." },
+          { error: "No tiene permiso (canView) para agregar seguimientos a infracciones de este nivel." },
+          { status: 403 }
+        );
+      }
+
+      // Check 2: Role must be one of the Coordinator roles
+      if (!coordinatorRoles.includes(currentUser.role)) {
+        return NextResponse.json(
+          { error: "Su rol no le permite registrar seguimientos." },
           { status: 403 }
         );
       }

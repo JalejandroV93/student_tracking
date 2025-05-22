@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json(null, { status: 404 });
     }
 
-    let areaPermissionsData: AreaPermission[] = []; // Inicializar como arreglo vacío por defecto
+    let areaPermissionsData: AreaPermission[] | undefined = undefined;
 
     if (includePermissions) {
       if (userFromDb.role === Role.ADMIN) {
@@ -47,45 +47,17 @@ export async function GET(request: Request) {
           area: { id: area.id, code: area.code, name: area.name },
         }));
       } else {
-        // Explícitamente escribir el tipo del resultado de la consulta de prisma
-        const userAreaPermissionsResult: AreaPermission[] =
-          await prisma.areaPermissions.findMany({
-            where: { userId: userFromDb.id, canView: true },
-            select: {
-              id: true,
-              areaId: true,
-              canView: true,
-              area: { select: { id: true, code: true, name: true } },
-            },
-          });
-        areaPermissionsData = userAreaPermissionsResult;
-      }
-    } else {
-      // Siempre incluir los permisos, incluso si no se solicitan explícitamente
-      if (userFromDb.role === Role.ADMIN) {
-        // Para administradores, buscar solo los IDs de áreas sin incluir detalles completos
-        const allAreaIds = await prisma.area.findMany({
-          select: { id: true },
-        });
-        areaPermissionsData = allAreaIds.map((area) => ({
-          id: 0,
-          areaId: area.id,
-          canView: true,
-          area: { id: area.id, code: "", name: "" }, // Datos mínimos
-        }));
-      } else {
-        // Para otros roles, buscar sus permisos básicos
-        const userPermissions = await prisma.areaPermissions.findMany({
+        // Explicitly type the result of the prisma query
+        const userAreaPermissionsResult: AreaPermission[] = await prisma.areaPermissions.findMany({
           where: { userId: userFromDb.id, canView: true },
-          select: { id: true, areaId: true, canView: true },
+          select: {
+            id: true,
+            areaId: true,
+            canView: true,
+            area: { select: { id: true, code: true, name: true } },
+          },
         });
-
-        areaPermissionsData = userPermissions.map((perm) => ({
-          id: perm.id,
-          areaId: perm.areaId,
-          canView: perm.canView,
-          area: { id: perm.areaId, code: "", name: "" }, // Datos mínimos
-        }));
+        areaPermissionsData = userAreaPermissionsResult;
       }
     }
 
@@ -110,8 +82,11 @@ export async function GET(request: Request) {
     console.error("Error al obtener usuario actual:", error);
     let errorMessage = "Error al obtener usuario";
     if (error instanceof Error && error.message) {
-      errorMessage = error.message;
+        errorMessage = error.message;
     }
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }

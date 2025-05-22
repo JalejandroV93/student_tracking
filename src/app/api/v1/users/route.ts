@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
-import { hashPassword } from "@/lib/auth";
-import z from "zod";
-import { Role } from "@prisma/client";
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/session';
+import { hashPassword } from '@/lib/auth';
+import z from 'zod';
+import { Role } from '@prisma/client';
 
 // Esquema de validación para crear/actualizar usuario
 const userSchema = z.object({
@@ -26,13 +26,13 @@ export async function GET() {
     // Verificar autenticación y permisos
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     // Solo administradores pueden ver todos los usuarios
-    if (user.role !== "ADMIN") {
+    if (user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: "No tienes permisos para ver todos los usuarios" },
+        { error: 'No tienes permisos para ver todos los usuarios' },
         { status: 403 }
       );
     }
@@ -53,14 +53,14 @@ export async function GET() {
           },
         },
       },
-      orderBy: { fullName: "asc" },
+      orderBy: { fullName: 'asc' },
     });
 
     return NextResponse.json(users);
   } catch (error) {
-    console.error("Error al obtener usuarios:", error);
+    console.error('Error al obtener usuarios:', error);
     return NextResponse.json(
-      { error: "Error al obtener usuarios" },
+      { error: 'Error al obtener usuarios' },
       { status: 500 }
     );
   }
@@ -72,30 +72,29 @@ export async function POST(request: Request) {
     // Verificar autenticación y permisos
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     // Solo administradores pueden crear usuarios
-    if (user.role !== "ADMIN") {
+    if (user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: "No tienes permisos para crear usuarios" },
+        { error: 'No tienes permisos para crear usuarios' },
         { status: 403 }
       );
     }
 
     const body = await request.json();
-
+    
     // Validar datos
     const result = userSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: result.error.format() },
+        { error: 'Datos inválidos', details: result.error.format() },
         { status: 400 }
       );
     }
 
-    const { username, fullName, email, password, role, areaPermissions } =
-      result.data;
+    const { username, fullName, email, password, role, areaPermissions } = result.data;
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -104,7 +103,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Ya existe un usuario con ese nombre de usuario" },
+        { error: 'Ya existe un usuario con ese nombre de usuario' },
         { status: 400 }
       );
     }
@@ -112,7 +111,7 @@ export async function POST(request: Request) {
     // Verificar que se proporcionó una contraseña para usuarios nuevos
     if (!password) {
       return NextResponse.json(
-        { error: "Se requiere una contraseña para crear un usuario" },
+        { error: 'Se requiere una contraseña para crear un usuario' },
         { status: 400 }
       );
     }
@@ -142,13 +141,11 @@ export async function POST(request: Request) {
     // Crear permisos de área si es necesario
     if (areaPermissions && areaPermissions.length > 0) {
       await prisma.areaPermissions.createMany({
-        data: areaPermissions
-          .filter((permission) => permission.canView) // Solo crear permisos que están activados
-          .map((permission) => ({
-            userId: newUser.id,
-            areaId: permission.areaId,
-            canView: permission.canView,
-          })),
+        data: areaPermissions.map(permission => ({
+          userId: newUser.id,
+          areaId: permission.areaId,
+          canView: permission.canView,
+        })),
       });
     }
 
@@ -166,10 +163,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(userWithPermissions, { status: 201 });
   } catch (error) {
-    console.error("Error al crear usuario:", error);
+    console.error('Error al crear usuario:', error);
     return NextResponse.json(
-      { error: "Error al crear usuario" },
+      { error: 'Error al crear usuario' },
       { status: 500 }
     );
   }
-}
+} 
