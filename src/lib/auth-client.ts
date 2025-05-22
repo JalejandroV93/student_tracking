@@ -33,7 +33,7 @@ export const logoutClient = async (): Promise<void> => {
 
 // Client-side function to fetch the current user.
 export const fetchUserClient = async (): Promise<UserPayload | null> => {
-  const response = await fetch('/api/v1/auth/me');
+  const response = await fetch('/api/v1/auth/me?includePermissions=true');
   if (response.ok) {
     return await response.json();
   } else {

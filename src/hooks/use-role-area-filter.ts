@@ -1,5 +1,5 @@
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Role } from "@prisma/client";
+import { Role } from "@prisma/client"; // Ensure Role is imported
 
 // Definir los tipos de elemento que pueden filtrarse
 interface Filterable {
@@ -8,93 +8,57 @@ interface Filterable {
   section?: string | null;
 }
 
-// Mapeo de roles a áreas permitidas
-const roleToAreaPermissions: Record<Role, string[]> = {
-  [Role.ADMIN]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
-  [Role.PRESCHOOL_COORDINATOR]: ["PRESCHOOL"],
-  [Role.ELEMENTARY_COORDINATOR]: ["ELEMENTARY"],
-  [Role.MIDDLE_SCHOOL_COORDINATOR]: ["MIDDLE"],
-  [Role.HIGH_SCHOOL_COORDINATOR]: ["HIGH"],
-  [Role.PSYCHOLOGY]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
-  [Role.USER]: [],
-  [Role.STUDENT]: [],
-};
-
-// Mapeo de códigos de área a valores en los datos
-const areaCodeToDataValue: Record<string, string[]> = {
-  PRESCHOOL: ["Preescolar", "preschool", "preescolar"],
-  ELEMENTARY: ["Primaria", "elementary", "primaria"],
-  MIDDLE: ["Secundaria", "middle", "secundaria"],
-  HIGH: ["Bachillerato", "high", "bachillerato"],
-};
-
 export function useRoleAreaFilter() {
   const { user } = useAuth();
+  const areaPermissions = user?.AreaPermissions;
+  const userRole = user?.role;
 
-  // Función para verificar si el usuario tiene permiso para ver un área específica
+  // Función para verificar si el usuario tiene permiso para ver un área específica por CÓDIGO de área
   const canViewArea = (areaCode: string): boolean => {
-    if (!user) return false;
-
-    // Administradores pueden ver todo
-    if (user.role === Role.ADMIN) return true;
-
-    // Verificar permisos basados en el rol
-    const allowedAreas = roleToAreaPermissions[user.role] || [];
-    return allowedAreas.includes(areaCode);
+    if (!user) return false; 
+    if (userRole === Role.ADMIN) return true;
+    if (!areaPermissions) return false;
+    // Check against area.code
+    return areaPermissions.some(p => p.area.code.toLowerCase() === areaCode.toLowerCase() && p.canView);
   };
 
   // Función para filtrar una lista de elementos según el rol y permisos del usuario
+  // Esta función ahora compara contra area.name
   const filterByRole = <T extends Filterable>(items: T[]): T[] => {
-    if (!user) return [];
+    if (!user) return []; 
+    if (userRole === Role.ADMIN) return items;
+    if (!areaPermissions) return [];
 
-    // Administradores pueden ver todo
-    if (user.role === Role.ADMIN) return items;
+    const viewableAreaNames = new Set(
+      areaPermissions
+        .filter(p => p.canView)
+        .map(p => p.area.name.toLowerCase()) // Compare with area.name
+    );
 
-    // Obtener áreas permitidas para el rol
-    const allowedAreas = roleToAreaPermissions[user.role] || [];
-
-    // Filtrar los elementos por área
-    return items.filter((item) => {
-      // Determinar el valor de área/nivel/sección del elemento
-      const itemArea = item.nivel || item.area || item.section || "";
-
-      // Verificar si el ítem pertenece a alguna de las áreas permitidas
-      return allowedAreas.some((areaCode) => {
-        const validValues = areaCodeToDataValue[areaCode] || [];
-        return validValues.some(
-          (value) => itemArea.toLowerCase() === value.toLowerCase()
-        );
-      });
+    return items.filter(item => {
+      const itemAreaValue = item.nivel || item.area || item.section;
+      if (!itemAreaValue) return false;
+      return viewableAreaNames.has(itemAreaValue.toLowerCase());
     });
   };
 
-  // Función para obtener el área del usuario según su rol
-  const getUserArea = (): string => {
-    if (!user) return "";
-
-    // Administradores no tienen área específica
-    if (user.role === Role.ADMIN) return "";
-
-    // Mapear rol a área
-    switch (user.role) {
-      case Role.PRESCHOOL_COORDINATOR:
-        return "Preescolar";
-      case Role.ELEMENTARY_COORDINATOR:
-        return "Primaria";
-      case Role.MIDDLE_SCHOOL_COORDINATOR:
-        return "Secundaria";
-      case Role.HIGH_SCHOOL_COORDINATOR:
-        return "Bachillerato";
-      default:
-        return "";
-    }
+  // Función para obtener los NOMBRES de las áreas permitidas para el usuario
+  const getUserArea = (): string[] => {
+    if (!user) return []; 
+    // For ADMIN, returning all area names would require fetching all areas here or having them passed.
+    // For now, returning an empty array; client logic should understand ADMIN means all access.
+    if (userRole === Role.ADMIN) return []; 
+    if (!areaPermissions) return [];
+    return areaPermissions.filter(p => p.canView).map(p => p.area.name);
   };
 
   return {
     canViewArea,
     filterByRole,
-    getUserArea,
-    isAdmin: user?.role === Role.ADMIN,
-    userRole: user?.role,
+    getUserArea, // Note: return type changed to string[]
+    isAdmin: userRole === Role.ADMIN,
+    userRole: userRole, // Export userRole
+    // Optionally export filtered permissions if direct access is needed by UI components
+    viewableAreaPermissions: areaPermissions?.filter(p => p.canView) || [] 
   };
 }

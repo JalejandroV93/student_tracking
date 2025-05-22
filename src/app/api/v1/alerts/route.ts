@@ -1,13 +1,19 @@
 import { getSectionCategory } from "@/lib/constantes";
 import { getStudentTypeICount, transformInfraction, transformStudent } from "@/lib/utils";
 import { AlertStatus } from "@/lib/utils";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const section = searchParams.get("section");
 
@@ -29,9 +35,39 @@ export async function GET(request: Request) {
       return acc;
     }, {} as Record<string, { primary: number; secondary: number }>);
 
-    // Fetch all students and infractions
+    let permittedAreaNames: string[] | undefined = undefined;
+
+    if (
+      currentUser.role !== Role.ADMIN &&
+      currentUser.role !== Role.PSYCHOLOGY
+    ) {
+      const areaPermissions = await prisma.areaPermissions.findMany({
+        where: { userId: currentUser.id, canView: true },
+        include: { area: true },
+      });
+      permittedAreaNames = areaPermissions.map(
+        (permission) => permission.area.name
+      );
+
+      if (permittedAreaNames.length === 0) {
+        // No areas permitted, so no alerts to show
+        return NextResponse.json([]);
+      }
+    }
+
+    // Define base where clauses
+    const studentWhereClause: any = {};
+    const infractionWhereClause: any = { attended: false };
+
+    if (permittedAreaNames) {
+      studentWhereClause.nivel = { in: permittedAreaNames };
+      infractionWhereClause.nivel = { in: permittedAreaNames };
+    }
+
+    // Fetch students and infractions based on permissions
     const [rawStudents, rawInfractions] = await Promise.all([
       prisma.estudiantes.findMany({
+        where: studentWhereClause,
         select: {
           id: true,
           codigo: true,
@@ -42,12 +78,9 @@ export async function GET(request: Request) {
         orderBy: { nombre: "asc" },
       }),
       prisma.faltas.findMany({
-        where: {
-          // Solo queremos faltas no atendidas para las alertas
-          attended: false,
-        },
+        where: infractionWhereClause,
         include: {
-          casos: true,
+          casos: true, // Assuming casos is needed for transformInfraction or other logic
         },
       }),
     ]);
@@ -130,8 +163,12 @@ export async function GET(request: Request) {
     return NextResponse.json(studentsWithAlerts);
   } catch (error) {
     console.error("Error processing alerts:", error);
+    let errorMessage = "Error processing alerts";
+    if (error instanceof Error && error.message) {
+      errorMessage = error.message;
+    }
     return NextResponse.json(
-      { error: "Error processing alerts" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

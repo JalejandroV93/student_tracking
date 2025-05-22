@@ -1,5 +1,6 @@
 import { transformInfraction, transformStudent } from "@/lib/utils";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 
@@ -7,13 +8,41 @@ const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
     const countOnly = searchParams.get("countOnly");
 
+    let permittedAreaNames: string[] = [];
+    if (currentUser.role !== Role.ADMIN && currentUser.role !== Role.PSYCHOLOGY) {
+      const areaPermissions = await prisma.areaPermissions.findMany({
+        where: { userId: currentUser.id, canView: true },
+        include: { area: true },
+      });
+      permittedAreaNames = areaPermissions.map(
+        (permission) => permission.area.name
+      );
+      if (permittedAreaNames.length === 0 && !studentId) { // if studentId is present, we check later
+        if (countOnly === "true") {
+            return NextResponse.json({ count: 0 });
+        }
+        return NextResponse.json([]);
+      }
+    }
+
+    const isRestrictedUser = currentUser.role !== Role.ADMIN && currentUser.role !== Role.PSYCHOLOGY;
+
     // Si solo necesitamos el conteo, hacemos una consulta optimizada
     if (countOnly === "true") {
-      const count = await prisma.estudiantes.count();
+      const count = await prisma.estudiantes.count({
+        where: isRestrictedUser
+          ? { nivel: { in: permittedAreaNames } }
+          : {},
+      });
       return NextResponse.json({ count });
     }
 
@@ -46,6 +75,13 @@ export async function GET(request: Request) {
         );
       }
 
+      if (isRestrictedUser && student.nivel && !permittedAreaNames.includes(student.nivel)) {
+        return NextResponse.json(
+          { error: "Forbidden: You do not have permission to view this student's area." },
+          { status: 403 }
+        );
+      }
+      
       // Transform the student data
       const transformedStudent = transformStudent(student);
 
@@ -95,6 +131,9 @@ export async function GET(request: Request) {
     } else {
       // Fetch all students with complete data
       const students = await prisma.estudiantes.findMany({
+        where: isRestrictedUser
+          ? { nivel: { in: permittedAreaNames } }
+          : {},
         select: {
           id: true,
           codigo: true,
@@ -104,6 +143,13 @@ export async function GET(request: Request) {
         },
         orderBy: { nombre: "asc" },
       });
+      
+      if (isRestrictedUser && permittedAreaNames.length === 0 && students.length > 0) {
+        // This case should ideally not be reached if the initial check for permittedAreaNames is correct
+        // but as a safeguard: if a restricted user has no permitted areas, they should not see any students.
+        return NextResponse.json([]);
+      }
+
 
       // Transform students with their infractions
       const transformedStudents = students.map(transformStudent);
@@ -116,8 +162,13 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     console.error("Error fetching students:", error);
+    // Check if the error is an instance of Error and has a message property
+    let errorMessage = "Error fetching students";
+    if (error instanceof Error && error.message) {
+      errorMessage = error.message;
+    }
     return NextResponse.json(
-      { error: "Error fetching students" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
