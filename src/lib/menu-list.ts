@@ -174,6 +174,12 @@ export function getMenuList(
           active: pathname.startsWith("/dashboard/settings/users"),
         },
         {
+          href: "/dashboard/settings/areas",
+          label: "Áreas",
+          icon: Database,
+          active: pathname.startsWith("/dashboard/settings/areas"),
+        },
+        {
           href: "/dashboard/admin/sync",
           label: "Sincronización BD",
           icon: Database,

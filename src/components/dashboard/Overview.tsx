@@ -17,12 +17,13 @@ import { AlertsWidget } from "@/components/alerts/AlertsWidget";
 import { InfractionTrends } from "@/components/dashboard/InfractionTrends";
 import { SectionOverview } from "@/components/dashboard/SectionOverview";
 import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { TrimestreSelector } from "./TrimestreSelector";
 import { useInfractionsStore } from "@/stores/infractions.store";
 import { OverviewSkeleton } from "./Overview.skeleton";
 import { useStudentsCount } from "@/hooks/use-students-count";
 import { NumberTicker } from "@/components/magicui/number-ticker";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface OverviewProps {
   students: Student[];
@@ -44,6 +45,7 @@ export function Overview({
     loading: infractionsLoading,
     error: infractionsError,
   } = useInfractionsStore(); // Get loading/error states
+  const { user } = useAuth(); // Obtener el usuario para los permisos
 
   // Obtener el conteo total de estudiantes
   const { data: totalStudentsCount = 0, isLoading: isLoadingStudentsCount } =
@@ -173,6 +175,35 @@ export function Overview({
   const filteredTypeIIICounts = filteredInfractions.filter(
     (inf) => inf.type === "Tipo III"
   ).length;
+
+  // Helper para verificar permisos de área
+  const hasAreaPermission = useCallback(
+    (sectionName: string): boolean => {
+      // Administrador siempre tiene acceso a todas las áreas
+      if (user?.role === "ADMIN") return true;
+
+      // Si no hay permisos de área definidos, asumimos que no tiene acceso
+      if (!user?.AreaPermissions || user.AreaPermissions.length === 0)
+        return false;
+
+      // Mapeo de nombres de sección a códigos de área (ajustar según la configuración real)
+      const sectionToAreaCode: Record<string, string> = {
+        Preschool: "PRESCHOOL",
+        Elementary: "ELEMENTARY",
+        "Middle School": "MIDDLE_SCHOOL",
+        "High School": "HIGH_SCHOOL",
+      };
+
+      const areaCode = sectionToAreaCode[sectionName];
+      if (!areaCode) return false;
+
+      // Verificar si el usuario tiene permiso para ver esta área específica
+      return user.AreaPermissions.some(
+        (permission) => permission.area.code === areaCode && permission.canView
+      );
+    },
+    [user]
+  );
 
   // Handle Loading/Error State for Infractions
   if (infractionsLoading) {
@@ -343,9 +374,11 @@ export function Overview({
       {/* Section Summaries - Uses sectionStats which is derived from filteredInfractions */}
       <div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {sectionStats.map((section) => (
-            <SectionOverview key={section.name} section={section} />
-          ))}
+          {sectionStats
+            .filter((section) => hasAreaPermission(section.name))
+            .map((section) => (
+              <SectionOverview key={section.name} section={section} />
+            ))}
         </div>
       </div>
     </div>

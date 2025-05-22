@@ -21,7 +21,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Area } from "./AreaForm"; // Re-using Area type from AreaForm
+import { Area } from "./AreaForm";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface AreaListProps {
   areas: Area[];
@@ -45,8 +46,7 @@ const AreaList: React.FC<AreaListProps> = ({ areas, onEdit, onDelete }) => {
       try {
         await onDelete(areaToDelete.id);
       } catch (error: any) {
-        // Error toast is handled by the page component, but you could add one here if needed
-        // toast.error(`Failed to delete area: ${error.message || "Unknown error"}`);
+        // El error ya se maneja en el componente principal
       } finally {
         setIsDeleting(false);
         setShowDeleteDialog(false);
@@ -55,40 +55,52 @@ const AreaList: React.FC<AreaListProps> = ({ areas, onEdit, onDelete }) => {
     }
   };
 
-  if (areas.length === 0) {
-    return <p>No areas found.</p>;
-  }
-
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Code</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Código</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {areas.map((area) => (
-            <TableRow key={area.id}>
-              <TableCell>{area.name}</TableCell>
-              <TableCell>{area.code}</TableCell>
-              <TableCell className="text-right space-x-2">
-                <Button variant="outline" size="sm" onClick={() => onEdit(area)}>
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteClick(area)}
-                  disabled={isDeleting && areaToDelete?.id === area.id}
-                >
-                  {isDeleting && areaToDelete?.id === area.id ? "Deleting..." : "Delete"}
-                </Button>
+          {areas.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={3}
+                className="text-center py-4 text-muted-foreground"
+              >
+                No hay áreas registradas en el sistema
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            areas.map((area) => (
+              <TableRow key={area.id}>
+                <TableCell className="font-medium">{area.name}</TableCell>
+                <TableCell>{area.code}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(area)}
+                    className="mr-1"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteClick(area)}
+                    disabled={isDeleting && areaToDelete?.id === area.id}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
 
@@ -96,19 +108,27 @@ const AreaList: React.FC<AreaListProps> = ({ areas, onEdit, onDelete }) => {
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                area &quot;{areaToDelete.name}&quot; ({areaToDelete.code}).
-                Make sure this area is not currently in use (e.g., by permissions or students).
+                Esta acción no se puede deshacer. Se eliminará permanentemente
+                el área "{areaToDelete.name}" ({areaToDelete.code}). Asegúrate
+                de que esta área no esté actualmente en uso (por ejemplo, en
+                permisos o asignada a estudiantes).
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setAreaToDelete(null)} disabled={isDeleting}>
-                Cancel
+              <AlertDialogCancel
+                onClick={() => setAreaToDelete(null)}
+                disabled={isDeleting}
+              >
+                Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                {isDeleting ? "Deleting..." : "Yes, delete"}
+              <AlertDialogAction
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                {isDeleting ? "Eliminando..." : "Sí, eliminar"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

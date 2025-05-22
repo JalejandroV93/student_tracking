@@ -28,7 +28,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const userId = id as string; 
+    const userId = id as string;
     // Verificar autenticación y permisos
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -171,20 +171,24 @@ export async function PUT(
     });
 
     // Solo los administradores pueden actualizar permisos de área
-    if (isAdmin && areaPermissions && areaPermissions.length > 0) {
-      // Eliminar permisos existentes
+    if (isAdmin) {
+      // Eliminar permisos existentes siempre, incluso si el arreglo está vacío
       await prisma.areaPermissions.deleteMany({
         where: { userId },
       });
 
-      // Crear nuevos permisos
-      await prisma.areaPermissions.createMany({
-        data: areaPermissions.map((permission) => ({
-          userId,
-          areaId: permission.areaId,
-          canView: permission.canView,
-        })),
-      });
+      // Crear nuevos permisos solo si hay permisos válidos para crear
+      if (areaPermissions && areaPermissions.length > 0) {
+        await prisma.areaPermissions.createMany({
+          data: areaPermissions
+            .filter((permission) => permission.canView) // Solo crear permisos que están activados
+            .map((permission) => ({
+              userId,
+              areaId: permission.areaId,
+              canView: permission.canView,
+            })),
+        });
+      }
     }
 
     // Obtener el usuario actualizado con sus permisos

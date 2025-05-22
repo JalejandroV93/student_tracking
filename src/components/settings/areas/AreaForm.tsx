@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export interface Area {
   id: number;
@@ -21,7 +22,7 @@ interface AreaFormProps {
   initialData?: Area;
   onSubmit: (data: AreaFormData) => Promise<void>;
   onCancel: () => void;
-  isSubmitting?: boolean; // Optional prop to indicate submission in progress
+  isSubmitting?: boolean;
 }
 
 const AreaForm: React.FC<AreaFormProps> = ({
@@ -46,7 +47,7 @@ const AreaForm: React.FC<AreaFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !code.trim()) {
-      toast.error("Name and Code cannot be empty.");
+      toast.error("Nombre y Código no pueden estar vacíos.");
       return;
     }
     await onSubmit({ name, code });
@@ -55,31 +56,43 @@ const AreaForm: React.FC<AreaFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="area-name">Area Name</Label>
+        <Label htmlFor="area-name">Nombre del Área</Label>
         <Input
           id="area-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g., Primaria"
+          placeholder="ej. Primaria"
           disabled={isSubmitting}
         />
       </div>
       <div>
-        <Label htmlFor="area-code">Area Code</Label>
+        <Label htmlFor="area-code">Código del Área</Label>
         <Input
           id="area-code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="e.g., PRIMARY"
+          placeholder="ej. PRIMARY"
           disabled={isSubmitting}
         />
       </div>
       <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Cancelar
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (initialData ? "Saving..." : "Creating...") : (initialData ? "Save Changes" : "Create Area")}
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting
+            ? initialData
+              ? "Guardando..."
+              : "Creando..."
+            : initialData
+            ? "Guardar Cambios"
+            : "Crear Área"}
         </Button>
       </div>
     </form>
