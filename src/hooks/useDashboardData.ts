@@ -87,8 +87,11 @@ export const useDashboardData = () => {
       if (areasRes && !areasRes.ok) throw new Error(`Failed to fetch areas: ${areasRes.statusText}`);
       
       const studentsData = await studentsRes.json();
+      console.log('[useDashboardData] Fetched Students:', studentsData);
       const infractionsData = await infractionsRes.json();
+      console.log('[useDashboardData] Fetched Infractions:', infractionsData);
       const areasData = areasRes ? await areasRes.json() : [];
+      console.log('[useDashboardData] Fetched Areas (Admin/Psych):', areasData);
 
       setAllScopedStudents(studentsData);
       setAllScopedInfractions(infractionsData);
@@ -97,7 +100,7 @@ export const useDashboardData = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred while fetching data.";
       setDataError(errorMessage);
-      console.error("Dashboard data fetch error:", errorMessage);
+      console.error("[useDashboardData] ERROR in fetchData:", errorMessage);
     } finally {
       setDataLoading(false);
     }
@@ -115,6 +118,12 @@ export const useDashboardData = () => {
 
 
   const sectionStatsList = useMemo((): SectionStats[] => {
+    console.log('[useDashboardData] useMemo sectionStatsList: currentUser:', currentUser);
+    console.log('[useDashboardData] useMemo sectionStatsList: authLoading:', authLoading, 'dataLoading:', dataLoading, 'dataError:', dataError);
+    console.log('[useDashboardData] useMemo sectionStatsList: allScopedStudents:', allScopedStudents);
+    console.log('[useDashboardData] useMemo sectionStatsList: allScopedInfractions:', allScopedInfractions);
+    console.log('[useDashboardData] useMemo sectionStatsList: allSystemAreas (Admin/Psych):', allSystemAreas);
+
     if (!currentUser || (!authLoading && !dataLoading && dataError)) { // Also consider dataError
         return []; // Return empty if no user, or if initial data load failed
     }
@@ -133,22 +142,27 @@ export const useDashboardData = () => {
     }
     
     areasToProcess.sort((a,b) => a.name.localeCompare(b.name));
+    console.log('[useDashboardData] useMemo sectionStatsList: areasToProcess:', areasToProcess);
 
 
-    return areasToProcess.map(area => {
+    const computedList = areasToProcess.map(area => {
       const studentsInArea = allScopedStudents.filter(s => s.nivel === area.name);
       const infractionsInArea = allScopedInfractions.filter(i => i.nivel === area.name);
 
       const typeICount = infractionsInArea.filter(i => i.type === "Tipo I").length;
       const typeIICount = infractionsInArea.filter(i => i.type === "Tipo II").length;
       const typeIIICount = infractionsInArea.filter(i => i.type === "Tipo III").length; // Assuming Type III exists
-
-      // getStudentsWithAlerts from useAlertsStore is already scoped by server for the current user.
-      // If we need per-section alerts from this list, we filter it.
-      // Otherwise, if getStudentsWithAlerts can take an area code, that's better.
-      // For now, assuming getStudentsWithAlerts(area.code.toLowerCase()) works as intended by the store.
+      
       const alertsForThisSection = getStudentsWithAlerts(area.code.toLowerCase()); 
       const alertsCount = alertsForThisSection.length;
+
+      // Example: Log for the first area, or a specific area if easier
+      if (areasToProcess.length > 0 && area.name === areasToProcess[0].name) { 
+        console.log(`[useDashboardData] Processing area: ${area.name}`);
+        console.log('[useDashboardData] studentsInArea for this area:', studentsInArea);
+        console.log('[useDashboardData] infractionsInArea for this area:', infractionsInArea);
+        console.log('[useDashboardData] alertsForThisSection for this area:', alertsForThisSection);
+      }
 
       return {
         name: area.name,
@@ -161,6 +175,8 @@ export const useDashboardData = () => {
         alertsCount: alertsCount,
       };
     });
+    console.log('[useDashboardData] useMemo sectionStatsList: final computed list:', computedList);
+    return computedList;
   }, [currentUser, allScopedStudents, allScopedInfractions, allSystemAreas, getStudentsWithAlerts, authLoading, dataLoading, dataError]);
 
 
