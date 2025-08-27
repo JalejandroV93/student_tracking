@@ -1,13 +1,6 @@
 import { UserPayload } from "@/types/user";
 import { Role } from "@prisma/client";
-import {
-  AlertTriangle,
-  CalendarDays,
-  LayoutGrid,
-  LucideIcon,
-  Users,
-  Database,
-} from "lucide-react";
+import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, Users } from "lucide-react";
 
 type Submenu = {
   href: string;
@@ -162,10 +155,10 @@ export function getMenuList(
       groupLabel: "Configuración",
       menus: [
         {
-          href: "/dashboard/settings",
+          href: "/dashboard/settings/alerts",
           label: "Alertas",
           icon: AlertTriangle,
-          active: pathname.startsWith("/dashboard/settings"),
+          active: pathname.startsWith("/dashboard/settings/alerts"),
         },
         {
           href: "/dashboard/settings/users",
@@ -173,12 +166,7 @@ export function getMenuList(
           icon: Users,
           active: pathname.startsWith("/dashboard/settings/users"),
         },
-        {
-          href: "/dashboard/admin/sync",
-          label: "Sincronización BD",
-          icon: Database,
-          active: pathname.startsWith("/dashboard/admin/sync"),
-        },
+        
       ],
     });
   }
