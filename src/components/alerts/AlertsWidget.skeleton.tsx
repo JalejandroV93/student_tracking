@@ -9,7 +9,7 @@ export function AlertsWidgetSkeleton() {
         <CardTitle>Alertas Activas Recientes</CardTitle>
         <CardDescription>Top 5 estudiantes que requieren atención</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="grow">
         <Table>
           <TableHeader>
             <TableRow>

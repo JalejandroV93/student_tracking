@@ -25,8 +25,7 @@ export default function LoginPage() {
                   <LoginForm />
                   <BorderBeam
                       duration={6}
-                      size={400}
-                      className="from-transparent via-red-500 to-transparent"
+                      size={100}
                   />
                   
               </Card>

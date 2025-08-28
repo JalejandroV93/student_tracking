@@ -27,9 +27,9 @@ export function TrimestreSelector({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos los trimestres</SelectItem>
-          <SelectItem value="1">Primer Trimestre</SelectItem>
-          <SelectItem value="2">Segundo Trimestre</SelectItem>
-          <SelectItem value="3">Tercer Trimestre</SelectItem>
+          <SelectItem value="Primer Trimestre">Primer Trimestre</SelectItem>
+          <SelectItem value="Segundo Trimestre">Segundo Trimestre</SelectItem>
+          <SelectItem value="Tercer Trimestre">Tercer Trimestre</SelectItem>
         </SelectContent>
       </Select>
     </div>

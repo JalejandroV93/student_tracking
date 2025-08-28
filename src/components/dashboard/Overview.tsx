@@ -11,78 +11,52 @@ import {
   Users,
 } from "lucide-react";
 
-import type { Student, AlertSettings } from "@/types/dashboard";
+import type { Student, Infraction } from "@/types/dashboard";
 import type { AlertStatus } from "@/lib/utils";
 import { AlertsWidget } from "@/components/alerts/AlertsWidget";
 import { InfractionTrends } from "@/components/dashboard/InfractionTrends";
 import { SectionOverview } from "@/components/dashboard/SectionOverview";
 import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { TrimestreSelector } from "./TrimestreSelector";
-import { useInfractionsStore } from "@/stores/infractions.store";
-import { OverviewSkeleton } from "./Overview.skeleton";
 import { useStudentsCount } from "@/hooks/use-students-count";
 import { NumberTicker } from "@/components/magicui/number-ticker";
 
 interface OverviewProps {
   students: Student[];
-  settings: AlertSettings; // Keep settings prop if needed by getStudentAlertStatus
+  infractions: Infraction[];
   getStudentAlertStatus: (studentId: string) => AlertStatus | null;
   onSelectStudent: (studentId: string) => void;
 }
 
 export function Overview({
   students,
-  // settings, // settings might not be needed directly if getStudentAlertStatus gets it from its own store context
+  infractions,
   getStudentAlertStatus,
   onSelectStudent,
 }: OverviewProps) {
   const [currentTrimestre, setCurrentTrimestre] = useState<string>("all"); // Ensure it's string
-  const {
-    infractions,
-    fetchInfractions,
-    loading: infractionsLoading,
-    error: infractionsError,
-  } = useInfractionsStore(); // Get loading/error states
 
   // Obtener el conteo total de estudiantes
   const { data: totalStudentsCount = 0, isLoading: isLoadingStudentsCount } =
     useStudentsCount();
 
-  useEffect(() => {
-    fetchInfractions();
-  }, [fetchInfractions]);
-
   // Filter infractions by trimester first - This is the core fix
   const filteredInfractions = useMemo(() => {
-    if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
     if (currentTrimestre === "all") {
-      // console.log(`Filtering for 'all': ${infractions.length} total infractions`);
       return infractions;
     }
-    // Ensure we compare string to string and handle potential null/empty strings from DB
+    // Directamente comparar con el string del trimestre sin mapeo
     const filtered = infractions.filter((inf) => {
-      // Mapeo de valores numéricos a nombres de trimestre
-      const trimestreMap: Record<string, string> = {
-        "1": "Primer Trimestre",
-        "2": "Segundo Trimestre",
-        "3": "Tercer Trimestre",
-      };
-
-      // Obtener el valor esperado del trimestre según lo seleccionado
-      const valorEsperado = trimestreMap[currentTrimestre];
-
-      // Comparar con el valor mapeado
-      return inf.trimester === valorEsperado;
+      return inf.trimester === currentTrimestre;
     });
 
     return filtered;
-  }, [infractions, currentTrimestre, infractionsLoading, infractionsError]); // Add loading/error dependencies
+  }, [infractions, currentTrimestre]); // Simplified dependencies
 
   // Calculate students with alerts using the passed function (uses ALL infractions for calculation, not filtered ones)
   const studentsWithAlerts = useMemo(
     () => {
-      if (infractionsLoading || infractionsError) return []; // Return empty if loading or error
       return (
         students
           .map((student) => ({
@@ -111,7 +85,7 @@ export function Overview({
           })
       );
     },
-    [students, getStudentAlertStatus, infractionsLoading, infractionsError] // Depends on students and the alert function logic (which implicitly depends on infractions/settings)
+    [students, getStudentAlertStatus] // Simplified dependencies
   );
 
   // Calculate statistics by section using the *filtered* infractions
@@ -173,23 +147,6 @@ export function Overview({
   const filteredTypeIIICounts = filteredInfractions.filter(
     (inf) => inf.type === "Tipo III"
   ).length;
-
-  // Handle Loading/Error State for Infractions
-  if (infractionsLoading) {
-    return (
-      <div className="w-[900px]">
-        <OverviewSkeleton />
-      </div>
-    );
-  }
-
-  if (infractionsError) {
-    return (
-      <div className="text-destructive">
-        Error loading infractions: {infractionsError}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

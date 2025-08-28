@@ -60,7 +60,7 @@ export function StudentSearchList({
           </div>
         )}
         {!isLoading && !error && (
-          <ScrollArea className="h-[calc(700px_-_1rem)] border rounded-md">
+          <ScrollArea className="h-[calc(700px-1rem)] border rounded-md">
             {students.length > 0 ? (
               <ul className="divide-y">
                 {students.map((student) => (

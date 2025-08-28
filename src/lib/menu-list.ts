@@ -1,6 +1,14 @@
 import { UserPayload } from "@/types/user";
 import { Role } from "@prisma/client";
-import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  CalendarDays,
+  FileText,
+  LayoutGrid,
+  LucideIcon,
+  Users,
+} from "lucide-react";
 
 type Submenu = {
   href: string;
@@ -166,7 +174,18 @@ export function getMenuList(
           icon: Users,
           active: pathname.startsWith("/dashboard/settings/users"),
         },
-        
+        {
+          href: "/dashboard/settings/faltas",
+          label: "Faltas",
+          icon: FileText,
+          active: pathname.startsWith("/dashboard/settings/faltas"),
+        },
+        {
+          href: "/dashboard/settings/school-years",
+          label: "Años Escolares",
+          icon: Calendar,
+          active: pathname.startsWith("/dashboard/settings/school-years"),
+        },
       ],
     });
   }

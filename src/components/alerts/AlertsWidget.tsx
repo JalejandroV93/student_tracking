@@ -51,7 +51,7 @@ export function AlertsWidget({
           Top 5 estudiantes que requieren atención
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="grow">
         {" "}
         {/* Allow content to grow */}
         {topAlerts.length > 0 ? (

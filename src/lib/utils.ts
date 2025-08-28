@@ -65,13 +65,15 @@ export function getStudentTypeIICount(
 }
 
 // Data transformation function
-export function transformStudent(student: {
-  id: number;
-  codigo: number;
-  nombre: string | null;
-  grado: string | null;
-  nivel: string | null;
-}): Student {
+export function transformStudent(
+  student: {
+    id: number;
+    codigo: number;
+    nombre: string | null;
+  },
+  grado?: string,
+  nivel?: string
+): Student {
   if (!student) {
     throw new Error("Student data is required");
   }
@@ -79,8 +81,8 @@ export function transformStudent(student: {
   return {
     id: `${student.id}-${student.codigo}`,
     name: student.nombre || "Sin nombre",
-    grado: student.grado || "Sin grado",
-    level: student.nivel || "Sin nivel",
+    grado: grado || "Sin grado",
+    level: nivel || "Sin nivel",
   };
 }
 

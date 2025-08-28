@@ -1,5 +1,9 @@
 import { getSectionCategory } from "@/lib/constantes";
-import { getStudentTypeICount, transformInfraction, transformStudent } from "@/lib/utils";
+import {
+  getStudentTypeICount,
+  transformInfraction,
+  transformStudent,
+} from "@/lib/utils";
 import { AlertStatus } from "@/lib/utils";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -36,8 +40,6 @@ export async function GET(request: Request) {
           id: true,
           codigo: true,
           nombre: true,
-          grado: true,
-          nivel: true,
         },
         orderBy: { nombre: "asc" },
       }),
@@ -52,13 +54,29 @@ export async function GET(request: Request) {
       }),
     ]);
 
-    // Transformar estudiantes primero para tener IDs correctos
-    const students = rawStudents.map(transformStudent);
-
     // Transformar las faltas al formato de Infraction con IDs de estudiantes correctos
     const infractions = rawInfractions.map((infraction) => {
       const studentId = `${infraction.id_estudiante}-${infraction.codigo_estudiante}`;
       return transformInfraction(infraction, studentId);
+    });
+
+    // Crear un mapa de estudiantes con su grado y nivel más reciente desde las faltas
+    const studentGradoMap = new Map<string, { grado: string; nivel: string }>();
+    rawInfractions.forEach((infraction) => {
+      const studentId = `${infraction.id_estudiante}-${infraction.codigo_estudiante}`;
+      if (infraction.seccion && infraction.nivel) {
+        studentGradoMap.set(studentId, {
+          grado: infraction.seccion,
+          nivel: infraction.nivel,
+        });
+      }
+    });
+
+    // Transformar estudiantes con grado y nivel desde las faltas
+    const students = rawStudents.map((student) => {
+      const studentId = `${student.id}-${student.codigo}`;
+      const studentInfo = studentGradoMap.get(studentId);
+      return transformStudent(student, studentInfo?.grado, studentInfo?.nivel);
     });
 
     // Filter students by section if provided

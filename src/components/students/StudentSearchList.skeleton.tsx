@@ -29,7 +29,7 @@ export function StudentSearchListSkeleton({
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[calc(700px_-_1rem)] border rounded-md">
+        <ScrollArea className="h-[calc(700px-1rem)] border rounded-md">
           <div className="divide-y">
             {Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="px-4 py-3 space-y-2">
