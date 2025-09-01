@@ -1,4 +1,8 @@
 import { transformInfraction, transformStudent } from "@/lib/utils";
+import {
+  getActiveSchoolYear,
+  getSchoolYearById,
+} from "@/lib/school-year-utils";
 import { PrismaClient } from "@prisma/client";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
@@ -10,6 +14,27 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
     const countOnly = searchParams.get("countOnly");
+    const schoolYearId = searchParams.get("schoolYearId");
+
+    // Determinar qué año académico usar
+    let targetSchoolYear;
+    if (schoolYearId && schoolYearId !== "active") {
+      targetSchoolYear = await getSchoolYearById(parseInt(schoolYearId));
+      if (!targetSchoolYear) {
+        return NextResponse.json(
+          { error: "School year not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      targetSchoolYear = await getActiveSchoolYear();
+      if (!targetSchoolYear) {
+        return NextResponse.json(
+          { error: "No active school year found" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Si solo necesitamos el conteo, hacemos una consulta optimizada
     if (countOnly === "true") {
@@ -93,20 +118,38 @@ export async function GET(request: Request) {
         followUps: followUps,
       });
     } else {
-      // Fetch all students with complete data
+      // Fetch all students with their most recent infraction data for grado/nivel
+      // from the specific school year
       const students = await prisma.estudiantes.findMany({
         select: {
           id: true,
           codigo: true,
           nombre: true,
-          grado: true,
-          nivel: true,
+          faltas: {
+            where: {
+              school_year_id: targetSchoolYear.id,
+            },
+            select: {
+              nivel: true,
+              seccion: true,
+              fecha: true,
+            },
+            orderBy: { fecha: "desc" },
+            take: 1,
+          },
         },
         orderBy: { nombre: "asc" },
       });
 
       // Transform students with their infractions
-      const transformedStudents = students.map(transformStudent);
+      const transformedStudents = students.map((student) => {
+        const latestInfraction = student.faltas[0];
+        return transformStudent(
+          student,
+          latestInfraction?.seccion || undefined,
+          latestInfraction?.nivel || undefined
+        );
+      });
 
       return NextResponse.json(transformedStudents, {
         headers: {

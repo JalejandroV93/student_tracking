@@ -1,21 +1,19 @@
 // app/_components/AuthProvider.tsx
 "use client";
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useCallback,
-} from "react";
+import React, { createContext, useContext, ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { fetchUserClient } from "@/lib/auth-client";
+import { SWRConfig } from "swr";
+import { useOptimizedAuth } from "@/hooks/useAuth";
 import { UserPayload } from "@/types/user";
 
 interface AuthContextProps {
-  user: UserPayload | null;
+  user: UserPayload | null | undefined;
   isLoading: boolean;
-  refetchUser: () => Promise<void>;
+  isValidating: boolean;
+  error?: Error | null;
+  refetchUser: () => Promise<UserPayload | null | undefined>;
+  clearAuthCache: () => Promise<UserPayload | null | undefined>;
+  validateSession: () => Promise<UserPayload | null | undefined>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -24,53 +22,73 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<UserPayload | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+// Componente interno que usa el hook optimizado
+const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const fetchUser = React.useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const fetchedUser = await fetchUserClient(); // Usa fetchUserClient
-      setUser(fetchedUser);
-      if (pathname === "/login" && fetchedUser != null) {
-        router.push("/");
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pathname, router]);
+  const {
+    user,
+    isLoading,
+    error,
+    isValidating,
+    refetchUser,
+    clearAuthCache,
+    validateSession,
+  } = useOptimizedAuth();
 
+  // Solo redirigir si estamos en login y hay usuario autenticado
   useEffect(() => {
-    // Siempre carga el usuario al montar el componente
-    fetchUser();
+    if (pathname === "/login" && user && !isLoading) {
+      router.push("/");
+    }
+  }, [pathname, user, isLoading, router]);
 
-    // Opcional: Añadir un event listener para cuando la ventana obtiene foco
-    const handleFocus = () => {
-      fetchUser();
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [fetchUser]);
-
-  const refetchUser = useCallback(async () => {
-    await fetchUser();
-  }, [fetchUser]); // Use useCallback for refetchUser
+  // Manejar cambios en el estado de autenticación
+  useEffect(() => {
+    // Si hay error de autenticación y no estamos en login, limpiar caché
+    if (error && pathname !== "/login" && pathname !== "/access") {
+      console.log("Authentication error detected, clearing cache");
+      clearAuthCache();
+    }
+  }, [error, pathname, clearAuthCache]);
 
   const contextValue: AuthContextProps = {
     user,
     isLoading,
+    isValidating,
+    error,
     refetchUser,
+    clearAuthCache,
+    validateSession,
   };
 
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
+};
+
+// Proveedor principal que incluye configuración SWR
+export const AuthProvider: React.FC<AuthProviderProps> = ({
+  children,
+}) => {
+  return (
+    <SWRConfig
+      value={{
+        // Configuración global de SWR para optimizar rendimiento
+        onError: (error, key) => {
+          console.warn(`SWR Error for ${key}:`, error);
+        },
+        onSuccess: (data, key) => {
+          // Solo log en desarrollo
+          if (process.env.NODE_ENV === "development") {
+            console.log(`SWR Success for ${key}`);
+          }
+        },
+      }}
+    >
+      <AuthProviderInner>{children}</AuthProviderInner>
+    </SWRConfig>
   );
 };
 

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { useResponsiveAnimation } from "@/hooks/useResponsiveAnimation"
 import { LoginForm } from "@/components/auth/LoginForm"
 import { LoginHeader } from "@/components/auth/LoginHeader"
-import { BorderBeam } from "@/components/magicui/border-beam";
+//import { BorderBeam } from "@/components/magicui/border-beam";
 
 export default function LoginPage() {
   const { controls } = useResponsiveAnimation()
@@ -23,10 +23,10 @@ export default function LoginPage() {
               <Card className="relative overflow-hidden border-none">
                   <LoginHeader />
                   <LoginForm />
-                  <BorderBeam
+                  {/* <BorderBeam
                       duration={6}
                       size={100}
-                  />
+                  /> */}
                   
               </Card>
           </motion.div>

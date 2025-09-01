@@ -23,17 +23,58 @@ interface StudentWithAlert extends Student {
   typeIICount: number;
 }
 
-export const useDashboardDataSWR = () => {
-  // Fetch alerts data (includes students with their grade/level information)
+interface UseDashboardDataSWROptions {
+  schoolYearId?: string | null; // "active", number as string, or null
+}
+
+export const useDashboardDataSWR = (
+  options: UseDashboardDataSWROptions = {}
+) => {
+  const { schoolYearId = "active" } = options;
+
+  // Construir parámetros de query para las APIs
+  const getApiUrl = (baseUrl: string) => {
+    const params = new URLSearchParams();
+    if (schoolYearId) {
+      params.append("schoolYearId", schoolYearId);
+    }
+    return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+  };
+
+  // Crear keys únicos que incluyan el schoolYearId para forzar revalidación
+  const alertsKey = `alerts-${schoolYearId || "default"}`;
+  const studentsKey = `students-${schoolYearId || "default"}`;
+  const infractionsKey = `infractions-${schoolYearId || "default"}`;
+
+  // Fetch all students data (para mostrar el total correcto en KPI)
   const {
-    data: students = [],
+    data: allStudents = [],
+    error: studentsError,
+    isLoading: studentsLoading,
+    mutate: mutateStudents,
+  } = useSWR<Student[]>(
+    [studentsKey, getApiUrl("/api/v1/students")],
+    ([, url]: [string, string]) => fetcher(url),
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 5 * 60 * 1000, // 5 minutes
+    }
+  );
+
+  // Fetch alerts data (students with alert information)
+  const {
+    data: studentsWithAlerts = [],
     error: alertsError,
     isLoading: alertsLoading,
     mutate: mutateAlerts,
-  } = useSWR<StudentWithAlert[]>("/api/v1/alerts", fetcher, {
-    revalidateOnFocus: false,
-    refreshInterval: 5 * 60 * 1000, // 5 minutes
-  });
+  } = useSWR<StudentWithAlert[]>(
+    [alertsKey, getApiUrl("/api/v1/alerts")],
+    ([, url]: [string, string]) => fetcher(url),
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 5 * 60 * 1000, // 5 minutes
+    }
+  );
 
   // Fetch infractions data
   const {
@@ -41,10 +82,14 @@ export const useDashboardDataSWR = () => {
     error: infractionsError,
     isLoading: infractionsLoading,
     mutate: mutateInfractions,
-  } = useSWR<Infraction[]>("/api/v1/infractions", fetcher, {
-    revalidateOnFocus: false,
-    refreshInterval: 5 * 60 * 1000, // 5 minutes
-  });
+  } = useSWR<Infraction[]>(
+    [infractionsKey, getApiUrl("/api/v1/infractions")],
+    ([, url]: [string, string]) => fetcher(url),
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 5 * 60 * 1000, // 5 minutes
+    }
+  );
 
   // Fetch settings data
   const {
@@ -64,19 +109,22 @@ export const useDashboardDataSWR = () => {
   // Extract settings and configuration state
   const settings = settingsResponse?.settings;
   const areSettingsConfigured = settingsResponse?.configured ?? false;
+
   // Calculate derived data
-  const isLoading = alertsLoading || infractionsLoading || settingsLoading;
-  const error = alertsError || infractionsError || settingsError;
+  const isLoading =
+    studentsLoading || alertsLoading || infractionsLoading || settingsLoading;
+  const error =
+    studentsError || alertsError || infractionsError || settingsError;
 
   // Function to get students with alerts
   const getStudentsWithAlerts = (section?: string | null) => {
-    if (!students.length) {
+    if (!studentsWithAlerts.length) {
       return [];
     }
 
     // If a section is provided, filter the students
     if (section) {
-      return students.filter((student) => {
+      return studentsWithAlerts.filter((student: StudentWithAlert) => {
         const sectionMap: Record<string, string> = {
           preschool: "Preschool",
           elementary: "Elementary",
@@ -89,23 +137,30 @@ export const useDashboardDataSWR = () => {
       });
     }
 
-    return students;
+    return studentsWithAlerts;
   };
 
   // Function to get alert status for a specific student
   const getStudentAlertStatus = (studentId: string): AlertStatus | null => {
-    const student = students.find((s) => s.id === studentId);
+    const student = studentsWithAlerts.find(
+      (s: StudentWithAlert) => s.id === studentId
+    );
     return student?.alertStatus ?? null;
   };
 
   // Function to refresh all data
   const refreshAll = async () => {
-    await Promise.all([mutateAlerts(), mutateInfractions(), mutateSettings()]);
+    await Promise.all([
+      mutateStudents(),
+      mutateAlerts(),
+      mutateInfractions(),
+      mutateSettings(),
+    ]);
   };
 
   return {
     // Data
-    students,
+    students: allStudents, // Todos los estudiantes para mostrar el conteo total correcto
     infractions,
     settings,
 
@@ -120,6 +175,7 @@ export const useDashboardDataSWR = () => {
 
     // Mutation functions
     refreshAll,
+    mutateStudents,
     mutateAlerts,
     mutateInfractions,
     mutateSettings,

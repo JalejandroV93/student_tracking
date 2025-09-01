@@ -27,6 +27,14 @@ interface OverviewProps {
   infractions: Infraction[];
   getStudentAlertStatus: (studentId: string) => AlertStatus | null;
   onSelectStudent: (studentId: string) => void;
+  dashboardFilters?: {
+    filters: {
+      schoolYearId: string | null;
+      trimestre: string;
+    };
+    setSchoolYear: (schoolYearId: string) => void;
+    setTrimestre: (trimestre: string) => void;
+  };
 }
 
 export function Overview({
@@ -34,25 +42,32 @@ export function Overview({
   infractions,
   getStudentAlertStatus,
   onSelectStudent,
+  dashboardFilters,
 }: OverviewProps) {
-  const [currentTrimestre, setCurrentTrimestre] = useState<string>("all"); // Ensure it's string
+  // Usar filtros pasados como props o estado local como fallback
+  const [currentTrimestre, setCurrentTrimestre] = useState<string>("all");
+
+  // Usar filtros globales si están disponibles, sino usar estado local
+  const effectiveCurrentTrimestre =
+    dashboardFilters?.filters.trimestre ?? currentTrimestre;
+  const effectiveSetTrimestre =
+    dashboardFilters?.setTrimestre ?? setCurrentTrimestre;
 
   // Obtener el conteo total de estudiantes
   const { data: totalStudentsCount = 0, isLoading: isLoadingStudentsCount } =
-    useStudentsCount();
-
-  // Filter infractions by trimester first - This is the core fix
+    useStudentsCount(); // Filter infractions by trimester first - This is the core fix
   const filteredInfractions = useMemo(() => {
-    if (currentTrimestre === "all") {
+    if (effectiveCurrentTrimestre === "all") {
       return infractions;
     }
-    // Directamente comparar con el string del trimestre sin mapeo
+    // Usar trimestreId para filtrar en lugar de trimester string
+    const trimestreId = parseInt(effectiveCurrentTrimestre);
     const filtered = infractions.filter((inf) => {
-      return inf.trimester === currentTrimestre;
+      return inf.trimestreId === trimestreId;
     });
 
     return filtered;
-  }, [infractions, currentTrimestre]); // Simplified dependencies
+  }, [infractions, effectiveCurrentTrimestre]); // Simplified dependencies
 
   // Calculate students with alerts using the passed function (uses ALL infractions for calculation, not filtered ones)
   const studentsWithAlerts = useMemo(
@@ -153,8 +168,9 @@ export function Overview({
       {/* Trimestre Selector */}
       <div className="flex justify-end">
         <TrimestreSelector
-          currentTrimestre={currentTrimestre}
-          onTrimestreChange={setCurrentTrimestre}
+          currentTrimestre={effectiveCurrentTrimestre}
+          onTrimestreChange={effectiveSetTrimestre}
+          dashboardFilters={dashboardFilters}
         />
       </div>
 

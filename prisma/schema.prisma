@@ -34,6 +34,9 @@ model Faltas {
   nivel                String?
   attended             Boolean     @default(false)
   attended_at          DateTime?
+  observaciones        String?
+  observaciones_autor  String?
+  observaciones_fecha  DateTime?
   created_at           DateTime    @default(now())
   updated_at           DateTime    @updatedAt
   fecha_creacion       DateTime?

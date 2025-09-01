@@ -13,6 +13,7 @@ import {
   ProcessedFalta,
   StudentData,
 } from "@/types/csv-import";
+import { Trimestre } from "@/types/school-year";
 
 export class CSVProcessingService {
   /**
@@ -21,9 +22,27 @@ export class CSVProcessingService {
   static async processCSVFile(
     csvContent: string,
     tipoFalta: string,
+    trimestreId: number,
     duplicateHandling?: DuplicateHandlingOptions
   ): Promise<ProcessingResult> {
     try {
+      // Obtener información del trimestre
+      const trimestre = await prisma.trimestre.findUnique({
+        where: { id: trimestreId },
+        include: { schoolYear: true },
+      });
+
+      if (!trimestre) {
+        return {
+          success: false,
+          message: "Trimestre no encontrado",
+          totalRows: 0,
+          processedRows: 0,
+          duplicates: [],
+          errors: [],
+        };
+      }
+
       // Parsear CSV
       const { data: csvRows, errors: parseErrors } = await parseCSVFile(
         csvContent
@@ -45,7 +64,12 @@ export class CSVProcessingService {
       }
 
       // Procesar las filas
-      return await this.processCSVRows(csvRows, tipoFalta, duplicateHandling);
+      return await this.processCSVRows(
+        csvRows,
+        tipoFalta,
+        trimestre,
+        duplicateHandling
+      );
     } catch (error) {
       console.error("Error processing CSV file:", error);
       return {
@@ -71,6 +95,7 @@ export class CSVProcessingService {
   private static async processCSVRows(
     csvRows: CSVFaltaRow[],
     tipoFalta: string,
+    trimestre: Trimestre & { schoolYear: { id: number; name: string } },
     duplicateHandling?: DuplicateHandlingOptions
   ): Promise<ProcessingResult> {
     const result: ProcessingResult = {
@@ -121,7 +146,12 @@ export class CSVProcessingService {
         }
 
         // Convertir fila a falta
-        const faltaData = await convertCSVRowToFalta(row, studentId, tipoFalta);
+        const faltaData = await convertCSVRowToFalta(
+          row,
+          studentId,
+          tipoFalta,
+          trimestre
+        );
         if (!faltaData) {
           result.errors.push({
             row: i + 1,

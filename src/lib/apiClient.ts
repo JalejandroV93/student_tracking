@@ -102,16 +102,51 @@ export const addFollowUp = async (
 export const toggleInfractionAttended = async ({
   infractionId,
   attended,
+  observaciones,
+  observacionesAutor,
 }: {
   infractionId: string;
   attended: boolean;
+  observaciones?: string;
+  observacionesAutor?: string;
 }): Promise<{ hash: string; attended: boolean }> => {
-  const response = await fetch(`/api/v1/infractions/${infractionId}`, {
+  const response = await fetch(`/api/v1/infractions/${infractionId}/attend`, {
     // Corrected API route based on file structure
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ attended }),
+    body: JSON.stringify({ attended, observaciones, observacionesAutor }),
   });
   // Assuming API returns { hash, attended }
   return handleResponse<{ hash: string; attended: boolean }>(response);
+};
+
+// Nueva función para agregar solo observaciones
+export const addObservaciones = async ({
+  infractionId,
+  observaciones,
+  autor,
+}: {
+  infractionId: string;
+  observaciones: string;
+  autor?: string;
+}): Promise<{
+  hash: string;
+  observaciones: string;
+  observaciones_autor: string;
+  observaciones_fecha: string;
+}> => {
+  const response = await fetch(
+    `/api/v1/infractions/${infractionId}/observaciones`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ observaciones, autor }),
+    }
+  );
+  return handleResponse<{
+    hash: string;
+    observaciones: string;
+    observaciones_autor: string;
+    observaciones_fecha: string;
+  }>(response);
 };

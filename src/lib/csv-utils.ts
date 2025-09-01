@@ -5,7 +5,6 @@ import {
   asignarNivelAcademico,
   extraerNumeroFalta,
 } from "@/lib/academic-level-utils";
-import { TrimestreDetectionService } from "@/services/trimestre-detection.service";
 
 /**
  * Genera un hash SHA256 único para una falta
@@ -87,22 +86,25 @@ export function parseCSVFile(csvContent: string): Promise<{
 /**
  * Convierte una fila CSV a un objeto ProcessedFalta
  */
-export async function convertCSVRowToFalta(
+export function convertCSVRowToFalta(
   row: CSVFaltaRow,
   studentId: number,
-  tipoFalta?: string
-): Promise<ProcessedFalta | null> {
+  tipoFalta?: string,
+  trimestreInfo?: { id: number; name: string; schoolYearId: number }
+): ProcessedFalta | null {
   try {
     const codigo = extractStudentCode(row.Código);
     if (!codigo) throw new Error("Código de estudiante inválido");
 
-    const fecha = parseCSVDate(row["Fecha "]);
+    const fecha = parseCSVDate(row["Fecha"]);
     if (!fecha) throw new Error("Fecha inválida");
 
     const fechaCreacion = parseCSVDate(row["Fecha De Creación"]);
     if (!fechaCreacion) throw new Error("Fecha de creación inválida");
 
-    const fechaUltimaEdicion = parseCSVDate(row["Fecha última Edición"]);
+    const fechaUltimaEdicion = row["Fecha última Edición"]
+      ? parseCSVDate(row["Fecha última Edición"])
+      : null;
 
     const hash = generateFaltaHash(
       row.Código,
@@ -122,12 +124,6 @@ export async function convertCSVRowToFalta(
       row["Falta segun Manual de Convivencia"]
     );
 
-    // Detectar trimestre usando el servicio (usando Fecha De Creación)
-    const trimestreDetection =
-      await TrimestreDetectionService.detectarTrimestre(
-        row["Fecha De Creación"]
-      );
-
     return {
       hash,
       id_estudiante: studentId,
@@ -139,9 +135,9 @@ export async function convertCSVRowToFalta(
       acciones_reparadoras: row["Acciones Reparadoras"] || "",
       autor: row.Autor || "",
       fecha,
-      trimestre: trimestreDetection.trimestreName, // Nombre del trimestre para compatibilidad
-      trimestre_id: trimestreDetection.trimestre?.id, // ID del trimestre
-      school_year_id: trimestreDetection.schoolYear?.id, // ID del año escolar
+      trimestre: trimestreInfo?.name || "No asignado", // Nombre del trimestre seleccionado
+      trimestre_id: trimestreInfo?.id, // ID del trimestre seleccionado
+      school_year_id: trimestreInfo?.schoolYearId, // ID del año escolar correspondiente
       fecha_creacion: fechaCreacion,
       fecha_ultima_edicion: fechaUltimaEdicion || undefined,
       ultimo_editor: row["último Editor"] || undefined,
@@ -205,7 +201,7 @@ export function validateCSVRow(row: CSVFaltaRow): {
     errors.push("Fecha de creación requerida");
   }
 
-  if (!row["Fecha "] || row["Fecha "].trim() === "") {
+  if (!row["Fecha"] || row["Fecha"].trim() === "") {
     errors.push("Fecha de la falta requerida");
   }
 

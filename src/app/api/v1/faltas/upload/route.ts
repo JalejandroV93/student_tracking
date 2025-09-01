@@ -8,6 +8,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
     const duplicateHandling = formData.get("duplicateHandling") as string;
     const tipoFalta = formData.get("tipoFalta") as string;
+    const trimestreId = formData.get("trimestreId") as string;
 
     if (!file) {
       return NextResponse.json(
@@ -21,6 +22,16 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: "Debe seleccionar el tipo de falta (Tipo I, II o III)",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!trimestreId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Debe seleccionar un trimestre",
         },
         { status: 400 }
       );
@@ -55,6 +66,7 @@ export async function POST(request: NextRequest) {
     const result = await CSVProcessingService.processCSVFile(
       content,
       tipoFalta,
+      parseInt(trimestreId),
       duplicateHandling ? JSON.parse(duplicateHandling) : undefined
     );
 

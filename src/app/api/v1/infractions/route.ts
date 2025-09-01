@@ -1,30 +1,44 @@
 import { transformInfraction } from "@/lib/utils";
+import {
+  getActiveSchoolYear,
+  getSchoolYearById,
+} from "@/lib/school-year-utils";
 import { PrismaClient } from "@prisma/client";
 // src/app/api/infractions/route.ts
 import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const schoolYearId = searchParams.get("schoolYearId");
+
+    // Determinar qué año académico usar
+    let targetSchoolYear;
+    if (schoolYearId && schoolYearId !== "active") {
+      // Si se especifica un año académico específico
+      targetSchoolYear = await getSchoolYearById(parseInt(schoolYearId));
+      if (!targetSchoolYear) {
+        return NextResponse.json(
+          { error: "School year not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Si no se especifica o se pide el activo, usar el año académico activo
+      targetSchoolYear = await getActiveSchoolYear();
+      if (!targetSchoolYear) {
+        return NextResponse.json(
+          { error: "No active school year found" },
+          { status: 400 }
+        );
+      }
+    }
+
     const infractions = await prisma.faltas.findMany({
-      select: {
-        hash: true,
-        id_estudiante: true,
-        codigo_estudiante: true,
-        tipo_falta: true,
-        numero_falta: true,
-        fecha: true,
-        descripcion_falta: true,
-        detalle_falta: true,
-        acciones_reparadoras: true,
-        autor: true,
-        trimestre: true,
-        nivel: true,
-        attended: true,
-        created_at: true,
-        updated_at: true,
-        attended_at: true,
+      where: {
+        school_year_id: targetSchoolYear.id,
       },
       orderBy: { fecha: "desc" },
     });

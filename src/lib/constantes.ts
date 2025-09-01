@@ -60,35 +60,36 @@ export const SECCIONES_ACADEMICAS = {
   "High School": "High School",
 } as const;
 
-//  Simplified section categorization function.
+const CATEGORY_PATTERNS: Record<string, RegExp[]> = {
+  "High School": [/d[ée]cimo(\s+segundo)?/, /und[ée]cimo/],
+  "Middle School": [/noveno/, /octavo/, /s[eé]ptimo/, /sexto/],
+  Elementary: [/quinto/, /cuarto/, /tercero/, /segundo/],
+  Preschool: [/primero/, /kinder/],
+};
+
+// Optimized function
 export function getSectionCategory(grado: string | undefined): string {
-  if (!grado) {
-    return "Unknown";
-  }
+  if (!grado) return "Unknown";
 
   const gradoLower = grado.toLowerCase().trim();
 
-  // Primero intentamos una coincidencia exacta
+  // 1. Pattern-based check
+  for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
+    if (patterns.some((regex) => regex.test(gradoLower))) {
+      return category;
+    }
+  }
+
+  // 2. Exact match fallback
   for (const category in NIVELES) {
     if (NIVELES[category].includes(gradoLower)) {
       return category;
     }
   }
 
-  // Si no hay coincidencia exacta, intentamos una coincidencia parcial
-  for (const category in NIVELES) {
-    const niveles = NIVELES[category];
-    const match = niveles.find((nivel) => {
-      const nivelBase = nivel.split(" ")[0]; // Obtiene la primera palabra (ej: "sexto" de "sexto a")
-      return gradoLower.startsWith(nivelBase);
-    });
-    if (match) {
-      return category;
-    }
-  }
-
   return "Unknown";
 }
+
 
 // Normalizes the infraction type.
 export function normalizarTipoFalta(

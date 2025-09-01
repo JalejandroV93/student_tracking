@@ -12,7 +12,7 @@ export interface CSVFaltaRow {
   Autor: string;
   "Fecha última Edición": string;
   "último Editor": string;
-  "Fecha ": string; // Nota: hay un espacio después de "Fecha" en el CSV original
+  "Fecha": string; // Sin espacio después de usar transformHeader con trim()
   "Estudiante con diagnostico?": string;
   "Falta segun Manual de Convivencia": string;
   "Descripcion de la falta": string;

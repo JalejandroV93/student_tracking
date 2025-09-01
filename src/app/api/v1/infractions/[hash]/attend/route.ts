@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 
 interface AttendRequestBody {
   attended: boolean;
+  observaciones?: string;
+  observacionesAutor?: string;
 }
 
 export async function PATCH(
@@ -22,7 +24,7 @@ export async function PATCH(
 
   try {
     const body: AttendRequestBody = await request.json();
-    const { attended } = body;
+    const { attended, observaciones, observacionesAutor } = body;
 
     if (typeof attended !== "boolean") {
       return NextResponse.json(
@@ -31,17 +33,29 @@ export async function PATCH(
       );
     }
 
+    const updateData: Record<string, string | boolean | Date | null> = {
+      attended: attended,
+      // Optionally update an 'attended_at' timestamp if needed
+      attended_at: attended ? new Date() : null,
+    };
+
+    // Si se proporcionan observaciones, actualizarlas
+    if (observaciones !== undefined) {
+      updateData.observaciones = observaciones;
+      updateData.observaciones_autor = observacionesAutor || "Usuario";
+      updateData.observaciones_fecha = new Date();
+    }
+
     const updatedInfraction = await prisma.faltas.update({
       where: { hash: hash },
-      data: {
-        attended: attended,
-        // Optionally update an 'attended_at' timestamp if needed
-        attended_at: attended ? new Date() : null,
-      },
+      data: updateData,
       // Select only necessary fields to return if needed
       select: {
         hash: true,
         attended: true,
+        observaciones: true,
+        observaciones_autor: true,
+        observaciones_fecha: true,
       },
     });
 

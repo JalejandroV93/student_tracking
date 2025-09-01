@@ -73,7 +73,9 @@ export function StudentSearchList({
                     >
                       <p className="font-medium">{student.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        ID: {student.id} | Grado: {student.grado}
+                        ID: {student.id}
+                        {student.grado !== "No especificado" &&
+                          ` | Grado: ${student.grado}`}
                       </p>
                     </button>
                   </li>

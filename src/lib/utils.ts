@@ -1,7 +1,6 @@
 // FILE: src/lib/utils.ts
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-
 import type { Infraction } from "@/types/dashboard";
 import { Prisma } from "@prisma/client";
 import { Student, FollowUp } from "@/types/dashboard";
@@ -81,8 +80,8 @@ export function transformStudent(
   return {
     id: `${student.id}-${student.codigo}`,
     name: student.nombre || "Sin nombre",
-    grado: grado || "Sin grado",
-    level: nivel || "Sin nivel",
+    grado: grado || "No especificado",
+    level: nivel || "No especificado",
   };
 }
 
@@ -101,8 +100,14 @@ export function transformInfraction(
     remedialActions: infraction.acciones_reparadoras ?? "",
     author: infraction.autor ?? "",
     trimester: infraction.trimestre ?? "",
+    trimestreId: infraction.trimestre_id,
+    schoolYearId: infraction.school_year_id,
     level: infraction.nivel ?? "",
     attended: infraction.attended ?? false,
+    observaciones: infraction.observaciones ?? undefined,
+    observacionesAutor: infraction.observaciones_autor ?? undefined,
+    observacionesFecha:
+      infraction.observaciones_fecha?.toISOString().split("T")[0] ?? undefined,
   };
 }
 
