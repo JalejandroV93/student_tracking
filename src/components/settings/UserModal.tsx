@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Role } from "@prisma/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -56,7 +56,7 @@ const userSchema = z.object({
   areaPermissions: z.array(
     z.object({
       areaId: z.number(),
-      canView: z.boolean().default(false),
+      canView: z.boolean(),
     })
   ),
 });

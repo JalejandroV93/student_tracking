@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StudentDetailCard } from "@/components/students/StudentDetailCard";
 import { FollowUpDialog } from "@/components/students/FollowUpDialog";
+import { EditFollowUpDialog } from "@/components/students/EditFollowUpDialog";
 import { EnhancedInfractionDetailsModal } from "@/components/students/EnhancedInfractionDetailsModal";
 import { StudentSchoolYearFilter } from "@/components/students/StudentSchoolYearFilter";
 import { useInfractionLoadingState } from "@/components/students/hooks";
@@ -132,9 +133,42 @@ export default function StudentDetailsPage() {
       },
     });
 
+  const { mutate: updateFollowUp, isPending: isUpdatingFollowUp } = useMutation(
+    {
+      mutationFn: ({
+        followUpId,
+        updates,
+      }: {
+        followUpId: string;
+        updates: Partial<FollowUp>;
+      }) =>
+        fetch(`/api/v1/followups/${followUpId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        }).then((res) => {
+          if (!res.ok) throw new Error("Failed to update follow-up");
+          return res.json();
+        }),
+      onSuccess: () => {
+        toast.success("Seguimiento actualizado exitosamente!");
+        setEditFollowUpDialogOpen(false);
+        setSelectedFollowUpForEdit(null);
+        queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+        refetchStudentDetails();
+      },
+      onError: (error) => {
+        toast.error(`Error actualizando seguimiento: ${error.message}`);
+      },
+    }
+  );
+
   const [isFollowUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [selectedInfractionForFollowUp, setSelectedInfractionForFollowUp] =
     useState<Infraction | null>(null);
+  const [isEditFollowUpDialogOpen, setEditFollowUpDialogOpen] = useState(false);
+  const [selectedFollowUpForEdit, setSelectedFollowUpForEdit] =
+    useState<FollowUp | null>(null);
   const [isInfractionModalOpen, setIsInfractionModalOpen] = useState(false);
   const [selectedInfractionForModal, setSelectedInfractionForModal] =
     useState<Infraction | null>(null);
@@ -149,8 +183,20 @@ export default function StudentDetailsPage() {
     setIsInfractionModalOpen(true);
   };
 
+  const handleOpenEditFollowUpDialog = (followUp: FollowUp) => {
+    setSelectedFollowUpForEdit(followUp);
+    setEditFollowUpDialogOpen(true);
+  };
+
   const handleAddFollowUp = async (followUpData: Omit<FollowUp, "id">) => {
     saveFollowUp(followUpData);
+  };
+
+  const handleUpdateFollowUp = async (
+    followUpId: string,
+    updates: Partial<FollowUp>
+  ) => {
+    updateFollowUp({ followUpId, updates });
   };
 
   const handleToggleAttended = (
@@ -274,6 +320,7 @@ export default function StudentDetailsPage() {
             onAddFollowUpClick={handleOpenFollowUpDialog}
             onToggleAttendedClick={handleToggleAttended}
             onViewInfractionDetailsClick={handleOpenInfractionModal}
+            onEditFollowUp={handleOpenEditFollowUpDialog}
             loadingStates={loadingStates}
           />
         )}
@@ -290,6 +337,18 @@ export default function StudentDetailsPage() {
             )}
             onSubmit={handleAddFollowUp}
             isSubmitting={isAddingFollowUp}
+          />
+        )}
+
+        {/* Edit Follow Up Dialog */}
+        {selectedFollowUpForEdit && student && (
+          <EditFollowUpDialog
+            isOpen={isEditFollowUpDialogOpen}
+            onOpenChange={setEditFollowUpDialogOpen}
+            followUp={selectedFollowUpForEdit}
+            studentName={student.name}
+            onSubmit={handleUpdateFollowUp}
+            isSubmitting={isUpdatingFollowUp}
           />
         )}
 

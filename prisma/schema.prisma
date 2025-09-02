@@ -83,7 +83,14 @@ model Seguimientos {
   fecha_seguimiento DateTime? @db.Date
   detalles          String?
   autor             String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  updated_by        String?
   caso              Casos     @relation(fields: [id_caso], references: [id_caso])
+
+  @@index([id_caso], map: "idx_seguimiento_caso")
+  @@index([created_at], map: "idx_seguimiento_created_at")
+  @@index([updated_at], map: "idx_seguimiento_updated_at")
 }
 
 model AlertSettings {

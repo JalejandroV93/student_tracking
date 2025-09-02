@@ -47,6 +47,7 @@ export interface StudentDetailCardProps {
     observaciones?: string
   ) => void;
   onViewInfractionDetailsClick?: (infraction: Infraction) => void;
+  onEditFollowUp?: (followUp: FollowUp) => void; // Nueva prop
   loadingStates: InfractionLoadingState;
 }
 

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,6 @@ import { formatDate } from "@/lib/utils";
 import {
   Calendar,
   User,
-  FileText,
   AlertTriangle,
   MessageSquare,
   Check,
@@ -82,156 +83,165 @@ export function EnhancedInfractionDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Detalles de la Falta
-          </DialogTitle>
-          <DialogDescription>
-            Información completa de la falta registrada
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] p-0 overflow-hidden">
+        <div className="bg-[#be1522] text-white px-6 py-4">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="flex items-center gap-2 text-white text-xl font-semibold">
+              <AlertTriangle className="h-6 w-6" />
+              Detalles de la Falta a
+            </DialogTitle>
+            <DialogDescription className="text-red-100">
+              Información completa de la falta registrada
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-6 py-4">
-          {/* Información del Estudiante */}
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Información del Estudiante
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Nombre:
-                </span>
-                <p className="mt-1">{student.name}</p>
-              </div>
-              <div>
-                <span className="font-medium text-muted-foreground">ID:</span>
-                <p className="mt-1">{student.id}</p>
-              </div>
-              {student.grado !== "No especificado" && (
-                <div>
-                  <span className="font-medium text-muted-foreground">
-                    Grado:
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] px-6 py-4">
+          <div className="space-y-6">
+            {/* Información del Estudiante */}
+            <div className="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 p-5 rounded-xl">
+              <h4 className="font-semibold mb-4 flex items-center gap-2 text-slate-800">
+                <User className="h-5 w-5 text-[#be1522]" />
+                Información del Estudiante
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <span className="font-medium text-slate-600 text-xs uppercase tracking-wide">
+                    Nombre
                   </span>
-                  <p className="mt-1">{student.grado}</p>
+                  <p className="font-semibold text-slate-900">{student.name}</p>
                 </div>
-              )}
-              {student.level !== "No especificado" && (
-                <div>
-                  <span className="font-medium text-muted-foreground">
-                    Nivel:
+                <div className="space-y-1">
+                  <span className="font-medium text-slate-600 text-xs uppercase tracking-wide">
+                    ID
                   </span>
-                  <p className="mt-1">{student.level}</p>
+                  <p className="font-semibold text-slate-900">{student.id}</p>
                 </div>
-              )}
+                {student.grado !== "No especificado" && (
+                  <div className="space-y-1">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide">
+                      Grado
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {student.grado}
+                    </p>
+                  </div>
+                )}
+                {student.level !== "No especificado" && (
+                  <div className="space-y-1">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide">
+                      Nivel
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {student.level}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          <Separator />
+            <Separator className="my-6" />
 
-          {/* Información de la Falta */}
-          <div>
-            <h4 className="font-semibold mb-4 flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Detalles de la Falta
-            </h4>
-
-            <div className="space-y-4">
-              {/* Fecha y Tipo */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Fecha de la Falta:</span>
-                  <span>{formatDate(infraction.date)}</span>
+            {/* Información de la Falta */}
+            <div>
+              <div className="space-y-6">
+                {/* Fecha y Tipo */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-[#be1522]" />
+                    <div>
+                      <span className="font-medium text-slate-600 text-sm">
+                        Fecha de la Falta
+                      </span>
+                      <p className="font-semibold text-slate-900">
+                        {formatDate(infraction.date)}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant={getBadgeVariant(infraction.type)}
+                    className="text-sm px-3 py-1"
+                  >
+                    {infraction.type}
+                  </Badge>
                 </div>
-                <Badge variant={getBadgeVariant(infraction.type)}>
-                  {infraction.type}
-                </Badge>
-              </div>
 
-              {/* Número de Falta */}
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Número de Falta:
-                </span>
-                <p className="mt-1">{infraction.number}</p>
-              </div>
+                {/* Grid de información */}
+                <div className="grid grid-cols-1 gap-4">
+                  
+                  {/* Detalles de la Falta */}
+                  <div className="p-4 border border-slate-200 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Falta Según el Manual de Convivencia
+                    </span>
+                    <p className="text-slate-800 leading-relaxed">
+                      {infraction.details ||
+                        "No se proporcionaron detalles adicionales"}
+                    </p>
+                  </div>
 
-              {/* Descripción */}
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Descripción:
-                </span>
-                <p className="mt-1 p-3 bg-muted/30 rounded-md">
-                  {infraction.description || "No se proporcionó descripción"}
-                </p>
-              </div>
+                  {/* Descripción */}
+                  <div className="p-4 border border-slate-200 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Descripción
+                    </span>
+                    <p className="text-slate-800 leading-relaxed">
+                      {infraction.description ||
+                        "No se proporcionó descripción"}
+                    </p>
+                  </div>
 
-              {/* Detalles de la Falta */}
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Detalle de la Falta:
-                </span>
-                <p className="mt-1 p-3 bg-muted/30 rounded-md">
-                  {infraction.details ||
-                    "No se proporcionaron detalles adicionales"}
-                </p>
-              </div>
+                  {/* Acciones Reparadoras */}
+                  <div className="p-4 border border-slate-200 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Acciones Reparadoras
+                    </span>
+                    <p className="text-slate-800 leading-relaxed">
+                      {infraction.remedialActions ||
+                        "No se definieron acciones reparadoras"}
+                    </p>
+                  </div>
+                </div>
 
-              {/* Acciones Reparadoras */}
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Acciones Reparadoras:
-                </span>
-                <p className="mt-1 p-3 bg-muted/30 rounded-md">
-                  {infraction.remedialActions ||
-                    "No se definieron acciones reparadoras"}
-                </p>
-              </div>
+                {/* Información Académica */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Trimestre
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {infraction.trimester || "No especificado"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Nivel Académico
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {infraction.level || "No especificado"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Registrado por
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {infraction.author || "No especificado"}
+                    </p>
+                  </div>
+                </div>
 
-              {/* Información Académica */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <span className="font-medium text-muted-foreground">
-                    Trimestre:
+                {/* Estado */}
+                <div className="p-4 border border-slate-200 rounded-lg">
+                  <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                    Estado
                   </span>
-                  <p className="mt-1">
-                    {infraction.trimester || "No especificado"}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground">
-                    Nivel Académico:
-                  </span>
-                  <p className="mt-1">
-                    {infraction.level || "No especificado"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Autor */}
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Registrado por:
-                </span>
-                <p className="mt-1">{infraction.author || "No especificado"}</p>
-              </div>
-
-              {/* Estado */}
-              <div>
-                <span className="font-medium text-muted-foreground">
-                  Estado:
-                </span>
-                <div className="mt-1">
                   <Badge
                     variant={infraction.attended ? "outline" : "secondary"}
                     className={
                       infraction.attended
-                        ? "text-green-600 border-green-600/50"
-                        : ""
+                        ? "text-green-700 border-green-300 bg-green-50"
+                        : "text-orange-700 border-orange-300 bg-orange-50"
                     }
                   >
                     {infraction.attended ? "Atendida" : "Pendiente"}
@@ -239,53 +249,55 @@ export function EnhancedInfractionDetailsModal({
                 </div>
               </div>
             </div>
-          </div>
 
-          <Separator />
+            <Separator className="my-6" />
 
-          {/* Sección de Observaciones */}
-          <div>
-            <h4 className="font-semibold mb-4 flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Observaciones
-            </h4>
+            {/* Sección de Observaciones */}
+            <div>
+              <h4 className="font-semibold mb-6 flex items-center gap-2 text-slate-800 text-lg">
+                <MessageSquare className="h-5 w-5 text-[#be1522]" />
+                Observaciones
+              </h4>
 
-            {/* Observación existente */}
-            {infraction.observaciones && (
-              <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-md">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-medium text-blue-800">
-                    Observación registrada
-                  </span>
-                  <span className="text-xs text-blue-600">
-                    {infraction.observacionesFecha &&
-                      formatDate(infraction.observacionesFecha)}{" "}
-                    - {infraction.observacionesAutor}
-                  </span>
+              {/* Observación existente */}
+              {infraction.observaciones && (
+                <div className="mb-6 p-5 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="font-semibold text-blue-800 text-sm">
+                      Observación registrada
+                    </span>
+                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                      {infraction.observacionesFecha &&
+                        formatDate(infraction.observacionesFecha)}{" "}
+                      - {infraction.observacionesAutor}
+                    </span>
+                  </div>
+                  <p className="text-blue-800 leading-relaxed">
+                    {infraction.observaciones}
+                  </p>
                 </div>
-                <p className="text-blue-700">{infraction.observaciones}</p>
-              </div>
-            )}
+              )}
 
-            {/* Agregar nueva observación */}
-            <div className="space-y-3">
-              <div>
-                
-                <Textarea
-                  id="observaciones"
-                  placeholder="Escriba sus observaciones sobre esta falta..."
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
+              {/* Agregar nueva observación */}
+              <div className="space-y-4 p-5 border border-slate-200 rounded-xl bg-slate-50">
+                <div>
+                  <label className="font-medium text-slate-700 text-sm block mb-2">
+                    Nueva observación
+                  </label>
+                  <Textarea
+                    id="observaciones"
+                    placeholder="Escriba sus observaciones sobre esta falta..."
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    rows={4}
+                    className="resize-none border-slate-300 focus:border-[#be1522] focus:ring-[#be1522]"
+                  />
+                </div>
 
-              <div className="flex gap-2">
                 <Button
                   onClick={handleAddObservaciones}
                   disabled={!observaciones.trim() || isSubmittingObservaciones}
-                  size="sm"
+                  className="bg-[#be1522] hover:bg-[#a01219] text-white"
                 >
                   {isSubmittingObservaciones ? (
                     <>
@@ -295,23 +307,27 @@ export function EnhancedInfractionDetailsModal({
                   ) : (
                     <>
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      {infraction.observaciones ? "Actualizar" : "Agregar"}
+                      {infraction.observaciones ? "Actualizar" : "Agregar"}{" "}
+                      Observación
                     </>
                   )}
                 </Button>
               </div>
             </div>
           </div>
+        </div>
 
-          <Separator />
-
-          {/* Acciones */}
-          <div className="flex justify-between items-center pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="border-t bg-white px-6 py-4">
+          <div className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="border-slate-300"
+            >
               Cerrar
             </Button>
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               {infraction.type === "Tipo I" && (
                 <Button
                   onClick={handleToggleAttended}

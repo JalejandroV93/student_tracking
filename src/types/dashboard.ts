@@ -14,8 +14,8 @@ export type PrismaAlertSetting = PrismaAlertSettings;
 export interface Student {
   id: string;
   name: string;
-  //grado: string;
-  //level: string;
+  grado: string;
+  level: string;
 }
 
 export interface Infraction {
@@ -46,6 +46,9 @@ export interface FollowUp {
   type: string;
   details: string;
   author: string;
+  createdAt?: string;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export interface AlertSettings {

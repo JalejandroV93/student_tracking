@@ -41,6 +41,10 @@ interface StudentsState {
     options?: { force?: boolean }
   ) => Promise<void>; // <-- Added options
   addFollowUp: (followUpData: Omit<FollowUp, "id">) => Promise<FollowUp | null>;
+  updateFollowUp: (
+    followUpId: string,
+    updates: Partial<FollowUp>
+  ) => Promise<FollowUp | null>; // Nueva función
   setSearchQuery: (query: string) => void;
   clearSelectedStudent: () => void;
   clearStudentListCache: () => void;
@@ -342,17 +346,83 @@ export const useStudentsStore = create<StudentsState>((set, get) => ({
     }
   },
 
+  updateFollowUp: async (followUpId, updates) => {
+    set({ detailLoading: true });
+    try {
+      const response = await fetch(`/api/v1/followups/${followUpId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Failed to update follow-up" }));
+        throw new Error(
+          errorData.error ||
+            `Failed to update follow-up: ${response.statusText}`
+        );
+      }
+
+      const updatedFollowUp: FollowUp = await response.json();
+
+      // Update state with the updated follow-up
+      const studentId = get().selectedStudentData.student?.id;
+      set((state) => {
+        const updatedFollowUps = state.selectedStudentData.followUps.map(
+          (followUp) =>
+            followUp.id === followUpId ? updatedFollowUp : followUp
+        );
+        const updatedData = {
+          ...state.selectedStudentData,
+          followUps: updatedFollowUps,
+        };
+
+        // Update both selected data and cache
+        const updatedCache = studentId
+          ? {
+              ...state.cachedStudentDetails,
+              [studentId]: {
+                ...updatedData,
+                timestamp: Date.now(),
+              },
+            }
+          : state.cachedStudentDetails;
+
+        return {
+          selectedStudentData: updatedData,
+          cachedStudentDetails: updatedCache,
+          detailLoading: false,
+        };
+      });
+
+      toast.success("Seguimiento actualizado exitosamente!");
+      return updatedFollowUp;
+    } catch (error) {
+      console.error("Error updating follow-up:", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to update follow-up";
+      set({ detailLoading: false });
+      toast.error(message);
+      return null;
+    }
+  },
+
   toggleInfractionAttended: async (infractionId, currentAttendedState) => {
     const newState = !currentAttendedState;
     // Optional: Add specific loading state for this action if needed
     // set({ detailLoading: true }); // Or use a more granular flag
 
     try {
-      const response = await fetch(`/api/v1/infractions/${infractionId}/attend`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attended: newState }),
-      });
+      const response = await fetch(
+        `/api/v1/infractions/${infractionId}/attend`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ attended: newState }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response

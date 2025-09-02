@@ -35,15 +35,12 @@ import type { Infraction, FollowUp } from "@/types/dashboard";
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 // Schema for follow-up form validation
 const followUpFormSchema = z.object({
-  followUpNumber: z.coerce.number({
-    // Coerce to number for easier comparison
-    required_error: "Seleccione el número de seguimiento",
-  }),
-  date: z.string().refine((date) => !!date, {
-    // Basic check for non-empty date string
+  followUpNumber: z.number().min(1, "Seleccione el número de seguimiento"),
+  date: z.string().min(1, {
     message: "Seleccione la fecha del seguimiento",
   }),
   details: z
@@ -73,6 +70,8 @@ export function FollowUpDialog({
   onSubmit,
   isSubmitting,
 }: FollowUpDialogProps) {
+  const { user } = useAuth(); // Obtener usuario autenticado
+
   // Determine available follow-up numbers
   const availableFollowUpNumbers = useMemo(() => {
     // Obtenemos los números ya utilizados
@@ -88,7 +87,7 @@ export function FollowUpDialog({
   const form = useForm<FollowUpFormData>({
     resolver: zodResolver(followUpFormSchema),
     defaultValues: {
-      followUpNumber: availableFollowUpNumbers[0] ?? undefined, // Default to first available
+      followUpNumber: availableFollowUpNumbers[0] ?? 1, // Default to first available or 1
       date: new Date().toISOString().split("T")[0], // Default to today
       details: "",
     },
@@ -99,7 +98,7 @@ export function FollowUpDialog({
   useMemo(() => {
     if (isOpen) {
       form.reset({
-        followUpNumber: availableFollowUpNumbers[0] ?? undefined,
+        followUpNumber: availableFollowUpNumbers[0] ?? 1,
         date: new Date().toISOString().split("T")[0],
         details: "",
       });
@@ -113,7 +112,7 @@ export function FollowUpDialog({
       date: values.date,
       details: values.details,
       type: infraction.type, // Copy infraction type
-      author: studentName, // Or logged-in user if available
+      author: user?.fullName || user?.username || "Sistema", // Usar usuario autenticado
     };
 
     onSubmit(newFollowUpData); // Call the submission function passed from props
@@ -145,7 +144,7 @@ export function FollowUpDialog({
                 <FormItem>
                   <FormLabel>Número de Seguimiento</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(Number(value))} // Convert back to number
+                    onValueChange={(value) => field.onChange(Number(value))} // Convert to number
                     value={field.value?.toString()} // Ensure value is string for Select
                     disabled={
                       availableFollowUpNumbers.length === 0 || isSubmitting

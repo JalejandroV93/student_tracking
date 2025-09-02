@@ -81,22 +81,6 @@ export function TypeIIInfractionsTable({
                     <Badge variant="outline" className="text-xs px-2 py-0.5">
                       {status.completedCount}/3
                     </Badge>
-                    {status.isCaseClosed ? (
-                      <Badge
-                        variant="default"
-                        className="bg-green-600 text-white text-xs px-2 py-0.5"
-                      >
-                        Cerrado
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs px-2 py-0.5"
-                      >
-                        {status.pendingCount} pendiente
-                        {status.pendingCount !== 1 ? "s" : ""}
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Último seguimiento si existe */}
