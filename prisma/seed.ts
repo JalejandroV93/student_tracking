@@ -8,6 +8,102 @@ const prisma = new PrismaClient();
 async function seed() {
   console.log("🌱 Iniciando siembra de datos...");
 
+  // Insertar SchoolYear "quemado"
+  const schoolYears = [
+    {
+      id: 2,
+      name: "2025-2026",
+      startDate: new Date("2025-07-01"),
+      endDate: new Date("2026-06-30"),
+      isActive: true,
+      description: "Año Escolar 2025-2026",
+      createdAt: new Date("2025-08-28T20:35:37.113Z"),
+      updatedAt: new Date("2025-08-29T19:29:47.515Z"),
+    },
+  ];
+  for (const sy of schoolYears) {
+    const exists = await prisma.schoolYear.findUnique({ where: { id: sy.id } });
+    if (!exists) {
+      await prisma.schoolYear.create({ data: sy });
+      console.log(`✅ SchoolYear creado: ${sy.name}`);
+    } else {
+      console.log(`⏩ SchoolYear ya existe: ${sy.name}`);
+    }
+  }
+
+  // Insertar Trimestres "quemados"
+  const trimestres = [
+    {
+      id: 1,
+      schoolYearId: 1,
+      name: "Primer Trimestre",
+      order: 1,
+      startDate: new Date("2024-07-23"),
+      endDate: new Date("2024-11-13"),
+      createdAt: new Date("2025-08-28T20:13:12.082Z"),
+      updatedAt: new Date("2025-08-28T20:13:12.082Z"),
+    },
+    {
+      id: 2,
+      schoolYearId: 1,
+      name: "Segundo Trimestre",
+      order: 2,
+      startDate: new Date("2024-11-14"),
+      endDate: new Date("2025-03-06"),
+      createdAt: new Date("2025-08-28T20:13:12.082Z"),
+      updatedAt: new Date("2025-08-28T20:13:12.082Z"),
+    },
+    {
+      id: 3,
+      schoolYearId: 1,
+      name: "Tercer Trimestre",
+      order: 3,
+      startDate: new Date("2025-03-07"),
+      endDate: new Date("2025-06-14"),
+      createdAt: new Date("2025-08-28T20:13:12.082Z"),
+      updatedAt: new Date("2025-08-28T20:13:12.082Z"),
+    },
+    {
+      id: 4,
+      schoolYearId: 2,
+      name: "Primer Trimestre",
+      order: 1,
+      startDate: new Date("2025-08-11"),
+      endDate: new Date("2025-11-12"),
+      createdAt: new Date("2025-08-28T20:35:37.113Z"),
+      updatedAt: new Date("2025-08-28T20:35:37.113Z"),
+    },
+    {
+      id: 5,
+      schoolYearId: 2,
+      name: "Segundo Trimestre",
+      order: 2,
+      startDate: new Date("2025-11-13"),
+      endDate: new Date("2026-03-06"),
+      createdAt: new Date("2025-08-28T20:35:37.113Z"),
+      updatedAt: new Date("2025-08-28T20:35:37.113Z"),
+    },
+    {
+      id: 6,
+      schoolYearId: 2,
+      name: "Tercer Trimestre",
+      order: 3,
+      startDate: new Date("2026-03-07"),
+      endDate: new Date("2026-06-12"),
+      createdAt: new Date("2025-08-28T20:35:37.113Z"),
+      updatedAt: new Date("2025-08-28T20:35:37.113Z"),
+    },
+  ];
+  for (const t of trimestres) {
+    const exists = await prisma.trimestre.findUnique({ where: { id: t.id } });
+    if (!exists) {
+      await prisma.trimestre.create({ data: t });
+      console.log(`✅ Trimestre creado: ${t.name} (${t.schoolYearId})`);
+    } else {
+      console.log(`⏩ Trimestre ya existe: ${t.name} (${t.schoolYearId})`);
+    }
+  }
+
   // Crear las áreas por defecto
   const areas = [
     { name: "Preescolar", code: "PRESCHOOL" },
