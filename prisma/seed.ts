@@ -1,7 +1,6 @@
 // prisma/seed.ts
 import { PrismaClient, Role } from "@prisma/client";
-
-import { hashPassword } from "../src/lib/auth";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -137,7 +136,7 @@ async function seed() {
 
   if (!existingAdmin) {
     console.log("Creando usuario administrador...");
-    const hashedPassword = await hashPassword("admin123");
+    const hashedPassword = await bcrypt.hash("admin123", 10);
 
     await prisma.user.create({
       data: {
