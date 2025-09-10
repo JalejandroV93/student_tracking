@@ -11,16 +11,65 @@ import {
 } from "@/lib/school-year-utils";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getCurrentUser, getUserAreaPermissions } from "@/lib/session";
+import { Role } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
     console.log("🚨 Alerts endpoint called");
+
+    // Get current user to filter by permissions
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    console.log("👤 Current user:", { 
+      id: currentUser.id, 
+      role: currentUser.role,
+      username: currentUser.username 
+    });
 
     const { searchParams } = new URL(request.url);
     const section = searchParams.get("section");
     const schoolYearId = searchParams.get("schoolYearId");
 
     console.log("📋 Request params:", { section, schoolYearId });
+
+    // Get user's area permissions
+    let allowedAreaCodes: string[] = [];
+    if (currentUser.role === Role.ADMIN || currentUser.role === Role.PSYCHOLOGY) {
+      // Admin and Psychology have access to all areas
+      allowedAreaCodes = ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"];
+    } else if (currentUser.role === Role.GROUP_DIRECTOR) {
+      // GROUP_DIRECTOR permissions are defined in AreaPermissions table
+      allowedAreaCodes = await getUserAreaPermissions(currentUser.id);
+    } else {
+      // Other coordinators have predefined area access
+      const roleToAreaMap: Record<Role, string[]> = {
+        [Role.PRESCHOOL_COORDINATOR]: ["PRESCHOOL"],
+        [Role.ELEMENTARY_COORDINATOR]: ["ELEMENTARY"],
+        [Role.MIDDLE_SCHOOL_COORDINATOR]: ["MIDDLE"],
+        [Role.HIGH_SCHOOL_COORDINATOR]: ["HIGH"],
+        [Role.ADMIN]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
+        [Role.PSYCHOLOGY]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
+        [Role.GROUP_DIRECTOR]: [],
+        [Role.USER]: [],
+        [Role.STUDENT]: [],
+      };
+      allowedAreaCodes = roleToAreaMap[currentUser.role] || [];
+    }
+
+    console.log("🔐 User allowed areas:", allowedAreaCodes);
+
+    // If user has no area permissions, return empty results
+    if (allowedAreaCodes.length === 0) {
+      console.log("❌ User has no area permissions");
+      return NextResponse.json([]);
+    }
 
     // Determinar qué año académico usar
     let targetSchoolYear;
@@ -135,7 +184,7 @@ export async function GET(request: Request) {
     });
 
     // Filter students by section if provided
-    const sectionStudents = section
+    let sectionStudents = section
       ? students.filter((student) => {
           const sectionMap: Record<string, string> = {
             preschool: "Preschool",
@@ -149,6 +198,23 @@ export async function GET(request: Request) {
           );
         })
       : students;
+
+    // Filter students by user's area permissions
+    const areaCodeToSectionCategory: Record<string, string> = {
+      "PRESCHOOL": "Preschool",
+      "ELEMENTARY": "Elementary", 
+      "MIDDLE": "Middle School",
+      "HIGH": "High School",
+    };
+
+    sectionStudents = sectionStudents.filter((student) => {
+      const studentSectionCategory = getSectionCategory(student.grado);
+      return allowedAreaCodes.some(areaCode => 
+        areaCodeToSectionCategory[areaCode] === studentSectionCategory
+      );
+    });
+
+    console.log(`🔒 After permission filtering: ${sectionStudents.length} students`);
 
     // Process alerts for each student
     const studentsWithAlerts = sectionStudents
