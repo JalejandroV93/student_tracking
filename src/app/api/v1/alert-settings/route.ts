@@ -1,10 +1,8 @@
 // src/app/api/alert-settings/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
 import type { AlertSettings } from "@/types/dashboard"; // Import the type
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {

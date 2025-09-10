@@ -3,11 +3,9 @@ import {
   getActiveSchoolYear,
   getSchoolYearById,
 } from "@/lib/school-year-utils";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
-
-const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {

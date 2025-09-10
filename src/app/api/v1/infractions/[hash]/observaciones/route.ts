@@ -1,8 +1,7 @@
 // src/app/api/v1/infractions/[hash]/observaciones/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
 
 interface ObservacionRequestBody {
   observaciones: string;

@@ -1,8 +1,7 @@
 // src/app/api/infractions/[hash]/attend/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
 
 interface AttendRequestBody {
   attended: boolean;

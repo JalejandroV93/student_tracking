@@ -18,16 +18,27 @@ import {
   Settings,
   CheckCircle,
   AlertCircle,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { useSchoolYearSettings } from "@/hooks/use-school-year-settings";
 import { SchoolYearForm } from "@/components/settings/school-years/SchoolYearForm";
-import { CreateSchoolYearRequest, SchoolYear } from "@/types/school-year";
+import { SchoolYearEditForm } from "@/components/settings/school-years/SchoolYearEditForm";
+import { CreateSchoolYearRequest, SchoolYear, UpdateSchoolYearRequest } from "@/types/school-year";
 import { toast } from "sonner";
 
 export default function SchoolYearsSettingsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { settings, loading, error, activateSchoolYear, createSchoolYear } =
-    useSchoolYearSettings();
+  const [editingSchoolYear, setEditingSchoolYear] = useState<SchoolYear | null>(null);
+  const { 
+    settings, 
+    loading, 
+    error, 
+    activateSchoolYear, 
+    createSchoolYear, 
+    updateSchoolYear,
+    deleteSchoolYear 
+  } = useSchoolYearSettings();
 
   const handleActivateYear = async (schoolYear: SchoolYear) => {
     const success = await activateSchoolYear(schoolYear.id);
@@ -43,6 +54,29 @@ export default function SchoolYearsSettingsPage() {
       toast.success("Año escolar creado exitosamente");
     }
     return success;
+  };
+
+  const handleUpdateSchoolYear = async (id: number, formData: UpdateSchoolYearRequest) => {
+    const success = await updateSchoolYear(id, formData);
+    if (success) {
+      setEditingSchoolYear(null);
+      toast.success("Año escolar actualizado exitosamente");
+    }
+    return success;
+  };
+
+  const handleDeleteSchoolYear = async (schoolYear: SchoolYear) => {
+    if (schoolYear.isActive) {
+      toast.error("No se puede eliminar el año escolar activo");
+      return;
+    }
+
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el año escolar "${schoolYear.name}"? Esta acción no se puede deshacer.`)) {
+      const success = await deleteSchoolYear(schoolYear.id);
+      if (success) {
+        toast.success("Año escolar eliminado exitosamente");
+      }
+    }
   };
 
   if (loading) {
@@ -92,7 +126,7 @@ export default function SchoolYearsSettingsPage() {
           </div>
           <Button
             onClick={() => setShowCreateForm(true)}
-            disabled={showCreateForm}
+            disabled={showCreateForm || editingSchoolYear !== null}
           >
             <Plus className="h-4 w-4 mr-2" />
             Crear Año Escolar
@@ -112,6 +146,25 @@ export default function SchoolYearsSettingsPage() {
               <SchoolYearForm
                 onSubmit={handleCreateSchoolYear}
                 onCancel={() => setShowCreateForm(false)}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Formulario de edición */}
+        {editingSchoolYear && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Editar Año Escolar</CardTitle>
+              <CardDescription>
+                Modifica la información del año escolar seleccionado
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SchoolYearEditForm
+                schoolYear={editingSchoolYear}
+                onSubmit={handleUpdateSchoolYear}
+                onCancel={() => setEditingSchoolYear(null)}
               />
             </CardContent>
           </Card>
@@ -281,14 +334,36 @@ export default function SchoolYearsSettingsPage() {
                         </div>
 
                         {/* Acciones */}
-                        <div className="ml-4">
+                        <div className="ml-4 flex gap-2">
                           {!schoolYear.isActive && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleActivateYear(schoolYear)}
+                              disabled={editingSchoolYear !== null}
                             >
                               Activar
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingSchoolYear(schoolYear)}
+                            disabled={showCreateForm || editingSchoolYear !== null}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Editar
+                          </Button>
+                          {!schoolYear.isActive && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteSchoolYear(schoolYear)}
+                              disabled={showCreateForm || editingSchoolYear !== null}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Eliminar
                             </Button>
                           )}
                         </div>

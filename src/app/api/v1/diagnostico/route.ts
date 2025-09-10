@@ -1,7 +1,8 @@
-import { Casos, PrismaClient } from "@prisma/client";
+import { Casos } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+
 
 // Endpoint para diagnosticar problemas con faltas y casos
 export async function GET(request: Request) {

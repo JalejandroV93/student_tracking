@@ -1,7 +1,5 @@
-// src/lib/school-year-utils.ts
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+// lib/school-year-utils.ts
+import { prisma } from "@/lib/prisma";
 
 /**
  * Obtiene el año académico activo

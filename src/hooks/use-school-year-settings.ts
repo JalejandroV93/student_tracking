@@ -3,6 +3,7 @@ import {
   SchoolYear,
   SchoolYearSettings,
   CreateSchoolYearRequest,
+  UpdateSchoolYearRequest,
 } from "@/types/school-year";
 
 export function useSchoolYearSettings() {
@@ -90,6 +91,60 @@ export function useSchoolYearSettings() {
     }
   };
 
+  const updateSchoolYear = async (
+    id: number,
+    schoolYearData: UpdateSchoolYearRequest
+  ): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/v1/school-years/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(schoolYearData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchSchoolYears(); // Recargar la lista
+        return true;
+      } else {
+        setError(data.error || "Error al actualizar año escolar");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error updating school year:", error);
+      setError("Error al actualizar año escolar");
+      return false;
+    }
+  };
+
+  const deleteSchoolYear = async (id: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/v1/school-years/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchSchoolYears(); // Recargar la lista
+        return true;
+      } else {
+        setError(data.error || "Error al eliminar año escolar");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error deleting school year:", error);
+      setError("Error al eliminar año escolar");
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchSchoolYears();
   }, []);
@@ -102,5 +157,7 @@ export function useSchoolYearSettings() {
     fetchSchoolYears,
     activateSchoolYear,
     createSchoolYear,
+    updateSchoolYear,
+    deleteSchoolYear,
   };
 }
