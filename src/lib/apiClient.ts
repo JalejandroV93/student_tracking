@@ -26,6 +26,11 @@ export const fetchStudentsList = async (): Promise<Student[]> => {
   return handleResponse<Student[]>(response);
 };
 
+export const fetchStudentsListWithStats = async (): Promise<Student[]> => {
+  const response = await fetch("/api/v1/students?includeStats=true");
+  return handleResponse<Student[]>(response);
+};
+
 export const fetchStudentCount = async (): Promise<number> => {
   const response = await fetch("/api/v1/students?countOnly=true");
   const data = await handleResponse<{ count: number }>(response);

@@ -13,6 +13,7 @@ const updateUserSchema = z.object({
   email: z.string().email().nullable().optional(),
   password: z.string().min(6).optional(),
   role: z.nativeEnum(Role),
+  groupCode: z.string().optional(), // Código del grupo para directores de grupo
   areaPermissions: z.array(
     z.object({
       areaId: z.number(),
@@ -116,7 +117,7 @@ export async function PUT(
       );
     }
 
-    const { username, fullName, email, password, role, areaPermissions } =
+    const { username, fullName, email, password, role, groupCode, areaPermissions } =
       result.data;
 
     // Verificar que el usuario existe
@@ -154,9 +155,10 @@ export async function PUT(
       email,
     };
 
-    // Solo los administradores pueden actualizar roles
+    // Solo los administradores pueden actualizar roles y groupCode
     if (isAdmin) {
       updateData.role = role;
+      updateData.groupCode = groupCode || null;
     }
 
     // Si se proporciona una nueva contraseña, actualizarla

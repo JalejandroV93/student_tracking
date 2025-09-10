@@ -16,6 +16,7 @@ const roleToAreaPermissions: Record<Role, string[]> = {
   [Role.MIDDLE_SCHOOL_COORDINATOR]: ["MIDDLE"],
   [Role.HIGH_SCHOOL_COORDINATOR]: ["HIGH"],
   [Role.PSYCHOLOGY]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
+  [Role.TEACHER]: [], // Los profesores solo ven su grupo específico
   [Role.USER]: [],
   [Role.STUDENT]: [],
 };
@@ -85,6 +86,9 @@ export function useRoleAreaFilter() {
         return "Secundaria";
       case Role.HIGH_SCHOOL_COORDINATOR:
         return "Bachillerato";
+      case Role.TEACHER:
+        // Los profesores tienen un grupo específico, no un área general
+        return "";
       default:
         return "";
     }

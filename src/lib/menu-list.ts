@@ -65,6 +65,9 @@ const filterSubmenusByRole = (
           submenu.href.includes("middle") ||
           submenu.href.includes("high")
         );
+      case Role.TEACHER:
+        // Los directores de grupo no ven las secciones en el menú, solo su propio grupo
+        return false;
       default:
         return true;
     }

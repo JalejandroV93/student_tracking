@@ -12,6 +12,7 @@ const userSchema = z.object({
   email: z.string().email().nullable().optional(),
   password: z.string().min(6).optional(),
   role: z.nativeEnum(Role),
+  groupCode: z.string().optional(), // Código del grupo para directores de grupo
   areaPermissions: z.array(
     z.object({
       areaId: z.number(),
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { username, fullName, email, password, role, areaPermissions } = result.data;
+    const { username, fullName, email, password, role, groupCode, areaPermissions } = result.data;
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -127,6 +128,7 @@ export async function POST(request: Request) {
         email,
         document: username, // Usar username como documento por defecto
         role,
+        groupCode: groupCode || null,
         password: hashedPassword,
       },
       select: {

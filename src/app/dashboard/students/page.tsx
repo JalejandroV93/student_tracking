@@ -3,9 +3,10 @@
 
 import { useRouter } from "next/navigation";
 import { StudentSearchList } from "@/components/students/StudentSearchList";
+import { UserRoleInfo } from "@/components/students/UserRoleInfo";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchStudentsList } from "@/lib/apiClient";
+import { fetchStudentsListWithStats } from "@/lib/apiClient";
 import type { Student } from "@/types/dashboard";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -23,8 +24,8 @@ export default function StudentsListPage() {
     error: listError,
     isFetching: listIsFetching,
   } = useQuery({
-    queryKey: ["students"],
-    queryFn: fetchStudentsList,
+    queryKey: ["students", "with-stats"],
+    queryFn: () => fetchStudentsListWithStats(),
     staleTime: 5 * 60 * 1000, // 5 minutes - data is relatively stable
     gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
   });
@@ -36,7 +37,7 @@ export default function StudentsListPage() {
     if (!lowerCaseQuery) return studentsList;
 
     return studentsList.filter(
-      (student) =>
+      (student: Student) =>
         student.name.toLowerCase().includes(lowerCaseQuery) ||
         student.id.toLowerCase().includes(lowerCaseQuery)
     );
@@ -52,6 +53,8 @@ export default function StudentsListPage() {
         <p className="text-sm text-muted-foreground">
           Busca por nombre o ID para ver el historial de faltas y seguimientos.
         </p>
+
+        <UserRoleInfo />
 
         <StudentSearchList
           searchQuery={searchQuery}

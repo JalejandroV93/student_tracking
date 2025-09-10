@@ -110,6 +110,7 @@ model User {
   email               String?
   phonenumber         String?
   role                Role
+  groupCode           String?           // Código del grupo que dirige (solo para TEACHER)
   password            String
   lastLogin           DateTime?
   isBlocked           Boolean           @default(false)
@@ -203,6 +204,7 @@ enum Role {
   MIDDLE_SCHOOL_COORDINATOR
   HIGH_SCHOOL_COORDINATOR
   PSYCHOLOGY
+  TEACHER
   STUDENT
   USER
 }

@@ -53,6 +53,7 @@ const userSchema = z.object({
     .min(6, "La contraseña debe tener al menos 6 caracteres")
     .optional(),
   role: z.nativeEnum(Role),
+  groupCode: z.string().optional(), // Código del grupo para directores de grupo
   areaPermissions: z.array(
     z.object({
       areaId: z.number(),
@@ -75,6 +76,7 @@ type User = {
   fullName: string;
   email: string | null;
   role: Role;
+  groupCode?: string | null; // Código del grupo para directores de grupo
   areaPermissions: Array<{
     id: number;
     areaId: number;
@@ -179,6 +181,7 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        groupCode: user.groupCode || "",
         areaPermissions:
           user.areaPermissions?.map((perm) => ({
             areaId: perm.area.id,
@@ -189,6 +192,7 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
 
     return {
       role: "USER" as Role,
+      groupCode: "",
       areaPermissions: [],
     };
   };
@@ -221,7 +225,11 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
 
   // Mostrar u ocultar campos según el rol
   const showAreaPermissions = (role: Role) => {
-    return role !== "ADMIN" && role !== "USER" && role !== "STUDENT";
+    return role !== "ADMIN" && role !== "USER" && role !== "STUDENT" && role !== "TEACHER";
+  };
+
+  const showGroupCode = (role: Role) => {
+    return role === "TEACHER";
   };
 
   const currentRole = form.watch("role");
@@ -371,6 +379,7 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                           Coordinador Bachillerato
                         </SelectItem>
                         <SelectItem value="PSYCHOLOGY">Psicología</SelectItem>
+                        <SelectItem value="TEACHER">Director de Grupo</SelectItem>
                         <SelectItem value="USER">Usuario</SelectItem>
                         <SelectItem value="STUDENT">Estudiante</SelectItem>
                       </SelectContent>
@@ -380,6 +389,26 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                 )}
               />
             </div>
+
+            {/* Código de Grupo - solo visible para directores de grupo */}
+            {showGroupCode(currentRole) && (
+              <FormField
+                control={form.control}
+                name="groupCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código del Grupo</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ej: 6A, 10B, etc."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Permisos por Área - solo visible para ciertos roles */}
             {showAreaPermissions(currentRole) && areas && areas.length > 0 && (

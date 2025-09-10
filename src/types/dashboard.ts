@@ -16,6 +16,16 @@ export interface Student {
   name: string;
   grado: string;
   level: string;
+  stats?: InfractionStats;
+}
+
+export interface InfractionStats {
+  total: number;
+  tipoI: number;
+  tipoII: number;
+  tipoIII: number;
+  pending: number;
+  attended: number;
 }
 
 export interface Infraction {

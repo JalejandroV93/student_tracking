@@ -183,6 +183,8 @@ export default function ProfilePage() {
         return "Coordinador Bachillerato";
       case "PSYCHOLOGY":
         return "Psicología";
+      case "TEACHER":
+        return "Director de Grupo";
       case "USER":
         return "Usuario";
       case "STUDENT":

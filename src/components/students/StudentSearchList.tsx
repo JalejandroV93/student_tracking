@@ -1,11 +1,64 @@
 "use client";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, UserX, RefreshCw } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Search, UserX, RefreshCw, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import type { Student } from "@/types/dashboard";
 import { StudentSearchListSkeleton } from "./StudentSearchList.skeleton";
+
+interface StudentSearchListProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  students: Student[]; // The list to display (already filtered)
+  onSelectStudent: (student: Student) => void;
+  isLoading: boolean;
+  error: string | null;
+  isFetching: boolean;
+}
+
+// Componente para mostrar las estadísticas de faltas
+function InfractionStatsDisplay({ stats }: { stats: Student['stats'] }) {
+  if (!stats) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 mt-2">
+      <Badge variant="secondary" className="text-xs">
+        <AlertTriangle className="w-3 h-3 mr-1" />
+        Total: {stats.total}
+      </Badge>
+      {stats.tipoI > 0 && (
+        <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+          Tipo 1: {stats.tipoI}
+        </Badge>
+      )}
+      {stats.tipoII > 0 && (
+        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700">
+          Tipo 2: {stats.tipoII}
+        </Badge>
+      )}
+      {stats.tipoIII > 0 && (
+        <Badge variant="outline" className="text-xs bg-red-50 text-red-700">
+          Tipo 3: {stats.tipoIII}
+        </Badge>
+      )}
+      {stats.pending > 0 && (
+        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+          <Clock className="w-3 h-3 mr-1" />
+          Pendientes: {stats.pending}
+        </Badge>
+      )}
+      {stats.attended > 0 && (
+        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Atendidas: {stats.attended}
+        </Badge>
+      )}
+    </div>
+  );
+}
 
 interface StudentSearchListProps {
   searchQuery: string;
@@ -71,12 +124,17 @@ export function StudentSearchList({
                       onClick={() => onSelectStudent(student)}
                       title={`Seleccionar a ${student.name}`}
                     >
-                      <p className="font-medium">{student.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ID: {student.id}
-                        {student.grado !== "No especificado" &&
-                          ` | Grado: ${student.grado}`}
-                      </p>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="font-medium">{student.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            ID: {student.id}
+                            {student.grado !== "No especificado" &&
+                              ` | Grado: ${student.grado}`}
+                          </p>
+                        </div>
+                        <InfractionStatsDisplay stats={student.stats} />
+                      </div>
                     </button>
                   </li>
                 ))}

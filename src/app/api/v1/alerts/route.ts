@@ -1,26 +1,91 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getSectionCategory } from "@/lib/constantes";
-import {
-  getStudentTypeICount,
-  transformInfraction,
-  transformStudent,
-} from "@/lib/utils";
-import { AlertStatus } from "@/lib/utils";
-import {
-  getActiveSchoolYear,
-  getSchoolYearById,
-} from "@/lib/school-year-utils";
 import { prisma } from "@/lib/prisma";
+import { getActiveSchoolYear, getSchoolYearById } from "@/lib/school-year-utils";
+import { getCurrentUser } from "@/lib/session";
+import { getStudentTypeICount, transformInfraction, transformStudent } from "@/lib/utils";
+import { AlertStatus } from "@/lib/utils";
+import { Role } from "@prisma/client";
 import { NextResponse } from "next/server";
+
+// Función para filtrar estudiantes basado en permisos del usuario
+async function filterStudentsByUserPermissions(
+  students: Array<any>, // Simplificamos el tipo por ahora
+  user: { id: string; role: Role; [key: string]: any }
+) {
+  // Los administradores ven todo
+  if (user.role === "ADMIN") {
+    return students;
+  }
+
+  // Psicología ve todas las áreas
+  if (user.role === "PSYCHOLOGY") {
+    return students;
+  }
+
+  // Coordinadores ven solo su área específica
+  if (
+    user.role === "PRESCHOOL_COORDINATOR" ||
+    user.role === "ELEMENTARY_COORDINATOR" ||
+    user.role === "MIDDLE_SCHOOL_COORDINATOR" ||
+    user.role === "HIGH_SCHOOL_COORDINATOR"
+  ) {
+    const allowedSections: Record<Role, string[]> = {
+      [Role.PRESCHOOL_COORDINATOR]: ["Preschool"],
+      [Role.ELEMENTARY_COORDINATOR]: ["Elementary"],
+      [Role.MIDDLE_SCHOOL_COORDINATOR]: ["Middle School"],
+      [Role.HIGH_SCHOOL_COORDINATOR]: ["High School"],
+      [Role.ADMIN]: [],
+      [Role.PSYCHOLOGY]: [],
+      [Role.TEACHER]: [],
+      [Role.USER]: [],
+      [Role.STUDENT]: [],
+    };
+
+    const userAllowedSections = allowedSections[user.role] || [];
+    return students.filter((student) => {
+      const studentSection = getSectionCategory(student.grado);
+      return userAllowedSections.includes(studentSection);
+    });
+  }
+
+  // Directores de grupo (TEACHER) ven solo su grupo específico
+  if (user.role === "TEACHER") {
+    // Obtener el usuario completo con el groupCode
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { groupCode: true },
+    });
+
+    if (!fullUser?.groupCode) {
+      return []; // Si no tiene grupo asignado, no ve nada
+    }
+
+    return students.filter((student) => {
+      return student.grado === fullUser.groupCode;
+    });
+  }
+
+  // Por defecto, no ven nada
+  return [];
+}
 
 export async function GET(request: Request) {
   try {
     console.log("🚨 Alerts endpoint called");
+
+    // Verificar autenticación
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
     const { searchParams } = new URL(request.url);
     const section = searchParams.get("section");
     const schoolYearId = searchParams.get("schoolYearId");
 
     console.log("📋 Request params:", { section, schoolYearId });
+    console.log("👤 User:", { id: currentUser.id, role: currentUser.role });
 
     // Determinar qué año académico usar
     let targetSchoolYear;
@@ -150,8 +215,14 @@ export async function GET(request: Request) {
         })
       : students;
 
+    // Filter students based on user permissions
+    const filteredStudents = await filterStudentsByUserPermissions(
+      sectionStudents,
+      currentUser
+    );
+
     // Process alerts for each student
-    const studentsWithAlerts = sectionStudents
+    const studentsWithAlerts = filteredStudents
       .map((student) => {
         const typeICount = getStudentTypeICount(
           student.id, // Usar el ID formato correcto

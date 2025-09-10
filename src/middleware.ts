@@ -18,13 +18,14 @@ const sectionToAreaCode: Record<string, string> = {
 };
 
 // Mapeo de roles a áreas permitidas
-const roleToAreaPermissions: Record<Role, string[]> = {
+const roleAreaMap: Record<Role, string[]> = {
   [Role.ADMIN]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
   [Role.PRESCHOOL_COORDINATOR]: ["PRESCHOOL"],
   [Role.ELEMENTARY_COORDINATOR]: ["ELEMENTARY"],
   [Role.MIDDLE_SCHOOL_COORDINATOR]: ["MIDDLE"],
   [Role.HIGH_SCHOOL_COORDINATOR]: ["HIGH"],
   [Role.PSYCHOLOGY]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
+  [Role.TEACHER]: [], // Los profesores manejan grupos específicos, no áreas generales
   [Role.USER]: [],
   [Role.STUDENT]: [],
 };
@@ -114,7 +115,7 @@ export async function middleware(request: NextRequest) {
           }
 
           // Verificar si el rol del usuario tiene permiso para esta área
-          const allowedAreas = roleToAreaPermissions[user.role] || [];
+          const allowedAreas = roleAreaMap[user.role] || [];
           if (!allowedAreas.includes(areaCode)) {
             // Redirigir al dashboard si no tiene permisos para esta área
             return NextResponse.redirect(new URL("/dashboard", request.url));

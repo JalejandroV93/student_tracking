@@ -35,6 +35,7 @@ type User = {
   fullName: string;
   email: string | null;
   role: Role;
+  groupCode?: string | null; // Código del grupo para directores de grupo
   areaPermissions: AreaPermission[];
 };
 
@@ -116,6 +117,8 @@ export default function UsersManagementPage() {
         return "bg-purple-500";
       case "PSYCHOLOGY":
         return "bg-pink-500";
+      case "TEACHER":
+        return "bg-orange-500";
       default:
         return "bg-gray-500";
     }
@@ -135,6 +138,8 @@ export default function UsersManagementPage() {
         return "Coordinador Bachillerato";
       case "PSYCHOLOGY":
         return "Psicología";
+      case "TEACHER":
+        return "Director de Grupo";
       case "USER":
         return "Usuario";
       case "STUDENT":
@@ -168,7 +173,7 @@ export default function UsersManagementPage() {
                     <TableHead>Usuario</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Rol</TableHead>
-                    <TableHead>Permisos de Área</TableHead>
+                    <TableHead>Grupo/Permisos</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -219,7 +224,11 @@ export default function UsersManagementPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {user.areaPermissions?.length > 0 ? (
+                          {user.role === "TEACHER" && user.groupCode ? (
+                            <Badge variant="outline" className="bg-orange-50">
+                              Grupo: {user.groupCode}
+                            </Badge>
+                          ) : user.areaPermissions?.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {user.areaPermissions.map(
                                 (permission) =>
