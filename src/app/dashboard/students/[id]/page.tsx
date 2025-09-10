@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
+import { StudentProfileCard } from "@/components/students/profile";
 
 export default function StudentDetailsPage() {
   const params = useParams();
@@ -312,18 +313,34 @@ export default function StudentDetailsPage() {
         </div>
 
         {/* Student Detail Card - Usando el nuevo sistema de loading */}
-        {student && (
-          <StudentDetailCard
-            student={student}
-            infractions={sortedInfractions}
-            followUps={followUps}
-            onAddFollowUpClick={handleOpenFollowUpDialog}
-            onToggleAttendedClick={handleToggleAttended}
-            onViewInfractionDetailsClick={handleOpenInfractionModal}
-            onEditFollowUp={handleOpenEditFollowUpDialog}
-            loadingStates={loadingStates}
-          />
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Tarjeta de perfil del estudiante */}
+          {student && (
+            <div className="lg:col-span-1">
+              <StudentProfileCard
+                student={student}
+                infractions={sortedInfractions}
+                followUps={followUps}
+              />
+            </div>
+          )}
+          
+          {/* Detalles y tablas de infracciones */}
+          {student && (
+            <div className="lg:col-span-2">
+              <StudentDetailCard
+                student={student}
+                infractions={sortedInfractions}
+                followUps={followUps}
+                onAddFollowUpClick={handleOpenFollowUpDialog}
+                onToggleAttendedClick={handleToggleAttended}
+                onViewInfractionDetailsClick={handleOpenInfractionModal}
+                onEditFollowUp={handleOpenEditFollowUpDialog}
+                loadingStates={loadingStates}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Follow Up Dialog */}
         {selectedInfractionForFollowUp && student && (

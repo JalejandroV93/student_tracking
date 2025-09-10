@@ -41,7 +41,8 @@ export interface Infraction {
   trimester: string;
   trimestreId: number | null;
   schoolYearId: number | null;
-  level: string;
+  level: string; // Nivel académico (Elementary, Middle School, High School, etc.)
+  seccion?: string; // Sección específica (Décimo A, Noveno B, etc.)
   attended: boolean;
   observaciones?: string;
   observacionesAutor?: string;

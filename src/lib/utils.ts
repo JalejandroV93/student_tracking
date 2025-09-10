@@ -102,7 +102,8 @@ export function transformInfraction(
     trimester: infraction.trimestre ?? "",
     trimestreId: infraction.trimestre_id,
     schoolYearId: infraction.school_year_id,
-    level: infraction.nivel ?? "",
+    level: infraction.nivel ?? "", // Nivel académico (Elementary, Middle School, etc.)
+    seccion: infraction.seccion ?? undefined, // Sección específica (Décimo A, Noveno B, etc.)
     attended: infraction.attended ?? false,
     observaciones: infraction.observaciones ?? undefined,
     observacionesAutor: infraction.observaciones_autor ?? undefined,
