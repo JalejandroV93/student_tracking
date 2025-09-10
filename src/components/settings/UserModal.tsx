@@ -370,6 +370,9 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                         <SelectItem value="HIGH_SCHOOL_COORDINATOR">
                           Coordinador Bachillerato
                         </SelectItem>
+                        <SelectItem value="GROUP_DIRECTOR">
+                          Director de Grupo
+                        </SelectItem>
                         <SelectItem value="PSYCHOLOGY">Psicología</SelectItem>
                         <SelectItem value="USER">Usuario</SelectItem>
                         <SelectItem value="STUDENT">Estudiante</SelectItem>

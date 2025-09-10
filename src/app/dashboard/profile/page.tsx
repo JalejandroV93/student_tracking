@@ -181,6 +181,8 @@ export default function ProfilePage() {
         return "Coordinador Secundaria";
       case "HIGH_SCHOOL_COORDINATOR":
         return "Coordinador Bachillerato";
+      case "GROUP_DIRECTOR":
+        return "Director de Grupo";
       case "PSYCHOLOGY":
         return "Psicología";
       case "USER":
