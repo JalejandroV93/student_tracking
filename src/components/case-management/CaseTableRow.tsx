@@ -52,7 +52,7 @@ export const CaseTableRow = React.memo(
           </div>
         </TableCell>
         <TableCell>
-          <Badge variant={caseItem.status === "closed" ? "success" : "warning"}>
+          <Badge variant={caseItem.status === "closed" ? "default" : "destructive"}>
             {caseItem.status === "closed" ? "Cerrado" : "Abierto"}
           </Badge>
         </TableCell>

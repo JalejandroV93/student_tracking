@@ -27,7 +27,7 @@ export const CaseInfo = React.memo(({ caseItem }: CaseInfoProps) => {
         <div>
           <span className="font-medium">Estado:</span>{" "}
           <Badge
-            variant={caseItem.status === "closed" ? "success" : "warning"}
+            variant={caseItem.status === "closed" ? "default" : "destructive"}
             className="ml-1"
           >
             {caseItem.status === "closed" ? "Cerrado" : "Abierto"}

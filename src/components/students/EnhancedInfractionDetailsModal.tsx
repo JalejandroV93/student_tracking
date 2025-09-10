@@ -49,9 +49,9 @@ export function EnhancedInfractionDetailsModal({
   const getBadgeVariant = (type: string) => {
     switch (type) {
       case "Tipo I":
-        return "secondary";
+        return "default";
       case "Tipo II":
-        return "warning";
+        return "outline";
       case "Tipo III":
         return "destructive";
       default:

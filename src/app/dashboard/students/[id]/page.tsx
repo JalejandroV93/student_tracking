@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
 import { StudentProfileCard } from "@/components/students/profile";
+import { StudentAdvisorChatbot } from "@/components/students/advisor";
 
 export default function StudentDetailsPage() {
   const params = useParams();
@@ -313,10 +314,10 @@ export default function StudentDetailsPage() {
         </div>
 
         {/* Student Detail Card - Usando el nuevo sistema de loading */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Tarjeta de perfil del estudiante */}
           {student && (
-            <div className="lg:col-span-1">
+            <div className="xl:col-span-1">
               <StudentProfileCard
                 student={student}
                 infractions={sortedInfractions}
@@ -327,7 +328,7 @@ export default function StudentDetailsPage() {
           
           {/* Detalles y tablas de infracciones */}
           {student && (
-            <div className="lg:col-span-2">
+            <div className="xl:col-span-3">
               <StudentDetailCard
                 student={student}
                 infractions={sortedInfractions}
@@ -340,6 +341,8 @@ export default function StudentDetailsPage() {
               />
             </div>
           )}
+
+          
         </div>
 
         {/* Follow Up Dialog */}
@@ -381,7 +384,19 @@ export default function StudentDetailsPage() {
             isLoading={isTogglingAttended || isSavingObservaciones}
           />
         )}
+
       </div>
+      {/* Chatbot Consejero Educativo */}
+          {student && (
+            <div className="mt-8">
+              <StudentAdvisorChatbot
+                student={student}
+                infractions={sortedInfractions}
+                followUps={followUps}
+                className="sticky top-4"
+              />
+            </div>
+          )}
     </ContentLayout>
   );
 }

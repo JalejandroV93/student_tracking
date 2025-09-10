@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Search, UserX, RefreshCw, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import type { Student } from "@/types/dashboard";
 import { StudentSearchListSkeleton } from "./StudentSearchList.skeleton";

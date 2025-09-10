@@ -140,3 +140,6 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* AI Elements - Streamdown styles */
+@source "../node_modules/streamdown/dist/index.js";

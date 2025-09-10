@@ -82,6 +82,7 @@ export type BranchMessagesProps = HTMLAttributes<HTMLDivElement>;
 
 export const BranchMessages = ({ children, ...props }: BranchMessagesProps) => {
   const { currentBranch, setBranches, branches } = useBranch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const childrenArray = Array.isArray(children) ? children : [children];
 
   // Use useEffect to update branches when they change
