@@ -24,6 +24,7 @@ const roleToAreaPermissions: Record<Role, string[]> = {
   [Role.ELEMENTARY_COORDINATOR]: ["ELEMENTARY"],
   [Role.MIDDLE_SCHOOL_COORDINATOR]: ["MIDDLE"],
   [Role.HIGH_SCHOOL_COORDINATOR]: ["HIGH"],
+  [Role.GROUP_DIRECTOR]: [], // GROUP_DIRECTOR permissions determined by AreaPermissions table
   [Role.PSYCHOLOGY]: ["PRESCHOOL", "ELEMENTARY", "MIDDLE", "HIGH"],
   [Role.USER]: [],
   [Role.STUDENT]: [],
@@ -111,6 +112,13 @@ export async function middleware(request: NextRequest) {
           // Los administradores siempre tienen acceso a todas las áreas
           if (user.role === Role.ADMIN) {
             break; // Permitir acceso y continuar
+          }
+
+          // Para GROUP_DIRECTOR, verificar permisos en AreaPermissions
+          if (user.role === Role.GROUP_DIRECTOR) {
+            // En middleware no podemos hacer llamadas a la base de datos de forma síncrona
+            // Se verificará en el API endpoint
+            break; // Permitir acceso, se verificará en el API
           }
 
           // Verificar si el rol del usuario tiene permiso para esta área

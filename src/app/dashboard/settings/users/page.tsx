@@ -114,6 +114,8 @@ export default function UsersManagementPage() {
         return "bg-yellow-500";
       case "HIGH_SCHOOL_COORDINATOR":
         return "bg-purple-500";
+      case "GROUP_DIRECTOR":
+        return "bg-orange-500";
       case "PSYCHOLOGY":
         return "bg-pink-500";
       default:
@@ -133,6 +135,8 @@ export default function UsersManagementPage() {
         return "Coordinador Secundaria";
       case "HIGH_SCHOOL_COORDINATOR":
         return "Coordinador Bachillerato";
+      case "GROUP_DIRECTOR":
+        return "Director de Grupo";
       case "PSYCHOLOGY":
         return "Psicología";
       case "USER":
