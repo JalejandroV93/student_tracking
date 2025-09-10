@@ -1,9 +1,12 @@
 import { z } from "zod";
 
+// Esquema simple que maneja números directamente
+const thresholdSchema = z.number().min(1, "Mínimo 1").max(20, "Máximo 20");
+
 export const sectionThresholdSchema = z
   .object({
-    primary: z.number().min(1, "Mínimo 1").max(20, "Máximo 20"),
-    secondary: z.number().min(1, "Mínimo 1").max(20, "Máximo 20"),
+    primary: thresholdSchema,
+    secondary: thresholdSchema,
   })
   .refine((data) => data.secondary > data.primary, {
     message: "El umbral secundario debe ser mayor que el primario",
@@ -13,10 +16,10 @@ export const sectionThresholdSchema = z
 export const settingsSchema = z
   .object({
     primary: z.object({
-      threshold: z.number().min(1, "Mínimo 1").max(20, "Máximo 20"),
+      threshold: thresholdSchema,
     }),
     secondary: z.object({
-      threshold: z.number().min(1, "Mínimo 1").max(20, "Máximo 20"),
+      threshold: thresholdSchema,
     }),
     sections: z.record(z.string(), sectionThresholdSchema),
   })

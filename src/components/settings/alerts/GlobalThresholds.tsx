@@ -51,6 +51,8 @@ export function GlobalThresholds({ control, errors }: GlobalThresholdsProps) {
                   max="20"
                   className="text-lg"
                   {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value) || "")}
+                  value={field.value || ""}
                   placeholder="Ej: 3"
                 />
               </FormControl>
@@ -79,6 +81,8 @@ export function GlobalThresholds({ control, errors }: GlobalThresholdsProps) {
                   max="20"
                   className="text-lg"
                   {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value) || "")}
+                  value={field.value || ""}
                   placeholder="Ej: 5"
                 />
               </FormControl>

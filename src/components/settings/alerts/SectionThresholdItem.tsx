@@ -62,6 +62,8 @@ export function SectionThresholdItem({
                     min="1"
                     max="20"
                     {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value) || "")}
+                    value={field.value || ""}
                     placeholder="Ej: 2"
                   />
                 </FormControl>
@@ -89,6 +91,8 @@ export function SectionThresholdItem({
                     min="1"
                     max="20"
                     {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value) || "")}
+                    value={field.value || ""}
                     placeholder="Ej: 4"
                   />
                 </FormControl>
