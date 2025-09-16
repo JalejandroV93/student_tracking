@@ -15,6 +15,7 @@ interface DashboardChartsProps {
   infractions: Infraction[];
   getStudentAlertStatus: (studentId: string) => AlertStatus | null;
   onSelectStudent: (studentId: string) => void;
+  totalStudentsCount: number;
 }
 
 // Skeleton específico para gráficos
@@ -71,6 +72,7 @@ export function DashboardCharts({
   infractions,
   getStudentAlertStatus,
   onSelectStudent,
+  totalStudentsCount,
 }: DashboardChartsProps) {
   // Calcular estudiantes con alertas
   const studentsWithAlerts = students
@@ -84,7 +86,7 @@ export function DashboardCharts({
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Tendencias de Infracciones */}
       <DashboardSection
-        title="Tendencias de Faltas por Mes"
+        title={`Tendencias de Faltas por Mes (${totalStudentsCount} estudiantes)`}
         icon={<Activity className="h-5 w-5 text-primary" />}
         fallback={
           <ChartSkeleton

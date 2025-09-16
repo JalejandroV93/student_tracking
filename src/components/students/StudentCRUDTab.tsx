@@ -19,14 +19,14 @@ interface Student {
   name: string;
   code: string;
   grado: string;
-  level: string;
   photo_url?: string;
+  seccion: string;
 }
 
 interface StudentFilters {
   search: string;
   grado: string;
-  nivel: string; // Cambio de seccion a nivel
+  nivel: string; 
   schoolYearId: string;
 }
 
@@ -34,7 +34,7 @@ export function StudentCRUDTab() {
   const [filters, setFilters] = useState<StudentFilters>({
     search: "",
     grado: "all",
-    nivel: "all", // Cambio de seccion a nivel
+    nivel: "all", 
     schoolYearId: "active"
   });
   
@@ -241,7 +241,7 @@ export function StudentCRUDTab() {
             </div>
 
             {/* Nivel Académico */}
-            <div className="space-y-2">
+            <div className="space-y-2 hidden">
               <Label>Nivel Académico</Label>
               <Select
                 value={filters.nivel}
@@ -296,7 +296,7 @@ export function StudentCRUDTab() {
                       <TableCell className="font-mono">{student.code}</TableCell>
                       <TableCell>{student.name}</TableCell>
                       <TableCell>{student.grado}</TableCell>
-                      <TableCell>{student.level}</TableCell>
+                      <TableCell>{student.seccion}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button

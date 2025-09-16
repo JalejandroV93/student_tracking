@@ -69,6 +69,7 @@ export function StudentAdvisorChatbot({
     name: student.firstname || student.name.split(' ')[0], // Solo primer nombre por privacidad
     grade: student.grado || undefined,
     age: undefined, // No disponible en el tipo Student actual
+    level: student.seccion,
     infractions: infractions.map((inf) => ({
       id: inf.id,
       date: inf.date,

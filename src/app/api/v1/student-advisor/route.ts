@@ -8,6 +8,7 @@ interface StudentData {
   name: string;
   grade?: string;
   age?: number;
+  level?: string;
   infractions: Array<{
     id: string;
     date: string;
@@ -26,7 +27,7 @@ interface StudentData {
 }
 
 function generateSystemPrompt(studentData: StudentData): string {
-  const { name, grade, age, infractions, followUps } = studentData;
+  const { name, grade, age, infractions, followUps, level } = studentData;
   
   // Analizar patrones de comportamiento
   const totalInfractions = infractions.length;
@@ -49,10 +50,11 @@ Recuerda que todas tus interacciones y sugerencias deben reflejar la filosofía 
 Tu Base de Conocimiento:
 Tu principal herramienta es el Manual de Convivencia 2024-2025 del Liceo Taller San Miguel. Debes basar todas tus recomendaciones en los protocolos, procedimientos y principios establecidos en él, especialmente en lo referente a las faltas Tipo I (leves), Tipo II (medias) y Tipo III (graves).
 Información del Estudiante (Contexto):
-- Nombre: ${name}
+- Nombre del estudiante: ${name}
 ${grade ? `- Grado: ${grade}` : ''}
 ${age ? `- Edad: ${age} años` : ''}
-
+${level ? `- Nivel: ${level}` : ''}
+- Historial de Faltas:
 
 Situación: Has recibido información sobre una o varias faltas o llamados de atención. Aquí tienes un resumen de su historial reciente:
 - Total de faltas registradas: ${totalInfractions}
@@ -92,8 +94,8 @@ export async function POST(req: Request) {
     if (!studentData) {
       return new Response('Student data is required', { status: 400 });
     }
-
     const systemPrompt = generateSystemPrompt(studentData);
+    //console.log("Student Advisor API - Received student data:", systemPrompt);
 
     const result = streamText({
       model: google('gemini-2.5-flash'),

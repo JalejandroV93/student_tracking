@@ -20,6 +20,7 @@ export interface Student {
   grado: string;
   level: string;
   stats?: InfractionStats;
+  seccion?: string;
 
 }
 

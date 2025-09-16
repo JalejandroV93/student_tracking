@@ -7,11 +7,10 @@ export interface Student {
   name: string;
   code: string;
   grado: string;
-  level: string;
   photo_url?: string;
   firstname?: string;
   lastname?: string;
-  seccion?: string;
+  seccion: string;
 }
 
 export interface StudentFilters {

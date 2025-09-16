@@ -72,6 +72,7 @@ export function transformStudent(
     firstname?: string | null;
     lastname?: string | null;
     photo_url?: string | null;
+    seccion?: string | null;
   },
   grado?: string,
   nivel?: string
@@ -88,6 +89,7 @@ export function transformStudent(
     photoUrl: student.photo_url || undefined,
     grado: grado || "No especificado",
     level: nivel || "No especificado",
+    seccion: student.seccion || undefined,
   };
 }
 

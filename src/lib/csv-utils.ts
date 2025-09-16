@@ -1,10 +1,7 @@
+import { asignarNivelAcademico, extraerNumeroFalta } from "@/lib/academic-level-utils";
+import { CSVEstudianteRow, CSVFaltaRow, ProcessedFalta, ProcessedStudent, StudentData } from "@/types/csv-import";
 import crypto from "crypto";
 import Papa from "papaparse";
-import { CSVFaltaRow, CSVEstudianteRow, ProcessedFalta, ProcessedStudent, StudentData } from "@/types/csv-import";
-import {
-  asignarNivelAcademico,
-  extraerNumeroFalta,
-} from "@/lib/academic-level-utils";
 
 /**
  * Genera un hash SHA256 único para una falta

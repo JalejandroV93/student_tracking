@@ -51,7 +51,7 @@ export function StudentForm({ student, onSave, onCancel, schoolYears }: StudentF
     "Sexto", "Séptimo", "Octavo", "Noveno", "Décimo", "Once"
   ];
 
-  const seccionOptions = ["A", "B", "C", "D"];
+  const seccionOptions = ["Mi Taller", "Preschool", "Elementary", "Middle School", "High School"];
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

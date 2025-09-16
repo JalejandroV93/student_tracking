@@ -1,13 +1,10 @@
-import { transformInfraction, transformStudent } from "@/lib/utils";
-import {
-  getActiveSchoolYear,
-  getSchoolYearById,
-} from "@/lib/school-year-utils";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
-import { Role } from "@prisma/client";
-import { getSectionCategory } from "@/lib/constantes";
 import { asignarNivelAcademico } from "@/lib/academic-level-utils";
+import { getSectionCategory } from "@/lib/constantes";
+import { prisma } from "@/lib/prisma";
+import { getActiveSchoolYear, getSchoolYearById } from "@/lib/school-year-utils";
+import { getCurrentUser } from "@/lib/session";
+import { transformInfraction, transformStudent } from "@/lib/utils";
+import { Role } from "@prisma/client";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 
@@ -118,6 +115,17 @@ export async function GET(request: Request) {
     const countOnly = searchParams.get("countOnly");
     const schoolYearId = searchParams.get("schoolYearId");
     const includeStats = searchParams.get("includeStats") === "true";
+    
+    // Parámetros de paginación
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const search = searchParams.get("search") || "";
+    
+    // Validar parámetros de paginación
+    const validatedPage = Math.max(1, page);
+    // Para el dashboard, permitir límites más altos
+    const maxLimit = limit > 500 ? 10000 : 100; // Si solicitan más de 500, permitir hasta 10000
+    const validatedLimit = Math.min(Math.max(1, limit), maxLimit);
 
     // Verificar autenticación del usuario
     const currentUser = await getCurrentUser();
@@ -147,7 +155,38 @@ export async function GET(request: Request) {
 
     // Si solo necesitamos el conteo, hacemos una consulta optimizada
     if (countOnly === "true") {
-      const count = await prisma.estudiantes.count();
+      let whereCondition: {
+        OR?: Array<{
+          nombre?: { contains: string; mode: 'insensitive' };
+          codigo?: number;
+          firstname?: { contains: string; mode: 'insensitive' };
+          lastname?: { contains: string; mode: 'insensitive' };
+        }>;
+      } = {};
+      
+      // Aplicar filtro de búsqueda si se proporciona
+      if (search.trim()) {
+        const searchTerms: Array<{
+          nombre?: { contains: string; mode: 'insensitive' };
+          codigo?: number;
+          firstname?: { contains: string; mode: 'insensitive' };
+          lastname?: { contains: string; mode: 'insensitive' };
+        }> = [
+          { nombre: { contains: search.trim(), mode: 'insensitive' } },
+          { firstname: { contains: search.trim(), mode: 'insensitive' } },
+          { lastname: { contains: search.trim(), mode: 'insensitive' } }
+        ];
+        
+        // Si la búsqueda es un número, también buscar por código
+        const searchAsNumber = parseInt(search.trim(), 10);
+        if (!isNaN(searchAsNumber)) {
+          searchTerms.push({ codigo: searchAsNumber });
+        }
+        
+        whereCondition = { OR: searchTerms };
+      }
+      
+      const count = await prisma.estudiantes.count({ where: whereCondition });
       return NextResponse.json({ count });
     }
 
@@ -166,6 +205,8 @@ export async function GET(request: Request) {
           firstname: true,
           lastname: true,
           photo_url: true,
+          grado: true,
+          seccion: true,
           faltas: {
             include: {
               casos: {
@@ -187,7 +228,10 @@ export async function GET(request: Request) {
       }
 
       // Transform the student data
-      const transformedStudent = transformStudent(student);
+      const grado = student.grado || "No especificado";
+      const seccionParaNivel = student.seccion || "";
+      const nivel = seccionParaNivel ? asignarNivelAcademico(seccionParaNivel) : "No especificado";
+      const transformedStudent = transformStudent(student, grado, nivel);
 
       // Transform infractions and follow-ups
       const transformedInfractions = student.faltas.map((falta) =>
@@ -233,9 +277,44 @@ export async function GET(request: Request) {
         followUps: followUps,
       });
     } else {
-      // Fetch all students with their most recent infraction data for grado/nivel
-      // from the specific school year
+      // Fetch students with pagination and search
+      // Construir la condición WHERE para la búsqueda
+      let whereCondition: {
+        OR?: Array<{
+          nombre?: { contains: string; mode: 'insensitive' };
+          codigo?: number;
+          firstname?: { contains: string; mode: 'insensitive' };
+          lastname?: { contains: string; mode: 'insensitive' };
+        }>;
+      } = {};
+      
+      if (search.trim()) {
+        const searchTerms: Array<{
+          nombre?: { contains: string; mode: 'insensitive' };
+          codigo?: number;
+          firstname?: { contains: string; mode: 'insensitive' };
+          lastname?: { contains: string; mode: 'insensitive' };
+        }> = [
+          { nombre: { contains: search.trim(), mode: 'insensitive' } },
+          { firstname: { contains: search.trim(), mode: 'insensitive' } },
+          { lastname: { contains: search.trim(), mode: 'insensitive' } }
+        ];
+        
+        // Si la búsqueda es un número, también buscar por código
+        const searchAsNumber = parseInt(search.trim(), 10);
+        if (!isNaN(searchAsNumber)) {
+          searchTerms.push({ codigo: searchAsNumber });
+        }
+        
+        whereCondition = { OR: searchTerms };
+      }
+      
+      // Calcular offset para paginación
+      const offset = (validatedPage - 1) * validatedLimit;
+      
+      // Fetch students with pagination
       const students = await prisma.estudiantes.findMany({
+        where: whereCondition,
         select: {
           id: true,
           codigo: true,
@@ -260,12 +339,27 @@ export async function GET(request: Request) {
           },
         },
         orderBy: { nombre: "asc" },
+        take: validatedLimit,
+        skip: offset,
       });
 
       // Transform students with their infractions and stats
       const transformedStudents = await Promise.all(
         students.map(async (student) => {
           const latestInfraction = student.faltas[0];
+          
+          // Debug: Log para verificar los datos del estudiante desde la BD
+          if (students.indexOf(student) === 0) {
+            console.log("API Students - Sample student from DB:", {
+              id: student.id,
+              nombre: student.nombre,
+              grado: student.grado,
+              seccion: student.seccion,
+              faltasCount: student.faltas.length,
+              latestInfractionSeccion: latestInfraction?.seccion
+            });
+          }
+          
           // Usar los datos directos del estudiante en lugar de las infracciones
           const grado = student.grado || "No especificado";
           // Determinar el nivel académico basado en la sección del estudiante o de la última infracción
@@ -277,10 +371,23 @@ export async function GET(request: Request) {
             stats = await getStudentInfractionStats(student.id, targetSchoolYear.id);
           }
 
-          return {
+          const transformedStudent = {
             ...transformStudent(student, grado, nivel),
             stats: stats,
           };
+          
+          // Debug: Log para verificar el estudiante transformado
+          if (students.indexOf(student) === 0) {
+            console.log("API Students - Transformed student:", {
+              id: transformedStudent.id,
+              name: transformedStudent.name,
+              grado: transformedStudent.grado,
+              level: transformedStudent.level,
+              seccion: transformedStudent.seccion
+            });
+          }
+
+          return transformedStudent;
         })
       );
 
@@ -290,7 +397,23 @@ export async function GET(request: Request) {
         currentUser
       );
 
-      return NextResponse.json(filteredStudents, {
+      // Obtener el total de elementos para metadatos de paginación
+      const totalCount = await prisma.estudiantes.count({ where: whereCondition });
+      const totalPages = Math.ceil(totalCount / validatedLimit);
+      const hasNextPage = validatedPage < totalPages;
+      const hasPrevPage = validatedPage > 1;
+
+      return NextResponse.json({
+        data: filteredStudents,
+        pagination: {
+          currentPage: validatedPage,
+          totalPages,
+          totalCount,
+          limit: validatedLimit,
+          hasNextPage,
+          hasPrevPage,
+        }
+      }, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
         },

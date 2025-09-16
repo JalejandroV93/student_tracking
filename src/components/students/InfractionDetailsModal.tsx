@@ -126,7 +126,7 @@ export function InfractionDetailsModal({
                   <label className="text-sm font-medium text-blue-700">
                     Nivel Académico
                   </label>
-                  <p className="text-slate-900 font-medium">{student.level}</p>
+                  <p className="text-slate-900 font-medium">{student.seccion}</p>
                 </div>
               )}
             </div>

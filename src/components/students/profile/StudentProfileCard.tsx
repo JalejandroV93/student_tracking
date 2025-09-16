@@ -36,7 +36,7 @@ export function StudentProfileCard({
   const currentGrade = student.grado && student.grado !== "No especificado" ? student.grado : "No disponible";
   
   // El nivel académico viene del student.level (Elementary, Middle School, etc.)
-  const academicLevel = student.level;
+  const academicLevel = student.seccion;
   
   // Generar iniciales para el avatar
   const initials = student.name

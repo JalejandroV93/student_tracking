@@ -19,11 +19,61 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+// Tipos para paginación
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  schoolYearId?: string;
+  includeStats?: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+// Función para construir query params
+function buildQueryParams(params: PaginationParams): string {
+  const searchParams = new URLSearchParams();
+  
+  if (params.page) searchParams.set('page', params.page.toString());
+  if (params.limit) searchParams.set('limit', params.limit.toString());
+  if (params.search) searchParams.set('search', params.search);
+  if (params.schoolYearId) searchParams.set('schoolYearId', params.schoolYearId);
+  if (params.includeStats) searchParams.set('includeStats', 'true');
+  
+  return searchParams.toString();
+}
+
 // --- Fetching Functions ---
 
 export const fetchStudentsList = async (): Promise<Student[]> => {
   const response = await fetch("/api/v1/students");
   return handleResponse<Student[]>(response);
+};
+
+// Nueva función para búsqueda paginada
+export const fetchStudentsPaginated = async (params: PaginationParams = {}): Promise<PaginatedResponse<Student>> => {
+  const queryString = buildQueryParams(params);
+  const url = `/api/v1/students${queryString ? `?${queryString}` : ''}`;
+  const response = await fetch(url);
+  return handleResponse<PaginatedResponse<Student>>(response);
+};
+
+// Nueva función para infinite query
+export const fetchStudentsInfinite = async ({ pageParam = 1, ...params }: PaginationParams & { pageParam?: number }): Promise<PaginatedResponse<Student>> => {
+  const queryString = buildQueryParams({ ...params, page: pageParam });
+  const url = `/api/v1/students${queryString ? `?${queryString}` : ''}`;
+  const response = await fetch(url);
+  return handleResponse<PaginatedResponse<Student>>(response);
 };
 
 export const fetchStudentsListWithStats = async (): Promise<Student[]> => {
