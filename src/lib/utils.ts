@@ -69,6 +69,9 @@ export function transformStudent(
     id: number;
     codigo: number;
     nombre: string | null;
+    firstname?: string | null;
+    lastname?: string | null;
+    photo_url?: string | null;
   },
   grado?: string,
   nivel?: string
@@ -80,6 +83,9 @@ export function transformStudent(
   return {
     id: `${student.id}-${student.codigo}`,
     name: student.nombre || "Sin nombre",
+    firstname: student.firstname || undefined,
+    lastname: student.lastname || undefined,
+    photoUrl: student.photo_url || undefined,
     grado: grado || "No especificado",
     level: nivel || "No especificado",
   };

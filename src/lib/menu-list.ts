@@ -189,6 +189,13 @@ export function getMenuList(
           icon: Calendar,
           active: pathname.startsWith("/dashboard/settings/school-years"),
         },
+        {
+          //crud estudiantes
+          href: "/dashboard/settings/students",
+          label: "Estudiantes",
+          icon: Users,
+          active: pathname.startsWith("/dashboard/settings/students"),
+        },
       ],
     });
   }

@@ -1,6 +1,7 @@
 export interface SchoolYear {
   id: number;
   name: string;
+  phidias_id?: number | null;
   startDate: Date;
   endDate: Date;
   isActive: boolean;
@@ -24,6 +25,7 @@ export interface Trimestre {
 
 export interface CreateSchoolYearRequest {
   name: string;
+  phidias_id?: number | null;
   startDate: string;
   endDate: string;
   description?: string;
@@ -39,6 +41,7 @@ export interface CreateTrimestreRequest {
 
 export interface UpdateSchoolYearRequest {
   name?: string;
+  phidias_id?: number | null;
   startDate?: string;
   endDate?: string;
   description?: string;

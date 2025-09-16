@@ -53,7 +53,6 @@ Información del Estudiante (Contexto):
 ${grade ? `- Grado: ${grade}` : ''}
 ${age ? `- Edad: ${age} años` : ''}
 
-Omite los Apellidos del estudiante para proteger su privacidad.
 
 Situación: Has recibido información sobre una o varias faltas o llamados de atención. Aquí tienes un resumen de su historial reciente:
 - Total de faltas registradas: ${totalInfractions}

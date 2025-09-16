@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
@@ -23,7 +30,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Response } from "@/components/ai-elements/response";
 import { Loader } from "@/components/ai-elements/loader";
-import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
+import { Suggestion } from "@/components/ai-elements/suggestion";
 import type { Student, Infraction, FollowUp } from "@/types/dashboard";
 import { useSession } from "@/hooks/auth-client";
 
@@ -59,7 +66,7 @@ export function StudentAdvisorChatbot({
 
   // Preparar los datos del estudiante para el endpoint
   const studentData = {
-    name: student.name,
+    name: student.firstname || student.name.split(' ')[0], // Solo primer nombre por privacidad
     grade: student.grado || undefined,
     age: undefined, // No disponible en el tipo Student actual
     infractions: infractions.map((inf) => ({
@@ -135,7 +142,7 @@ export function StudentAdvisorChatbot({
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
             Obtén estrategias personalizadas y recomendaciones profesionales para apoyar el
-            desarrollo de {student.name}.
+            desarrollo de {student.firstname || student.name.split(' ')[0]}.
           </p>
           <Button onClick={() => setIsExpanded(true)} className="w-full">
             <MessageSquare className="mr-2 h-4 w-4" />
@@ -152,7 +159,7 @@ export function StudentAdvisorChatbot({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-primary" />
-            Consejero Educativo IA - {student.name}
+            Consejero Educativo IA - {student.firstname || student.name.split(' ')[0]}
           </CardTitle>
           <Button
             variant="ghost"
@@ -189,22 +196,35 @@ export function StudentAdvisorChatbot({
                   <ConversationEmptyState
                     icon={<Bot className="size-12 text-primary" />}
                     title="¡Hola! Soy tu consejero educativo IA"
-                    description={`Estoy aquí para ayudarte con estrategias y recomendaciones para apoyar a ${student.name}. Puedes preguntarme sobre manejo de comportamiento, técnicas de comunicación, planes de intervención y más.`}
+                    description={`Estoy aquí para ayudarte con estrategias y recomendaciones para apoyar a ${student.firstname || student.name.split(' ')[0]}. Puedes preguntarme sobre manejo de comportamiento, técnicas de comunicación, planes de intervención y más.`}
                   >
                     <div className="mt-6 space-y-4 w-full">
                       <p className="text-sm font-medium text-muted-foreground text-center">
                         Sugerencias para comenzar:
                       </p>
-                      <Suggestions className="px-4">
-                        {suggestions.map((suggestion, index) => (
-                          <Suggestion
-                            key={index}
-                            suggestion={suggestion}
-                            onClick={handleSuggestionClick}
-                            className="whitespace-normal text-left h-auto min-h-[32px] py-2"
-                          />
-                        ))}
-                      </Suggestions>
+                      <div className="relative">
+                        <Carousel
+                          opts={{
+                            align: "start",
+                            loop: true,
+                          }}
+                          className="w-full"
+                        >
+                          <CarouselContent className="-ml-1">
+                            {suggestions.map((suggestion, index) => (
+                              <CarouselItem key={index} className="pl-1 basis-full md:basis-1/2">
+                                <Suggestion
+                                  suggestion={suggestion}
+                                  onClick={handleSuggestionClick}
+                                  className="whitespace-normal text-left h-auto min-h-[48px] py-3 px-4 w-full"
+                                />
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-2" />
+                          <CarouselNext className="right-2" />
+                        </Carousel>
+                      </div>
                     </div>
                   </ConversationEmptyState>
                 ) : (

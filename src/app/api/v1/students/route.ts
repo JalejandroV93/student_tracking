@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { Role } from "@prisma/client";
 import { getSectionCategory } from "@/lib/constantes";
+import { asignarNivelAcademico } from "@/lib/academic-level-utils";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 
@@ -158,7 +159,13 @@ export async function GET(request: Request) {
         where: {
           id: id,
         },
-        include: {
+        select: {
+          id: true,
+          codigo: true,
+          nombre: true,
+          firstname: true,
+          lastname: true,
+          photo_url: true,
           faltas: {
             include: {
               casos: {
@@ -233,6 +240,11 @@ export async function GET(request: Request) {
           id: true,
           codigo: true,
           nombre: true,
+          firstname: true,
+          lastname: true,
+          photo_url: true,
+          grado: true,
+          seccion: true,
           faltas: {
             where: {
               school_year_id: targetSchoolYear.id,
@@ -254,8 +266,11 @@ export async function GET(request: Request) {
       const transformedStudents = await Promise.all(
         students.map(async (student) => {
           const latestInfraction = student.faltas[0];
-          const grado = latestInfraction?.seccion || "No especificado";
-          const nivel = latestInfraction?.nivel || "No especificado";
+          // Usar los datos directos del estudiante en lugar de las infracciones
+          const grado = student.grado || "No especificado";
+          // Determinar el nivel académico basado en la sección del estudiante o de la última infracción
+          const seccionParaNivel = student.seccion || latestInfraction?.seccion || "";
+          const nivel = seccionParaNivel ? asignarNivelAcademico(seccionParaNivel) : "No especificado";
           
           let stats = undefined;
           if (includeStats) {

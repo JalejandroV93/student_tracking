@@ -21,6 +21,7 @@ interface SchoolYearFormProps {
 
 interface FormData {
   name: string;
+  phidias_id?: string;
   startDate: string;
   endDate: string;
   description?: string;
@@ -110,6 +111,7 @@ export function SchoolYearForm({ onSubmit, onCancel }: SchoolYearFormProps) {
       // Crear objeto para enviar
       const schoolYearData: CreateSchoolYearRequest = {
         name: data.name,
+        phidias_id: data.phidias_id ? parseInt(data.phidias_id) : null,
         startDate: data.startDate,
         endDate: data.endDate,
         description: data.description,
@@ -164,7 +166,7 @@ export function SchoolYearForm({ onSubmit, onCancel }: SchoolYearFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nombre del Año Escolar *</Label>
               <Input
@@ -189,6 +191,16 @@ export function SchoolYearForm({ onSubmit, onCancel }: SchoolYearFormProps) {
                 id="description"
                 placeholder="Descripción opcional"
                 {...register("description")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phidias_id">ID de Phidias</Label>
+              <Input
+                id="phidias_id"
+                type="number"
+                placeholder="ID del año en Phidias"
+                {...register("phidias_id")}
               />
             </div>
           </div>

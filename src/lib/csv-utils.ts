@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import Papa from "papaparse";
-import { CSVFaltaRow, ProcessedFalta, StudentData } from "@/types/csv-import";
+import { CSVFaltaRow, CSVEstudianteRow, ProcessedFalta, ProcessedStudent, StudentData } from "@/types/csv-import";
 import {
   asignarNivelAcademico,
   extraerNumeroFalta,
@@ -86,7 +86,30 @@ export function parseCSVFile(csvContent: string): Promise<{
 /**
  * Convierte una fila CSV a un objeto ProcessedFalta
  */
-export function convertCSVRowToFalta(
+/**
+ * Extrae el grado y la sección de un string como "Décimo A" o "Kínder 5 B"
+ */
+function extraerGradoYSeccion(gradoCompleto: string): { grado: string; seccion: string } {
+  const texto = gradoCompleto.trim();
+  
+  // Buscar la letra al final que indica la sección (A, B, C, etc.)
+  const match = texto.match(/^(.+?)\s+([A-Z])$/);
+  
+  if (match) {
+    return {
+      grado: match[1].trim(),
+      seccion: match[2].trim()
+    };
+  }
+  
+  // Si no tiene sección, el grado completo es el grado y la sección es vacía
+  return {
+    grado: texto,
+    seccion: ""
+  };
+}
+
+export function convertStudentCSVRow(
   row: CSVFaltaRow,
   studentId: number,
   tipoFalta?: string,
@@ -216,4 +239,131 @@ export function validateCSVRow(row: CSVFaltaRow): {
     valid: errors.length === 0,
     errors,
   };
+}
+
+/**
+ * Parsea el archivo CSV de estudiantes y convierte las filas al formato requerido
+ */
+export function parseStudentCSVFile(csvContent: string): Promise<{
+  data: CSVEstudianteRow[];
+  errors: Papa.ParseError[];
+}> {
+  return new Promise((resolve) => {
+    Papa.parse<CSVEstudianteRow>(csvContent, {
+      header: true,
+      delimiter: ";",
+      skipEmptyLines: true,
+      transformHeader: (header: string) => header.trim(),
+      complete: (results: Papa.ParseResult<CSVEstudianteRow>) => {
+        resolve({
+          data: results.data,
+          errors: results.errors,
+        });
+      },
+    });
+  });
+}
+
+/**
+ * Valida que una fila CSV de estudiante tenga los campos mínimos requeridos
+ */
+export function validateStudentCSVRow(row: CSVEstudianteRow): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  if (!row.Id || row.Id.trim() === "") {
+    errors.push("ID del estudiante requerido");
+  } else if (isNaN(parseInt(row.Id))) {
+    errors.push("ID del estudiante debe ser un número válido");
+  }
+
+  if (!row.Código || row.Código.trim() === "") {
+    errors.push("Código de estudiante requerido");
+  } else if (isNaN(parseInt(row.Código))) {
+    errors.push("Código del estudiante debe ser un número válido");
+  }
+
+  if (!row.Nombre || row.Nombre.trim() === "") {
+    errors.push("Nombre del estudiante requerido");
+  }
+
+  if (!row.Apellido || row.Apellido.trim() === "") {
+    errors.push("Apellido del estudiante requerido");
+  }
+
+  if (!row.Grado || row.Grado.trim() === "") {
+    errors.push("Grado del estudiante requerido");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Convierte una fila CSV de estudiante a un objeto ProcessedStudent
+ */
+export function convertCSVRowToStudent(
+  row: CSVEstudianteRow,
+  schoolYearId: number
+): ProcessedStudent | null {
+  try {
+    const id = parseInt(row.Id);
+    const codigo = parseInt(row.Código);
+    
+    if (isNaN(id) || isNaN(codigo)) {
+      throw new Error("ID o código de estudiante inválido");
+    }
+
+    // Asignar nivel académico automáticamente basado en el grado
+    const nivel = asignarNivelAcademico(row.Grado);
+
+    // Crear nombre completo combinando nombre y apellido
+    const nombreCompleto = `${row.Nombre.trim()} ${row.Apellido.trim()}`;
+
+    // Extraer grado y sección del campo "Grado"
+    const { grado, seccion } = extraerGradoYSeccion(row.Grado);
+
+    return {
+      id,
+      codigo,
+      nombre: nombreCompleto,
+      firstname: row.Nombre.trim(),
+      lastname: row.Apellido.trim(),
+      grado: grado,
+      seccion: seccion,
+      nivel,
+      school_year_id: schoolYearId,
+      photo_url: row["URL de la foto"]?.trim() || undefined,
+    };
+  } catch (error) {
+    console.error("Error converting student CSV row:", error);
+    return null;
+  }
+}
+
+/**
+ * Extrae los datos básicos del estudiante de una fila CSV de estudiante
+ */
+export function extractStudentDataFromStudentCSV(row: CSVEstudianteRow): StudentData | null {
+  try {
+    const codigo = parseInt(row.Código);
+    const id = parseInt(row.Id);
+    
+    if (isNaN(codigo) || isNaN(id)) return null;
+
+    const nombreCompleto = `${row.Nombre.trim()} ${row.Apellido.trim()}`;
+
+    return {
+      id,
+      codigo,
+      nombre: nombreCompleto,
+    };
+  } catch (error) {
+    console.error("Error extracting student data from student CSV:", error);
+    return null;
+  }
 }
