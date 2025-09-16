@@ -367,3 +367,71 @@ export function extractStudentDataFromStudentCSV(row: CSVEstudianteRow): Student
     return null;
   }
 }
+
+/**
+ * Convierte una fila CSV de faltas a un objeto ProcessedFalta
+ */
+export function convertCSVRowToFalta(
+  row: CSVFaltaRow,
+  studentId: number,
+  tipoFalta: string,
+  trimestre: { id: number; name: string; schoolYearId?: number; schoolYear?: { id: number; name: string } }
+): ProcessedFalta | null {
+  try {
+    const codigo = extractStudentCode(row.Código);
+    if (!codigo) throw new Error("Código de estudiante inválido");
+
+    const fecha = parseCSVDate(row["Fecha"]);
+    if (!fecha) throw new Error("Fecha inválida");
+
+    const fechaCreacion = parseCSVDate(row["Fecha De Creación"]);
+    if (!fechaCreacion) throw new Error("Fecha de creación inválida");
+
+    const fechaUltimaEdicion = row["Fecha última Edición"]
+      ? parseCSVDate(row["Fecha última Edición"])
+      : null;
+
+    const hash = generateFaltaHash(
+      row.Código,
+      row["Fecha De Creación"],
+      row["Descripcion de la falta"] || "",
+      row["Acciones Reparadoras"] || ""
+    );
+
+    const idExterno = parseInt(row.Id);
+    if (isNaN(idExterno)) throw new Error("ID externo inválido");
+
+    // Asignar nivel académico automáticamente basado en la sección
+    const nivel = asignarNivelAcademico(row.Sección);
+
+    // Extraer número de falta del campo "Falta segun Manual de Convivencia"
+    const numeroFalta = extraerNumeroFalta(
+      row["Falta segun Manual de Convivencia"]
+    );
+
+    return {
+      hash,
+      id_estudiante: studentId,
+      codigo_estudiante: codigo,
+      tipo_falta: tipoFalta, // Tipo de falta seleccionado por el usuario
+      numero_falta: numeroFalta ?? undefined,
+      descripcion_falta: row["Descripcion de la falta"] || "",
+      detalle_falta: row["Falta segun Manual de Convivencia"] || "",
+      acciones_reparadoras: row["Acciones Reparadoras"] || "",
+      autor: row.Autor || "",
+      fecha,
+      trimestre: trimestre.name, // Nombre del trimestre seleccionado
+      trimestre_id: trimestre.id, // ID del trimestre seleccionado
+      school_year_id: trimestre.schoolYearId || trimestre.schoolYear?.id, // ID del año escolar correspondiente
+      fecha_creacion: fechaCreacion,
+      fecha_ultima_edicion: fechaUltimaEdicion || undefined,
+      ultimo_editor: row["último Editor"] || undefined,
+      seccion: row.Sección || "",
+      nivel, // Nivel académico calculado automáticamente
+      id_externo: idExterno,
+    };
+  } catch (error) {
+    console.error("Error converting CSV row to falta:", error);
+    return null;
+  }
+}
