@@ -205,8 +205,10 @@ class PhidiasApiService {
     for (const student of students) {
       for (const pollId of pollIds) {
         try {
-          const result = await this.getSeguimientosEstudiante(pollId, student.phidias_id);
-          
+          console.log(`\n=== PROCESSING STUDENT ${student.id} (PHIDIAS ID: ${student.phidias_id}) FOR POLL ${pollId} ===`);
+          const result = await this.getSeguimientosEstudiante(pollId, student.id);
+          console.log(`Processed student ${student.id} for poll ${pollId}: ${result.success ? 'Success' : 'Failed'}`);
+          console.log(`Result:`, result);
           results.push({
             studentId: student.id,
             pollId,

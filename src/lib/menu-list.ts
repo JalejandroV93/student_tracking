@@ -8,6 +8,8 @@ import {
   LayoutGrid,
   LucideIcon,
   Users,
+  RefreshCw,
+  Settings,
 } from "lucide-react";
 
 type Submenu = {
@@ -195,6 +197,18 @@ export function getMenuList(
           label: "Estudiantes",
           icon: Users,
           active: pathname.startsWith("/dashboard/settings/students"),
+        },
+        {
+          href: "/dashboard/settings/phidias/sync",
+          label: "Control de Sincronización Phidias",
+          icon: RefreshCw,
+          active: pathname.startsWith("/dashboard/settings/phidias/sync"),
+        },
+        {
+          href: "/dashboard/settings/phidias/seguimientos",
+          label: "Configuración de Seguimientos",
+          icon: Settings,
+          active: pathname.startsWith("/dashboard/settings/phidias/seguimientos"),
         },
       ],
     });
