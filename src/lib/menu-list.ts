@@ -179,12 +179,12 @@ export function getMenuList(
           icon: Users,
           active: pathname.startsWith("/dashboard/settings/users"),
         },
-        {
-          href: "/dashboard/settings/faltas",
-          label: "Faltas",
-          icon: FileText,
-          active: pathname.startsWith("/dashboard/settings/faltas"),
-        },
+        // {
+        //   href: "/dashboard/settings/faltas",
+        //   label: "Faltas",
+        //   icon: FileText,
+        //   active: pathname.startsWith("/dashboard/settings/faltas"),
+        // },
         {
           href: "/dashboard/settings/school-years",
           label: "Años Escolares",

@@ -88,10 +88,17 @@ export function EnhancedInfractionDetailsModal({
           <DialogHeader className="space-y-2">
             <DialogTitle className="flex items-center gap-2 text-white text-xl font-semibold">
               <AlertTriangle className="h-6 w-6" />
-              Detalles de la Falta #{infraction.number}
+              Detalles de la Falta #{infraction.number} - {infraction.type}
             </DialogTitle>
-            <DialogDescription className="text-red-100">
+            <DialogDescription className="text-red-100 flex justify-between">
               Información completa de la falta registrada
+              {/* Agregar Estado de falta a la derecha del header del modal */}
+              <span className="ml-4 text-sm">
+                Estado de la falta:{" "}
+                <Badge variant={infraction.attended ? "default" : "outline"} className="bg-white">
+                  {infraction.attended ? "Atendida" : "No atendida"}
+                </Badge>
+              </span>
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -133,20 +140,47 @@ export function EnhancedInfractionDetailsModal({
                       Nivel
                     </span>
                     <p className="font-semibold text-slate-900">
-                      {student.level}
+                      {student.seccion}
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            <Separator className="my-6" />
+            
 
             {/* Información de la Falta */}
             <div>
               <div className="space-y-6">
+                {/* Información Académica */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Trimestre
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {infraction.trimester || "No especificado"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Nivel Académico
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {infraction.level || "No especificado"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Registrado por
+                    </span>
+                    <p className="font-semibold text-slate-900">
+                      {infraction.author || "No especificado"}
+                    </p>
+                  </div>
+                </div>
                 {/* Fecha y Tipo */}
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg ">
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 text-[#be1522]" />
                     <div>
@@ -203,33 +237,7 @@ export function EnhancedInfractionDetailsModal({
                   </div>
                 </div>
 
-                {/* Información Académica */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
-                      Trimestre
-                    </span>
-                    <p className="font-semibold text-slate-900">
-                      {infraction.trimester || "No especificado"}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
-                      Nivel Académico
-                    </span>
-                    <p className="font-semibold text-slate-900">
-                      {infraction.level || "No especificado"}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
-                      Registrado por
-                    </span>
-                    <p className="font-semibold text-slate-900">
-                      {infraction.author || "No especificado"}
-                    </p>
-                  </div>
-                </div>
+                
 
                 {/* Estado */}
                 <div className="p-4 border border-slate-200 rounded-lg">
@@ -250,7 +258,7 @@ export function EnhancedInfractionDetailsModal({
               </div>
             </div>
 
-            <Separator className="my-6" />
+           
 
             {/* Sección de Observaciones */}
             <div>
