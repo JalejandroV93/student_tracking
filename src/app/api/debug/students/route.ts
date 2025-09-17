@@ -45,27 +45,27 @@ export async function GET() {
     // Analizar por nivel
     const levelAnalysis: Record<string, { sections: string[], count: number }> = {};
     
-    for (const section of sectionsData) {
-      if (section.seccion) {
-        const level = asignarNivelAcademico(section.seccion);
-        
-        if (!levelAnalysis[level]) {
-          levelAnalysis[level] = { sections: [], count: 0 };
-        }
-        
-        levelAnalysis[level].sections.push(section.seccion);
-        
-        // Contar estudiantes en esta sección
-        const sectionCount = await prisma.estudiantes.count({
-          where: {
-            school_year_id: activeYear.id,
-            seccion: section.seccion
-          }
-        });
-        
-        levelAnalysis[level].count += sectionCount;
-      }
-    }
+    const studentCountsBySection = await prisma.estudiantes.groupBy({  
+      by: ['seccion'],  
+      where: {  
+        school_year_id: activeYear.id,  
+        seccion: { not: null },  
+      },  
+      _count: {  
+        id: true,  
+      },  
+    });  
+
+    for (const group of studentCountsBySection) {  
+      if (group.seccion) {  
+        const level = asignarNivelAcademico(group.seccion);  
+        if (!levelAnalysis[level]) {  
+          levelAnalysis[level] = { sections: [], count: 0 };  
+        }  
+        levelAnalysis[level].sections.push(group.seccion);  
+        levelAnalysis[level].count += group._count.id;  
+      }  
+    }  
 
     return NextResponse.json({
       activeSchoolYear: {
