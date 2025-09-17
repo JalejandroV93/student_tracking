@@ -43,6 +43,30 @@ export interface PhidiasSeguimientoConfig {
 class PhidiasSyncService {
   
   /**
+   * Obtiene el trimestre correspondiente a una fecha específica
+   */
+  private async getTrimesterByDate(fecha: Date, schoolYearId: number): Promise<{ id: number; name: string } | null> {
+    try {
+      const trimestre = await prisma.trimestre.findFirst({
+        where: {
+          schoolYearId: schoolYearId,
+          startDate: { lte: fecha },
+          endDate: { gte: fecha }
+        },
+        select: {
+          id: true,
+          name: true
+        }
+      });
+      
+      return trimestre;
+    } catch (error) {
+      console.error('Error getting trimester for date:', fecha, error);
+      return null;
+    }
+  }
+  
+  /**
    * Debug: Lista todas las configuraciones de seguimientos activas
    */
   async debugSeguimientosConfig(): Promise<void> {
@@ -63,6 +87,24 @@ class PhidiasSyncService {
     console.log('\n=== DEBUG: Active Seguimientos Configs ===');
     configs.forEach(config => {
       console.log(`ID: ${config.id}, Poll: ${config.phidias_id}, Name: ${config.name}, Level: ${config.nivel_academico}, Type: ${config.tipo_falta}`);
+    });
+    
+    // Verificar trimestres para el año académico actual
+    const trimestres = await prisma.trimestre.findMany({
+      where: { schoolYearId: activeSchoolYear?.id },
+      select: {
+        id: true,
+        name: true,
+        startDate: true,
+        endDate: true,
+        order: true
+      },
+      orderBy: { order: 'asc' }
+    });
+    
+    console.log('\n=== DEBUG: Available Trimestres ===');
+    trimestres.forEach(trimestre => {
+      console.log(`ID: ${trimestre.id}, Name: ${trimestre.name}, Order: ${trimestre.order}, Range: ${trimestre.startDate.toISOString().split('T')[0]} to ${trimestre.endDate.toISOString().split('T')[0]}`);
     });
     
     // Verificar algunos estudiantes de ejemplo
@@ -176,11 +218,12 @@ class PhidiasSyncService {
   /**
    * Mapea los datos de Phidias a nuestro modelo de faltas
    */
-  private mapPhidiasRecordToFalta(
+  private async mapPhidiasRecordToFalta(
     record: PhidiasRecord,
-    studentData: { id: number; codigo: number },
+    studentData: { id: number; codigo: number; grado?: string; seccion?: string },
     schoolYearId: number,
-    tipoFalta: string
+    tipoFalta: string,
+    nivelAcademico: string
   ) {
     console.log(`\n=== MAPPING PHIDIAS RECORD ===`);
     console.log(`Record ID: ${record.id}`);
@@ -224,6 +267,9 @@ class PhidiasSyncService {
     const conDiagnostico = diagnosticoItem?.itemvalue?.toString()?.toLowerCase() === 'sí' ||
                           diagnosticoItem?.itemvalue?.toString()?.toLowerCase() === 'si';
 
+    // Obtener trimestre basado en la fecha
+    const trimesterInfo = await this.getTrimesterByDate(fecha, schoolYearId);
+
     // Usar el ID del record de Phidias como hash único (convertido a string para compatibilidad)
     const hash = `phidias_${record.id}`;
 
@@ -247,6 +293,11 @@ class PhidiasSyncService {
       fecha_creacion: new Date(record.timestamp * 1000),
       fecha_ultima_edicion: new Date(record.last_edit * 1000),
       ultimo_editor: ultimoEditor,
+      // Información adicional agregada
+      trimestre: trimesterInfo?.name || null,
+      trimestre_id: trimesterInfo?.id || null,
+      nivel: nivelAcademico,
+      seccion: studentData.grado || null,
       // Campos adicionales según el diagnóstico
       observaciones: conDiagnostico ? 'Estudiante con diagnóstico' : null,
       observaciones_autor: conDiagnostico ? autor : null,
@@ -254,6 +305,9 @@ class PhidiasSyncService {
     };
 
     console.log(`Mapped falta data:`, faltaData);
+    console.log(`Trimester info:`, trimesterInfo);
+    console.log(`Student grade/seccion:`, studentData.grado);
+    console.log(`Academic level:`, nivelAcademico);
     console.log(`=== END MAPPING ===\n`);
 
     return faltaData;
@@ -264,9 +318,10 @@ class PhidiasSyncService {
    */
   private async processSeguimientoRecords(
     pollResponse: PhidiasPollResponse,
-    studentData: { id: number; codigo: number },
+    studentData: { id: number; codigo: number; grado?: string; seccion?: string },
     schoolYearId: number,
-    tipoFalta: string
+    tipoFalta: string,
+    nivelAcademico: string
   ): Promise<{ created: number; updated: number }> {
     let created = 0;
     let updated = 0;
@@ -281,7 +336,7 @@ class PhidiasSyncService {
 
     for (const record of pollResponse.records) {
       try {
-        const faltaData = this.mapPhidiasRecordToFalta(record, studentData, schoolYearId, tipoFalta);
+        const faltaData = await this.mapPhidiasRecordToFalta(record, studentData, schoolYearId, tipoFalta, nivelAcademico);
 
         // Verificar si la falta ya existe
         const existingFalta = await prisma.faltas.findUnique({
@@ -463,9 +518,15 @@ class PhidiasSyncService {
           console.log(`Processing ${studentsForLevel.length} students for ${config.name} (Poll ID: ${config.phidias_id})`);
 
           // Crear mapeo de studentId a datos completos del estudiante
-          const studentMap = new Map<number, { id: number; codigo: number }>();
+          const studentMap = new Map<number, { id: number; codigo: number; grado?: string; seccion?: string }>();
           studentsForLevel.forEach(student => {
-            studentMap.set(student.id, { id: student.id, codigo: student.phidias_id });
+            const fullStudentData = allStudents.find(s => s.id === student.id);
+            studentMap.set(student.id, { 
+              id: student.id, 
+              codigo: student.phidias_id,
+              grado: fullStudentData?.grado || undefined,
+              seccion: fullStudentData?.seccion || undefined
+            });
           });
 
           // Procesar estudiantes en lotes pequeños para evitar rate limiting
@@ -516,7 +577,8 @@ class PhidiasSyncService {
                     result.result.data,
                     studentData,
                     activeSchoolYear.id,
-                    config.tipo_falta
+                    config.tipo_falta,
+                    config.nivel_academico
                   );
                   
                   recordsCreated += created;
