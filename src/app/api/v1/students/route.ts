@@ -230,6 +230,34 @@ export async function GET(request: Request) {
         );
       }
 
+      // Verificar si se debe sincronizar automáticamente con Phidias
+      const autoSync = searchParams.get("autoSync") === "true";
+      if (autoSync) {
+        try {
+          console.log(`🔄 Auto-sync iniciada para estudiante ${id} por usuario ${currentUser.id}`);
+          // Importar el servicio de sincronización aquí para evitar problemas de dependencias circulares
+          const { phidiasSyncService } = await import('@/services/phidias-sync.service');
+          
+          // Ejecutar sincronización en background sin bloquear la respuesta
+          phidiasSyncService.syncSpecificStudent(id, `auto-${currentUser.id}`)
+            .then((result) => {
+              console.log(`✅ Auto-sync completada exitosamente para estudiante ${id}:`, {
+                success: result.success,
+                studentsProcessed: result.studentsProcessed,
+                recordsCreated: result.recordsCreated,
+                recordsUpdated: result.recordsUpdated,
+                duration: result.duration
+              });
+            })
+            .catch((error) => {
+              console.error(`❌ Auto-sync falló para estudiante ${id}:`, error);
+            });
+        } catch (error) {
+          console.error(`💥 Error iniciando auto-sync para estudiante ${id}:`, error);
+          // No bloqueamos la respuesta aunque la sincronización falle
+        }
+      }
+
       // Transform the student data
       const grado = student.grado || "No especificado";
       const seccionParaNivel = student.seccion || "";

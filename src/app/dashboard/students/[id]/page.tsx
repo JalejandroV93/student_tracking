@@ -3,8 +3,9 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StudentDetailCard } from "@/components/students/StudentDetailCard";
 import { FollowUpDialog } from "@/components/students/FollowUpDialog";
 import { EditFollowUpDialog } from "@/components/students/EditFollowUpDialog";
@@ -18,6 +19,7 @@ import {
   addFollowUp,
   toggleInfractionAttended,
   addObservaciones,
+  syncStudentWithPhidias,
 } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
@@ -39,6 +41,13 @@ export default function StudentDetailsPage() {
   const [selectedSchoolYear, setSelectedSchoolYear] =
     useState<string>("active");
 
+  // Estado para sincronización manual
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
+  // Estado para trackear si la sincronización automática está en progreso
+  const [isAutoSyncing, setIsAutoSyncing] = useState(false);
+  // Estado para controlar si ya se hizo el autoSync inicial
+  const [hasAutoSynced, setHasAutoSynced] = useState(false);
+
   const {
     data: studentDetailsData,
     isLoading: detailLoading,
@@ -46,10 +55,59 @@ export default function StudentDetailsPage() {
     refetch: refetchStudentDetails,
   } = useQuery({
     queryKey: ["students", studentId],
-    queryFn: () => fetchStudentDetails(studentId),
+    queryFn: async () => {
+      const shouldAutoSync = !hasAutoSynced;
+      
+      if (shouldAutoSync) {
+        // Indicar que la sincronización automática está en progreso
+        setIsAutoSyncing(true);
+        setHasAutoSynced(true);
+      }
+      
+      try {
+        const result = await fetchStudentDetails(studentId, { 
+          autoSync: shouldAutoSync,
+          skipAutoSync: !shouldAutoSync 
+        });
+        return result;
+      } finally {
+        if (shouldAutoSync) {
+          // Dar un pequeño delay para que sea visible la animación
+          setTimeout(() => setIsAutoSyncing(false), 1500);
+        }
+      }
+    },
     enabled: !!studentId,
-    staleTime: 2 * 60 * 1000, // 2 minutes - fresher data for detail view
-    gcTime: 5 * 60 * 1000, // 5 minutes in cache
+    staleTime: 10 * 60 * 1000, // 10 minutes - aumentado para evitar sincronizaciones frecuentes
+    gcTime: 15 * 60 * 1000, // 15 minutes in cache
+    refetchOnWindowFocus: false, // Evitar refetch al cambiar ventana
+    refetchOnMount: true, // Asegurar que se ejecute al montar
+  });
+
+  // Mutación para sincronización manual
+  const { mutate: manualSync } = useMutation({
+    mutationFn: () => syncStudentWithPhidias(studentId),
+    onMutate: () => {
+      setIsManualSyncing(true);
+      // Asegurar que no esté marcado como auto-sincronizando
+      setIsAutoSyncing(false);
+      toast.info("Iniciando sincronización manual con Phidias...");
+    },
+    onSuccess: () => {
+      toast.success("Sincronización con Phidias completada exitosamente");
+      // Invalidar el cache para forzar una nueva consulta sin autoSync
+      queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+      // Refrescar los datos del estudiante después de un pequeño delay
+      setTimeout(() => {
+        refetchStudentDetails();
+      }, 1000);
+    },
+    onError: (error) => {
+      toast.error(`Error en sincronización: ${error.message}`);
+    },
+    onSettled: () => {
+      setIsManualSyncing(false);
+    },
   });
 
   const { mutate: saveFollowUp, isPending: isAddingFollowUp } = useMutation({
@@ -302,9 +360,36 @@ export default function StudentDetailsPage() {
     <ContentLayout title={`Estudiante: ${student?.name || ""}`}>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <Button variant="outline" size="sm" onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
+            </Button>
+            
+            {/* Botón de sincronización manual */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => manualSync()}
+              disabled={isManualSyncing || isAutoSyncing}
+            >
+              {isManualSyncing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sincronizando...
+                </>
+              ) : isAutoSyncing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Auto-sincronizando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sincronizar con Phidias
+                </>
+              )}
+            </Button>
+          </div>
 
           {/* Filtro de año académico */}
           <StudentSchoolYearFilter
@@ -312,6 +397,8 @@ export default function StudentDetailsPage() {
             onYearChange={setSelectedSchoolYear}
           />
         </div>
+
+        
 
         {/* Student Detail Card - Usando el nuevo sistema de loading */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">

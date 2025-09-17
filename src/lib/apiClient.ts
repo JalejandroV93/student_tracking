@@ -88,19 +88,78 @@ export const fetchStudentCount = async (): Promise<number> => {
 };
 
 export const fetchStudentDetails = async (
-  studentId: string
+  studentId: string,
+  options: { autoSync?: boolean; skipAutoSync?: boolean } = {}
 ): Promise<{
   student: Student;
   infractions: Infraction[];
   followUps: FollowUp[];
 }> => {
   if (!studentId) throw new Error("Student ID is required");
-  const response = await fetch(`/api/v1/students?studentId=${studentId}`);
+  
+  const { autoSync = false, skipAutoSync = false } = options;
+  const queryParams = new URLSearchParams({ studentId });
+  
+  // Solo incluir autoSync si se solicita explícitamente y no se debe saltar
+  if (autoSync && !skipAutoSync) {
+    queryParams.set('autoSync', 'true');
+  }
+  
+  const response = await fetch(`/api/v1/students?${queryParams.toString()}`);
   // The API returns an object { student, infractions, followUps }
   return handleResponse<{
     student: Student;
     infractions: Infraction[];
     followUps: FollowUp[];
+  }>(response);
+};
+
+// Nueva función para sincronizar manualmente un estudiante con Phidias
+export const syncStudentWithPhidias = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  message: string;
+  syncId?: string;
+}> => {
+  const response = await fetch(`/api/v1/phidias/sync`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      specificStudentId: parseInt(studentId),
+      triggeredBy: "manual-sync" // Indicar que es una sincronización manual
+    }),
+  });
+  return handleResponse<{
+    success: boolean;
+    message: string;
+    syncId?: string;
+  }>(response);
+};
+
+// Función para obtener el estado de sincronización
+export const getSyncStatus = async (syncId: string): Promise<{
+  status: 'running' | 'completed' | 'error';
+  result?: {
+    success: boolean;
+    studentsProcessed: number;
+    recordsCreated: number;
+    recordsUpdated: number;
+    errors?: Array<{ studentId: number; error: string }>;
+  };
+  message?: string;
+}> => {
+  const response = await fetch(`/api/v1/phidias/sync?syncId=${syncId}`);
+  return handleResponse<{
+    status: 'running' | 'completed' | 'error';
+    result?: {
+      success: boolean;
+      studentsProcessed: number;
+      recordsCreated: number;
+      recordsUpdated: number;
+      errors?: Array<{ studentId: number; error: string }>;
+    };
+    message?: string;
   }>(response);
 };
 
