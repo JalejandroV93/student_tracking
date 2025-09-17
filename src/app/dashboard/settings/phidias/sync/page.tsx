@@ -49,7 +49,7 @@ export default function PhidiasSyncPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <section>
       <div>
         <h1 className="text-3xl font-bold">Control de Sincronización Phidias</h1>
         <p className="text-muted-foreground mt-2">
@@ -134,6 +134,6 @@ export default function PhidiasSyncPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </section>
   );
 }
