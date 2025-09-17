@@ -9,14 +9,24 @@ datasource db {
 }
 
 model Estudiantes {
-  id         Int      @id @unique
-  codigo     Int      @unique
-  nombre     String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  faltas     Faltas[]
+  id             Int         @id @unique
+  codigo         Int         @unique
+  nombre         String?
+  firstname      String?
+  lastname       String?
+  school_year_id Int?
+  grado          String? // Grado actual del estudiante
+  seccion        String? // Sección actual del estudiante
+  photo_url      String? // URL de la foto del estudiante desde Phidias
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  faltas         Faltas[]
+  schoolYear     SchoolYear? @relation(fields: [school_year_id], references: [id])
 
   @@index([codigo], map: "idx_codigo")
+  @@index([school_year_id], map: "idx_estudiantes_school_year_id")
+  @@index([grado], map: "idx_estudiantes_grado")
+  @@index([seccion], map: "idx_estudiantes_seccion")
 }
 
 model Faltas {
@@ -110,7 +120,7 @@ model User {
   email               String?
   phonenumber         String?
   role                Role
-  groupCode           String?           // Código del grupo que dirige (solo para TEACHER)
+  groupCode           String? // Código del grupo que dirige (solo para TEACHER)
   password            String
   lastLogin           DateTime?
   isBlocked           Boolean           @default(false)
@@ -165,19 +175,23 @@ model SyncHistory {
 }
 
 model SchoolYear {
-  id          Int         @id @default(autoincrement())
-  name        String      @unique
-  startDate   DateTime    @db.Date
-  endDate     DateTime    @db.Date
-  isActive    Boolean     @default(false)
-  description String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  trimestres  Trimestre[]
+  id                  Int                  @id @default(autoincrement())
+  name                String               @unique
+  phidias_id          Int?                 @unique
+  startDate           DateTime             @db.Date
+  endDate             DateTime             @db.Date
+  isActive            Boolean              @default(false)
+  description         String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  trimestres          Trimestre[]
+  estudiantes         Estudiantes[]
+  phidiasSeguimientos PhidiasSeguimiento[]
 
   @@index([isActive], map: "idx_school_year_active")
   @@index([startDate], map: "idx_school_year_start")
   @@index([endDate], map: "idx_school_year_end")
+  @@index([phidias_id], map: "idx_school_year_phidias_id")
 }
 
 model Trimestre {
@@ -195,6 +209,44 @@ model Trimestre {
   @@index([schoolYearId], map: "idx_trimestre_school_year")
   @@index([startDate], map: "idx_trimestre_start")
   @@index([endDate], map: "idx_trimestre_end")
+}
+
+model PhidiasSeguimiento {
+  id              Int        @id @default(autoincrement())
+  phidias_id      Int        @unique
+  name            String
+  description     String?
+  tipo_falta      String // "Tipo I", "Tipo II", "Tipo III"
+  nivel_academico String // "Preschool", "Elementary", "Middle School", "High School"
+  school_year_id  Int
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  schoolYear      SchoolYear @relation(fields: [school_year_id], references: [id], onDelete: Cascade)
+
+  @@index([phidias_id], map: "idx_phidias_seguimiento_id")
+  @@index([tipo_falta], map: "idx_phidias_seguimiento_tipo")
+  @@index([nivel_academico], map: "idx_phidias_seguimiento_nivel")
+  @@index([school_year_id], map: "idx_phidias_seguimiento_school_year")
+  @@index([isActive], map: "idx_phidias_seguimiento_active")
+}
+
+model PhidiasSyncLog {
+  id                Int       @id @default(autoincrement())
+  syncType          String // "manual" | "automatic"
+  status            String // "success" | "error" | "partial"
+  studentsProcessed Int       @default(0)
+  recordsCreated    Int       @default(0)
+  recordsUpdated    Int       @default(0)
+  errors            Json? // Array de errores si los hay
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
+  duration          Int? // Duración en segundos
+  triggeredBy       String? // ID del usuario que inició la sincronización manual
+
+  @@index([status], map: "idx_phidias_sync_log_status")
+  @@index([startedAt], map: "idx_phidias_sync_log_started")
+  @@index([syncType], map: "idx_phidias_sync_log_type")
 }
 
 enum Role {

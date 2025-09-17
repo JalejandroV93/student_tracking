@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       const newSchoolYear = await tx.schoolYear.create({
         data: {
           name: body.name,
+          phidias_id: body.phidias_id,
           startDate: new Date(body.startDate),
           endDate: new Date(body.endDate),
           description: body.description,

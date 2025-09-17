@@ -17,6 +17,20 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+interface StudentsResponse {
+  data: Student[];
+  pagination: PaginationInfo;
+}
+
 interface StudentWithAlert extends Student {
   alertStatus: AlertStatus | null;
   typeICount?: number;
@@ -38,6 +52,10 @@ export const useDashboardDataSWR = (
     if (schoolYearId) {
       params.append("schoolYearId", schoolYearId);
     }
+    // Para el dashboard, necesitamos todos los estudiantes
+    if (baseUrl.includes("/api/v1/students")) {
+      params.append("limit", "1000"); // Límite alto para obtener todos los estudiantes
+    }
     return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   };
 
@@ -48,11 +66,11 @@ export const useDashboardDataSWR = (
 
   // Fetch all students data (para mostrar el total correcto en KPI)
   const {
-    data: allStudents = [],
+    data: studentsResponse,
     error: studentsError,
     isLoading: studentsLoading,
     mutate: mutateStudents,
-  } = useSWR<Student[]>(
+  } = useSWR<StudentsResponse>(
     [studentsKey, getApiUrl("/api/v1/students")],
     ([, url]: [string, string]) => fetcher(url),
     {
@@ -60,6 +78,9 @@ export const useDashboardDataSWR = (
       refreshInterval: 5 * 60 * 1000, // 5 minutes
     }
   );
+
+  // Extraer el array de estudiantes de la respuesta
+  const allStudents = Array.isArray(studentsResponse?.data) ? studentsResponse.data : [];
 
   // Fetch alerts data (students with alert information)
   const {
@@ -116,6 +137,18 @@ export const useDashboardDataSWR = (
   const error =
     studentsError || alertsError || infractionsError || settingsError;
 
+  // Function to get total students count
+  const getTotalStudentsCount = () => {
+    console.log("Total students count:", allStudents.length);
+    return allStudents.length;
+  };
+
+  // Function to get total students count by level
+  const getTotalStudentsByLevel = (level: string) => {
+    console.log(`Total students in level ${level}:`, allStudents.filter(student => student.seccion === level).length);
+    return allStudents.filter(student => student.seccion === level).length;
+  };
+
   // Function to get students with alerts
   const getStudentsWithAlerts = (section?: string | null) => {
     if (!studentsWithAlerts.length) {
@@ -133,7 +166,7 @@ export const useDashboardDataSWR = (
         };
         const targetSection = sectionMap[section];
         // Note: This filtering logic might need adjustment based on how grado is now handled
-        return targetSection && student.level === targetSection;
+        return targetSection && student.seccion === targetSection;
       });
     }
 
@@ -172,6 +205,8 @@ export const useDashboardDataSWR = (
     // Derived functions
     getStudentsWithAlerts,
     getStudentAlertStatus,
+    getTotalStudentsCount,
+    getTotalStudentsByLevel,
 
     // Mutation functions
     refreshAll,

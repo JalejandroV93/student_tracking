@@ -6,6 +6,7 @@ import { NumberTicker } from "@/components/magicui/number-ticker"
 interface SectionStats {
   name: string
   studentCount: number
+  totalStudentsInSection: number // Total de estudiantes en la sección (no solo los que tienen infracciones)
   typeI: number
   typeII: number
   typeIII: number
@@ -47,7 +48,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-lg font-bold">{section.name}</CardTitle>
-          <CardDescription>{section.studentCount} estudiantes</CardDescription>
+          <CardDescription>{section.totalStudentsInSection} estudiantes</CardDescription>
         </div>
         <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2 h-12 w-12">
           <School className="h-6 w-6 text-muted-foreground" />

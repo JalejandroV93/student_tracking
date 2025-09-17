@@ -4,10 +4,11 @@ import {
   AlertTriangle,
   Calendar,
   CalendarDays,
-  FileText,
   LayoutGrid,
   LucideIcon,
   Users,
+  RefreshCw,
+  Settings,
 } from "lucide-react";
 
 type Submenu = {
@@ -178,16 +179,29 @@ export function getMenuList(
           active: pathname.startsWith("/dashboard/settings/users"),
         },
         {
-          href: "/dashboard/settings/faltas",
-          label: "Faltas",
-          icon: FileText,
-          active: pathname.startsWith("/dashboard/settings/faltas"),
-        },
-        {
           href: "/dashboard/settings/school-years",
           label: "Años Escolares",
           icon: Calendar,
           active: pathname.startsWith("/dashboard/settings/school-years"),
+        },
+        {
+          //crud estudiantes
+          href: "/dashboard/settings/students",
+          label: "Estudiantes",
+          icon: Users,
+          active: pathname.startsWith("/dashboard/settings/students"),
+        },
+        {
+          href: "/dashboard/settings/phidias/sync",
+          label: "Control de Sincronización Phidias",
+          icon: RefreshCw,
+          active: pathname.startsWith("/dashboard/settings/phidias/sync"),
+        },
+        {
+          href: "/dashboard/settings/phidias/seguimientos",
+          label: "Configuración de Seguimientos",
+          icon: Settings,
+          active: pathname.startsWith("/dashboard/settings/phidias/seguimientos"),
         },
       ],
     });

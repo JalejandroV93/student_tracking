@@ -24,6 +24,8 @@ export function DashboardContent() {
     areSettingsConfigured,
     getStudentsWithAlerts,
     getStudentAlertStatus,
+    getTotalStudentsCount,
+    getTotalStudentsByLevel,
     isLoading,
     error,
   } = useDashboardDataSWR({ schoolYearId: filters.schoolYearId });
@@ -69,6 +71,8 @@ export function DashboardContent() {
           infractions={infractions}
           getStudentAlertStatus={getStudentAlertStatus}
           onSelectStudent={handleStudentSelect}
+          getTotalStudentsCount={getTotalStudentsCount}
+          getTotalStudentsByLevel={getTotalStudentsByLevel}
           dashboardFilters={{
             filters: dashboardFilters.filters,
             setSchoolYear: dashboardFilters.setSchoolYear,

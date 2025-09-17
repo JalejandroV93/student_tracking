@@ -196,6 +196,7 @@ export async function GET(request: Request) {
     const students = rawStudents.map((student) => {
       const studentId = `${student.id}-${student.codigo}`;
       const studentInfo = studentGradoMap.get(studentId);
+      console.log(`🔍 Student ${student.nombre} (${studentId}):`, studentInfo);
       return transformStudent(student, studentInfo?.grado, studentInfo?.nivel);
     });
 

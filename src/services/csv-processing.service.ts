@@ -1,13 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import {
   parseCSVFile,
+  parseStudentCSVFile,
   convertCSVRowToFalta,
+  convertCSVRowToStudent,
   extractStudentData,
   validateCSVRow,
+  validateStudentCSVRow,
 } from "@/lib/csv-utils";
 import {
   CSVFaltaRow,
+  CSVEstudianteRow,
   ProcessingResult,
+  StudentProcessingResult,
   DuplicateInfo,
   DuplicateHandlingOptions,
   ProcessedFalta,
@@ -345,5 +350,176 @@ export class CSVProcessingService {
     }
 
     return { valid: true };
+  }
+
+  /**
+   * Procesa un archivo CSV de estudiantes
+   */
+  static async processStudentCSVFile(
+    csvContent: string,
+    schoolYearId: number
+  ): Promise<StudentProcessingResult> {
+    try {
+      // Verificar que el año académico existe
+      const schoolYear = await prisma.schoolYear.findUnique({
+        where: { id: schoolYearId },
+      });
+
+      if (!schoolYear) {
+        return {
+          success: false,
+          message: "Año académico no encontrado",
+          totalRows: 0,
+          processedRows: 0,
+          created: 0,
+          updated: 0,
+          errors: [],
+        };
+      }
+
+      // Parsear CSV
+      const { data: csvRows, errors: parseErrors } = await parseStudentCSVFile(
+        csvContent
+      );
+
+      if (parseErrors.length > 0) {
+        return {
+          success: false,
+          message: "Error al parsear el archivo CSV: " + parseErrors[0].message,
+          totalRows: 0,
+          processedRows: 0,
+          created: 0,
+          updated: 0,
+          errors: parseErrors.map((error, index) => ({
+            row: error.row || index + 1,
+            error: error.message,
+            data: {},
+          })),
+        };
+      }
+
+      // Procesar las filas
+      return await this.processStudentCSVRows(csvRows, schoolYear);
+    } catch (error) {
+      console.error("Error processing student CSV file:", error);
+      return {
+        success: false,
+        message: "Error interno al procesar el archivo",
+        totalRows: 0,
+        processedRows: 0,
+        created: 0,
+        updated: 0,
+        errors: [
+          {
+            row: 0,
+            error: error instanceof Error ? error.message : "Error desconocido",
+            data: {},
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Procesa las filas del CSV de estudiantes
+   */
+  private static async processStudentCSVRows(
+    csvRows: CSVEstudianteRow[],
+    schoolYear: { id: number; name: string }
+  ): Promise<StudentProcessingResult> {
+    const result: StudentProcessingResult = {
+      success: true,
+      message: "",
+      totalRows: csvRows.length,
+      processedRows: 0,
+      created: 0,
+      updated: 0,
+      errors: [],
+    };
+
+    for (let i = 0; i < csvRows.length; i++) {
+      const row = csvRows[i];
+
+      try {
+        // Validar la fila
+        const validation = validateStudentCSVRow(row);
+        if (!validation.valid) {
+          result.errors.push({
+            row: i + 1,
+            error: validation.errors.join(", "),
+            data: row,
+          });
+          continue;
+        }
+
+        // Convertir fila a estudiante procesado
+        const studentData = convertCSVRowToStudent(row, schoolYear.id);
+        if (!studentData) {
+          result.errors.push({
+            row: i + 1,
+            error: "No se pudo procesar los datos del estudiante",
+            data: row,
+          });
+          continue;
+        }
+
+        // Verificar si el estudiante ya existe
+        const existingStudent = await prisma.estudiantes.findUnique({
+          where: { codigo: studentData.codigo },
+        });
+
+        if (existingStudent) {
+          // Actualizar estudiante existente
+          await prisma.estudiantes.update({
+            where: { codigo: studentData.codigo },
+            data: {
+              nombre: studentData.nombre,
+              firstname: studentData.firstname,
+              lastname: studentData.lastname,
+              grado: studentData.grado,
+              seccion: studentData.seccion,
+              school_year_id: studentData.school_year_id,
+              photo_url: studentData.photo_url,
+              updated_at: new Date(),
+            },
+          });
+          result.updated++;
+        } else {
+          // Crear nuevo estudiante
+          await prisma.estudiantes.create({
+            data: {
+              id: studentData.id,
+              codigo: studentData.codigo,
+              nombre: studentData.nombre,
+              firstname: studentData.firstname,
+              lastname: studentData.lastname,
+              grado: studentData.grado,
+              seccion: studentData.seccion,
+              school_year_id: studentData.school_year_id,
+              photo_url: studentData.photo_url,
+            },
+          });
+          result.created++;
+        }
+
+        result.processedRows++;
+      } catch (error) {
+        console.error(`Error processing student row ${i + 1}:`, error);
+        result.errors.push({
+          row: i + 1,
+          error: error instanceof Error ? error.message : "Error desconocido",
+          data: row,
+        });
+      }
+    }
+
+    // Generar mensaje resumen
+    result.message = `Procesamiento completado. ${result.created} estudiantes creados, ${result.updated} actualizados, ${result.processedRows} procesados de ${result.totalRows} total.`;
+    
+    if (result.errors.length > 0) {
+      result.message += ` ${result.errors.length} errores encontrados.`;
+    }
+
+    return result;
   }
 }

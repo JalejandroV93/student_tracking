@@ -21,6 +21,7 @@ export function SchoolYearEditForm({
 }: SchoolYearEditFormProps) {
   const [formData, setFormData] = useState({
     name: schoolYear.name,
+    phidias_id: schoolYear.phidias_id?.toString() || "",
     startDate: format(new Date(schoolYear.startDate), "yyyy-MM-dd"),
     endDate: format(new Date(schoolYear.endDate), "yyyy-MM-dd"),
     description: schoolYear.description || "",
@@ -44,6 +45,8 @@ export function SchoolYearEditForm({
     try {
       const updateData: UpdateSchoolYearRequest = {
         name: formData.name !== schoolYear.name ? formData.name : undefined,
+        phidias_id: formData.phidias_id !== (schoolYear.phidias_id?.toString() || "")
+          ? (formData.phidias_id ? parseInt(formData.phidias_id) : null) : undefined,
         startDate: formData.startDate !== format(new Date(schoolYear.startDate), "yyyy-MM-dd") 
           ? formData.startDate : undefined,
         endDate: formData.endDate !== format(new Date(schoolYear.endDate), "yyyy-MM-dd")
@@ -70,7 +73,7 @@ export function SchoolYearEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Nombre */}
         <div className="space-y-2">
           <Label htmlFor="name">Nombre del Año Escolar *</Label>
@@ -96,7 +99,21 @@ export function SchoolYearEditForm({
           />
         </div>
 
-        {/* Fecha de inicio */}
+        {/* ID de Phidias */}
+        <div className="space-y-2">
+          <Label htmlFor="phidias_id">ID de Phidias (Opcional)</Label>
+          <Input
+            id="phidias_id"
+            name="phidias_id"
+            type="number"
+            value={formData.phidias_id}
+            onChange={handleInputChange}
+            placeholder="ID del año escolar en Phidias"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{/* Fecha de inicio */}
         <div className="space-y-2">
           <Label htmlFor="startDate">Fecha de Inicio *</Label>
           <div className="relative">

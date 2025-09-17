@@ -55,16 +55,16 @@ export function StudentDetailCard({
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-2xl">{student.name}</CardTitle>
+            <CardTitle className="text-2xl hidden">{student.name}</CardTitle>
             <CardDescription>
               ID: {student.id}
               {(student.grado !== "No especificado" ||
-                student.level !== "No especificado") && (
+                student.seccion !== "No especificado") && (
                 <>
                   {student.grado !== "No especificado" &&
                     ` | Grado: ${student.grado}`}
-                  {student.level !== "No especificado" &&
-                    ` | Nivel: ${student.level}`}
+                  {student.seccion !== "No especificado" &&
+                    ` | Nivel: ${student.seccion}`}
                 </>
               )}
             </CardDescription>

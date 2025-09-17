@@ -21,6 +21,8 @@ interface OptimizedOverviewProps {
   infractions: Infraction[];
   getStudentAlertStatus: (studentId: string) => AlertStatus | null;
   onSelectStudent: (studentId: string) => void;
+  getTotalStudentsCount: () => number;
+  getTotalStudentsByLevel: (level: string) => number;
   dashboardFilters?: {
     filters: {
       schoolYearId: string | null;
@@ -36,6 +38,8 @@ export function OptimizedOverview({
   infractions,
   getStudentAlertStatus,
   onSelectStudent,
+  getTotalStudentsCount,
+  getTotalStudentsByLevel,
   dashboardFilters,
 }: OptimizedOverviewProps) {
   // Estado local para trimestre como fallback
@@ -49,24 +53,31 @@ export function OptimizedOverview({
 
   // Filtrar datos por trimestre seleccionado
   const filteredData = useMemo(() => {
+    // Validar que students e infractions sean arrays, fallback a array vacío si no lo son
+    const validatedStudents = Array.isArray(students) ? students : [];
+    const validatedInfractions = Array.isArray(infractions) ? infractions : [];
+    
     if (selectedTrimestre === "all") {
-      return { students, infractions };
+      return { students: validatedStudents, infractions: validatedInfractions };
     }
 
-    const filteredInfractions = infractions.filter(
+    const filteredInfractions = validatedInfractions.filter(
       (infraction) => infraction.trimester === selectedTrimestre
     );
 
     // Mantener todos los estudiantes activos, solo filtrar las infracciones
     // El total de estudiantes debe mostrar todos los estudiantes, no solo los que tienen infracciones
     return {
-      students: students, // Siempre mostrar todos los estudiantes activos
+      students: validatedStudents, // Siempre mostrar todos los estudiantes activos
       infractions: filteredInfractions,
     };
   }, [students, infractions, selectedTrimestre]);
 
   // Calcular estadísticas por sección usando los datos filtrados
   const sectionStats = useMemo(() => {
+    // Validar que students sea un array
+    const validatedStudents = Array.isArray(students) ? students : [];
+    
     return Object.values(SECCIONES_ACADEMICAS).map((sectionName) => {
       // Filtrar infracciones por sección y trimestre
       const sectionInfractions = filteredData.infractions.filter(
@@ -79,14 +90,14 @@ export function OptimizedOverview({
       );
 
       // Contar todos los estudiantes activos de esta sección
-      const allSectionStudents = students.filter(
-        (student) => student.level === sectionName
+      const allSectionStudents = validatedStudents.filter(
+        (student) => student.seccion === sectionName
       );
 
       // Estudiantes con infracciones en el período
-      const studentsWithInfractions = students.filter(
+      const studentsWithInfractions = validatedStudents.filter(
         (student) =>
-          sectionStudentIds.has(student.id) && student.level === sectionName
+          sectionStudentIds.has(student.id) && student.seccion === sectionName
       );
 
       // Contar infracciones por tipo
@@ -111,6 +122,7 @@ export function OptimizedOverview({
           selectedTrimestre === "all"
             ? allSectionStudents.length
             : studentsWithInfractions.length,
+        totalStudentsInSection: getTotalStudentsByLevel(sectionName), // Usar la función para obtener el total
         typeI,
         typeII,
         typeIII,
@@ -123,6 +135,7 @@ export function OptimizedOverview({
     filteredData.infractions,
     getStudentAlertStatus,
     selectedTrimestre,
+    getTotalStudentsByLevel,
   ]);
 
   // Skeleton para KPI cards
@@ -196,6 +209,7 @@ export function OptimizedOverview({
           infractions={filteredData.infractions}
           getStudentAlertStatus={getStudentAlertStatus}
           onSelectStudent={onSelectStudent}
+          totalStudentsCount={getTotalStudentsCount()}
         />
       </Suspense>
 

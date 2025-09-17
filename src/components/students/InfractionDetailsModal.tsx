@@ -73,7 +73,7 @@ export function InfractionDetailsModal({
                 >
                   <AlertTriangle className="h-6 w-6" />
                 </div>
-                Detalles de la Falta2
+                Detalles de la Falta  #{infraction.number}
               </DialogTitle>
               <DialogDescription className="text-slate-600 text-base">
                 Información completa del incidente registrado
@@ -121,12 +121,12 @@ export function InfractionDetailsModal({
                   <p className="text-slate-900 font-medium">{student.grado}</p>
                 </div>
               )}
-              {student.level !== "No especificado" && (
+              {student.seccion !== "No especificado" && (
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-blue-700">
                     Nivel Académico
                   </label>
-                  <p className="text-slate-900 font-medium">{student.level}</p>
+                  <p className="text-slate-900 font-medium">{student.seccion}</p>
                 </div>
               )}
             </div>

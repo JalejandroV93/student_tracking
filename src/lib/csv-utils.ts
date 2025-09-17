@@ -1,10 +1,7 @@
+import { asignarNivelAcademico, extraerNumeroFalta } from "@/lib/academic-level-utils";
+import { CSVEstudianteRow, CSVFaltaRow, ProcessedFalta, ProcessedStudent, StudentData } from "@/types/csv-import";
 import crypto from "crypto";
 import Papa from "papaparse";
-import { CSVFaltaRow, ProcessedFalta, StudentData } from "@/types/csv-import";
-import {
-  asignarNivelAcademico,
-  extraerNumeroFalta,
-} from "@/lib/academic-level-utils";
 
 /**
  * Genera un hash SHA256 único para una falta
@@ -86,7 +83,30 @@ export function parseCSVFile(csvContent: string): Promise<{
 /**
  * Convierte una fila CSV a un objeto ProcessedFalta
  */
-export function convertCSVRowToFalta(
+/**
+ * Extrae el grado y la sección de un string como "Décimo A" o "Kínder 5 B"
+ */
+function extraerGradoYSeccion(gradoCompleto: string): { grado: string; seccion: string } {
+  const texto = gradoCompleto.trim();
+  
+  // Buscar la letra al final que indica la sección (A, B, C, etc.)
+  const match = texto.match(/^(.+?)\s+([A-Z])$/);
+  
+  if (match) {
+    return {
+      grado: match[1].trim(),
+      seccion: match[2].trim()
+    };
+  }
+  
+  // Si no tiene sección, el grado completo es el grado y la sección es vacía
+  return {
+    grado: texto,
+    seccion: ""
+  };
+}
+
+export function convertStudentCSVRow(
   row: CSVFaltaRow,
   studentId: number,
   tipoFalta?: string,
@@ -216,4 +236,199 @@ export function validateCSVRow(row: CSVFaltaRow): {
     valid: errors.length === 0,
     errors,
   };
+}
+
+/**
+ * Parsea el archivo CSV de estudiantes y convierte las filas al formato requerido
+ */
+export function parseStudentCSVFile(csvContent: string): Promise<{
+  data: CSVEstudianteRow[];
+  errors: Papa.ParseError[];
+}> {
+  return new Promise((resolve) => {
+    Papa.parse<CSVEstudianteRow>(csvContent, {
+      header: true,
+      delimiter: ";",
+      skipEmptyLines: true,
+      transformHeader: (header: string) => header.trim(),
+      complete: (results: Papa.ParseResult<CSVEstudianteRow>) => {
+        resolve({
+          data: results.data,
+          errors: results.errors,
+        });
+      },
+    });
+  });
+}
+
+/**
+ * Valida que una fila CSV de estudiante tenga los campos mínimos requeridos
+ */
+export function validateStudentCSVRow(row: CSVEstudianteRow): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  if (!row.Id || row.Id.trim() === "") {
+    errors.push("ID del estudiante requerido");
+  } else if (isNaN(parseInt(row.Id))) {
+    errors.push("ID del estudiante debe ser un número válido");
+  }
+
+  if (!row.Código || row.Código.trim() === "") {
+    errors.push("Código de estudiante requerido");
+  } else if (isNaN(parseInt(row.Código))) {
+    errors.push("Código del estudiante debe ser un número válido");
+  }
+
+  if (!row.Nombre || row.Nombre.trim() === "") {
+    errors.push("Nombre del estudiante requerido");
+  }
+
+  if (!row.Apellido || row.Apellido.trim() === "") {
+    errors.push("Apellido del estudiante requerido");
+  }
+
+  if (!row.Grado || row.Grado.trim() === "") {
+    errors.push("Grado del estudiante requerido");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Convierte una fila CSV de estudiante a un objeto ProcessedStudent
+ */
+export function convertCSVRowToStudent(
+  row: CSVEstudianteRow,
+  schoolYearId: number
+): ProcessedStudent | null {
+  try {
+    const id = parseInt(row.Id);
+    const codigo = parseInt(row.Código);
+    
+    if (isNaN(id) || isNaN(codigo)) {
+      throw new Error("ID o código de estudiante inválido");
+    }
+
+    // Asignar nivel académico automáticamente basado en el grado
+    const nivel = asignarNivelAcademico(row.Grado);
+
+    // Crear nombre completo combinando nombre y apellido
+    const nombreCompleto = `${row.Nombre.trim()} ${row.Apellido.trim()}`;
+
+    // Extraer grado y sección del campo "Grado"
+    const { grado, seccion } = extraerGradoYSeccion(row.Grado);
+
+    return {
+      id,
+      codigo,
+      nombre: nombreCompleto,
+      firstname: row.Nombre.trim(),
+      lastname: row.Apellido.trim(),
+      grado: grado,
+      seccion: seccion,
+      nivel,
+      school_year_id: schoolYearId,
+      photo_url: row["URL de la foto"]?.trim() || undefined,
+    };
+  } catch (error) {
+    console.error("Error converting student CSV row:", error);
+    return null;
+  }
+}
+
+/**
+ * Extrae los datos básicos del estudiante de una fila CSV de estudiante
+ */
+export function extractStudentDataFromStudentCSV(row: CSVEstudianteRow): StudentData | null {
+  try {
+    const codigo = parseInt(row.Código);
+    const id = parseInt(row.Id);
+    
+    if (isNaN(codigo) || isNaN(id)) return null;
+
+    const nombreCompleto = `${row.Nombre.trim()} ${row.Apellido.trim()}`;
+
+    return {
+      id,
+      codigo,
+      nombre: nombreCompleto,
+    };
+  } catch (error) {
+    console.error("Error extracting student data from student CSV:", error);
+    return null;
+  }
+}
+
+/**
+ * Convierte una fila CSV de faltas a un objeto ProcessedFalta
+ */
+export function convertCSVRowToFalta(
+  row: CSVFaltaRow,
+  studentId: number,
+  tipoFalta: string,
+  trimestre: { id: number; name: string; schoolYearId?: number; schoolYear?: { id: number; name: string } }
+): ProcessedFalta | null {
+  try {
+    const codigo = extractStudentCode(row.Código);
+    if (!codigo) throw new Error("Código de estudiante inválido");
+
+    const fecha = parseCSVDate(row["Fecha"]);
+    if (!fecha) throw new Error("Fecha inválida");
+
+    const fechaCreacion = parseCSVDate(row["Fecha De Creación"]);
+    if (!fechaCreacion) throw new Error("Fecha de creación inválida");
+
+    const fechaUltimaEdicion = row["Fecha última Edición"]
+      ? parseCSVDate(row["Fecha última Edición"])
+      : null;
+
+    const hash = generateFaltaHash(
+      row.Código,
+      row["Fecha De Creación"],
+      row["Descripcion de la falta"] || "",
+      row["Acciones Reparadoras"] || ""
+    );
+
+    const idExterno = parseInt(row.Id);
+    if (isNaN(idExterno)) throw new Error("ID externo inválido");
+
+    // Asignar nivel académico automáticamente basado en la sección
+    const nivel = asignarNivelAcademico(row.Sección);
+
+    // Extraer número de falta del campo "Falta segun Manual de Convivencia"
+    const numeroFalta = extraerNumeroFalta(
+      row["Falta segun Manual de Convivencia"]
+    );
+
+    return {
+      hash,
+      id_estudiante: studentId,
+      codigo_estudiante: codigo,
+      tipo_falta: tipoFalta, // Tipo de falta seleccionado por el usuario
+      numero_falta: numeroFalta ?? undefined,
+      descripcion_falta: row["Descripcion de la falta"] || "",
+      detalle_falta: row["Falta segun Manual de Convivencia"] || "",
+      acciones_reparadoras: row["Acciones Reparadoras"] || "",
+      autor: row.Autor || "",
+      fecha,
+      trimestre: trimestre.name, // Nombre del trimestre seleccionado
+      trimestre_id: trimestre.id, // ID del trimestre seleccionado
+      school_year_id: trimestre.schoolYearId || trimestre.schoolYear?.id, // ID del año escolar correspondiente
+      fecha_creacion: fechaCreacion,
+      fecha_ultima_edicion: fechaUltimaEdicion || undefined,
+      ultimo_editor: row["último Editor"] || undefined,
+      seccion: row.Sección || "",
+      nivel, // Nivel académico calculado automáticamente
+      id_externo: idExterno,
+    };
+  } catch (error) {
+    console.error("Error converting CSV row to falta:", error);
+    return null;
+  }
 }

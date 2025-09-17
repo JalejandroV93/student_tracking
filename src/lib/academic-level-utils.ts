@@ -17,7 +17,7 @@ export function normalizarTexto(texto: string): string {
 export function asignarNivelAcademico(seccion: string): string {
   const seccionNormalizada = normalizarTexto(seccion);
 
-  // Definir niveles y sus secciones correspondientes
+  // Definir niveles y sus secciones correspondientes - Actualizado con grados de Phidias
   const niveles = {
     "Mi Taller": [
       "kinder 1 a",
@@ -32,6 +32,8 @@ export function asignarNivelAcademico(seccion: string): string {
       "kinder 4 b",
       "kinder 5 a",
       "kinder 5 b",
+      "kínder 5 a", // Con acento de Phidias
+      "kínder 5 b", // Con acento de Phidias
       "primero a",
       "primero b",
     ],
@@ -47,11 +49,14 @@ export function asignarNivelAcademico(seccion: string): string {
     ],
     "Middle School": [
       "sexto",
+      "séptimo", // Con acento de Phidias
       "septimo",
       "octavo",
       "noveno",
       "sexto a",
       "sexto b",
+      "séptimo a", // Con acento de Phidias
+      "séptimo b", // Con acento de Phidias
       "septimo a",
       "septimo b",
       "octavo a",
@@ -60,9 +65,18 @@ export function asignarNivelAcademico(seccion: string): string {
       "noveno b",
     ],
     "High School": [
+      "décimo", // Con acento de Phidias
+      "undécimo", // Con acento de Phidias
+      "décimo segundo", // Con acento de Phidias
       "decimo",
       "undecimo",
       "decimo segundo",
+      "décimo a", // Con acento de Phidias
+      "décimo b", // Con acento de Phidias
+      "undécimo a", // Con acento de Phidias
+      "undécimo b", // Con acento de Phidias
+      "décimo segundo a", // Con acento de Phidias
+      "décimo segundo b", // Con acento de Phidias
       "decimo a",
       "decimo b",
       "undecimo a",

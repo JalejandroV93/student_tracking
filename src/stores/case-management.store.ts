@@ -50,7 +50,7 @@ export const useCaseManagementStore = create<CaseManagementState>(
       try {
         // Fetch students, infractions, and follow-ups
         const [studentsRes, infractionsRes, followUpsRes] = await Promise.all([
-          fetch("/api/v1/students"),
+          fetch("/api/v1/students?limit=1000"), // Aumentar límite para obtener todos los estudiantes
           fetch("/api/v1/infractions"),
           fetch("/api/v1/followups"),
         ]);
@@ -66,11 +66,30 @@ export const useCaseManagementStore = create<CaseManagementState>(
             followUpsRes.json(),
           ]);
 
-        // Assuming APIs return the transformed data
+        // Extract data from API responses that may have pagination structure
+        const students = Array.isArray(studentsData) 
+          ? studentsData 
+          : studentsData.data || [];
+        const infractions = Array.isArray(infractionsData) 
+          ? infractionsData 
+          : infractionsData.data || [];
+        const followUps = Array.isArray(followUpsData) 
+          ? followUpsData 
+          : followUpsData.data || [];
+
+        // Debug logs para ver los datos que llegan
+        console.log("Case Management Store - Loaded data:", {
+          studentsCount: students.length,
+          infractionsCount: infractions.length,
+          followUpsCount: followUps.length,
+          sampleStudent: students[0] ? { id: students[0].id, name: students[0].name } : "No students",
+          sampleInfraction: infractions[0] ? { id: infractions[0].id, studentId: infractions[0].studentId, type: infractions[0].type } : "No infractions"
+        });
+
         set({
-          students: studentsData as Student[],
-          infractions: infractionsData as Infraction[],
-          followUps: followUpsData as FollowUp[],
+          students: students as Student[],
+          infractions: infractions as Infraction[],
+          followUps: followUps as FollowUp[],
           loading: false,
         });
       } catch (error) {
@@ -84,6 +103,16 @@ export const useCaseManagementStore = create<CaseManagementState>(
 
     getCases: (section = null) => {
       const { students, infractions, followUps } = get();
+
+      // Validar que los datos sean arrays antes de continuar
+      if (!Array.isArray(students) || !Array.isArray(infractions) || !Array.isArray(followUps)) {
+        console.warn("Case management data is not properly loaded yet", {
+          studentsIsArray: Array.isArray(students),
+          infractionsIsArray: Array.isArray(infractions),
+          followUpsIsArray: Array.isArray(followUps)
+        });
+        return [];
+      }
 
       const typeIIInfractions = infractions.filter(
         (inf) => inf.type === "Tipo II"
@@ -114,15 +143,20 @@ export const useCaseManagementStore = create<CaseManagementState>(
           (s) => s.id === infraction.studentId // Verificar si existe el estudiante por ID
         );
 
-        // Depurar y registrar el problema
+        // Depurar y registrar el problema con más detalle
         if (!student) {
           console.warn(
             `No se encontró estudiante para la infracción ID: ${infraction.id}, studentId: ${infraction.studentId}`
           );
-          console.log(
-            "IDs de estudiantes disponibles:",
-            students.map((s) => s.id)
+          console.log("Comparando IDs:");
+          console.log("  Buscando studentId:", infraction.studentId);
+          console.log("  IDs de estudiantes disponibles (primeros 5):", 
+            students.slice(0, 5).map((s) => ({ id: s.id, name: s.name }))
           );
+          console.log("  Total estudiantes cargados:", students.length);
+        } else {
+          // Log cuando SÍ encontramos el estudiante
+          console.log(`✓ Estudiante encontrado: ${student.name} (${student.id}) para infracción ${infraction.id}`);
         }
 
         const caseFollowUps = followUps.filter(
@@ -159,7 +193,7 @@ export const useCaseManagementStore = create<CaseManagementState>(
         return {
           id: infraction.id,
           studentId: infraction.studentId,
-          studentName: student?.name || "Estudiante ID:" + infraction.studentId, // Mostrar el ID del estudiante cuando no se encuentra el nombre
+          studentName: student?.name || `[ID: ${infraction.studentId}]`, // Mostrar el ID del estudiante cuando no se encuentra el nombre
           studentSection: student ? getSectionCategory(student.grado) : "N/A",
           studentGrade: student?.grado || "N/A",
           infractionDate: infraction.date,

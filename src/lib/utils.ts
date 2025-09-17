@@ -69,6 +69,10 @@ export function transformStudent(
     id: number;
     codigo: number;
     nombre: string | null;
+    firstname?: string | null;
+    lastname?: string | null;
+    photo_url?: string | null;
+    seccion?: string | null;
   },
   grado?: string,
   nivel?: string
@@ -80,8 +84,11 @@ export function transformStudent(
   return {
     id: `${student.id}-${student.codigo}`,
     name: student.nombre || "Sin nombre",
+    firstname: student.firstname || undefined,
+    lastname: student.lastname || undefined,
+    photoUrl: student.photo_url || undefined,
     grado: grado || "No especificado",
-    level: nivel || "No especificado",
+    seccion: student.seccion || nivel,
   };
 }
 
@@ -103,7 +110,7 @@ export function transformInfraction(
     trimestreId: infraction.trimestre_id,
     schoolYearId: infraction.school_year_id,
     level: infraction.nivel ?? "", // Nivel académico (Elementary, Middle School, etc.)
-    seccion: infraction.seccion ?? undefined, // Sección específica (Décimo A, Noveno B, etc.)
+    seccion: infraction.seccion ?? undefined, // Grado específico (Décimo A, Noveno B, etc.)
     attended: infraction.attended ?? false,
     observaciones: infraction.observaciones ?? undefined,
     observacionesAutor: infraction.observaciones_autor ?? undefined,

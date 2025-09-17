@@ -32,11 +32,11 @@ export function StudentProfileCard({
   const attendanceRate = getAttendanceRate(stats);
   const followUpProgress = getFollowUpProgress(stats);
   
-  // Obtener el grado específico de las faltas (sección como "Décimo A")
-  const currentGrade = stats.gradeFromInfractions || student.grado;
+  // Usar el grado directamente del estudiante
+  const currentGrade = student.grado && student.grado !== "No especificado" ? student.grado : "No disponible";
   
   // El nivel académico viene del student.level (Elementary, Middle School, etc.)
-  const academicLevel = student.level;
+  const academicLevel = student.seccion;
   
   // Generar iniciales para el avatar
   const initials = student.name
@@ -52,10 +52,11 @@ export function StudentProfileCard({
         <div className="space-y-6">
           {/* Foto y información básica */}
           <div className="flex flex-col items-center text-center">
-            <Avatar className="w-20 h-20 mb-4 ring-4 ring-white shadow-lg">
+            <Avatar className="w-24 h-24 mb-4 ring-4 ring-white shadow-lg hover:scale-200 transition-transform">
               <AvatarImage 
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}&backgroundColor=3b82f6,6366f1,8b5cf6,06b6d4,10b981&textColor=ffffff`} 
-                alt={student.name} 
+                src={student.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${student.name}&backgroundColor=3b82f6,6366f1,8b5cf6,06b6d4,10b981&textColor=ffffff`} 
+                alt={student.name}
+                className="object-cover"
               />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold text-lg">
                 {initials}

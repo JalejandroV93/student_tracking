@@ -42,12 +42,14 @@ export async function PUT(
     // Actualizar el año escolar
     const updatedData: {
       name?: string;
+      phidias_id?: number | null;
       startDate?: Date;
       endDate?: Date;
       description?: string | null;
       isActive?: boolean;
     } = {};
     if (body.name !== undefined) updatedData.name = body.name;
+    if (body.phidias_id !== undefined) updatedData.phidias_id = body.phidias_id;
     if (body.startDate !== undefined) updatedData.startDate = new Date(body.startDate);
     if (body.endDate !== undefined) updatedData.endDate = new Date(body.endDate);
     if (body.description !== undefined) updatedData.description = body.description;
