@@ -73,7 +73,7 @@ export function FollowUpDetailsDialog({
             <div className="flex items-center gap-2 mb-3">
               <div className="w-2 h-2 bg-[#be1522] rounded-full"></div>
               <h4 className="font-semibold text-gray-900">
-                Detalles de la Falta
+                Detalles de la Falta #{infraction.number}
               </h4>
             </div>
             <div className="grid grid-cols-1 gap-3 text-sm">

@@ -88,7 +88,7 @@ export function EnhancedInfractionDetailsModal({
           <DialogHeader className="space-y-2">
             <DialogTitle className="flex items-center gap-2 text-white text-xl font-semibold">
               <AlertTriangle className="h-6 w-6" />
-              Detalles de la Falta a
+              Detalles de la Falta #{infraction.number}
             </DialogTitle>
             <DialogDescription className="text-red-100">
               Información completa de la falta registrada
@@ -168,11 +168,20 @@ export function EnhancedInfractionDetailsModal({
 
                 {/* Grid de información */}
                 <div className="grid grid-cols-1 gap-4">
-                  
-                  {/* Detalles de la Falta */}
+                  {/* Descripción */}
                   <div className="p-4 border border-slate-200 rounded-lg">
                     <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
                       Falta Según el Manual de Convivencia
+                    </span>
+                    <p className="text-slate-800 leading-relaxed">
+                      {infraction.description ||
+                        "No se proporcionó descripción"}
+                    </p>
+                  </div>
+                  {/* Detalles de la Falta */}
+                  <div className="p-4 border border-slate-200 rounded-lg">
+                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
+                      Descripción
                     </span>
                     <p className="text-slate-800 leading-relaxed">
                       {infraction.details ||
@@ -180,16 +189,7 @@ export function EnhancedInfractionDetailsModal({
                     </p>
                   </div>
 
-                  {/* Descripción */}
-                  <div className="p-4 border border-slate-200 rounded-lg">
-                    <span className="font-medium text-slate-600 text-xs uppercase tracking-wide block mb-2">
-                      Descripción
-                    </span>
-                    <p className="text-slate-800 leading-relaxed">
-                      {infraction.description ||
-                        "No se proporcionó descripción"}
-                    </p>
-                  </div>
+                  
 
                   {/* Acciones Reparadoras */}
                   <div className="p-4 border border-slate-200 rounded-lg">

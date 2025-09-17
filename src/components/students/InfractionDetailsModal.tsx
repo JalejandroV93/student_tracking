@@ -73,7 +73,7 @@ export function InfractionDetailsModal({
                 >
                   <AlertTriangle className="h-6 w-6" />
                 </div>
-                Detalles de la Falta2
+                Detalles de la Falta  #{infraction.number}
               </DialogTitle>
               <DialogDescription className="text-slate-600 text-base">
                 Información completa del incidente registrado
