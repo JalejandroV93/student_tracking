@@ -145,8 +145,8 @@ export const useDashboardDataSWR = (
 
   // Function to get total students count by level
   const getTotalStudentsByLevel = (level: string) => {
-    console.log(`Total students in level ${level}:`, allStudents.filter(student => student.level === level).length);
-    return allStudents.filter(student => student.level === level).length;
+    console.log(`Total students in level ${level}:`, allStudents.filter(student => student.seccion === level).length);
+    return allStudents.filter(student => student.seccion === level).length;
   };
 
   // Function to get students with alerts
@@ -166,7 +166,7 @@ export const useDashboardDataSWR = (
         };
         const targetSection = sectionMap[section];
         // Note: This filtering logic might need adjustment based on how grado is now handled
-        return targetSection && student.level === targetSection;
+        return targetSection && student.seccion === targetSection;
       });
     }
 

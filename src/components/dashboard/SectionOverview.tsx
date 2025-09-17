@@ -49,11 +49,6 @@ export function SectionOverview({ section }: SectionOverviewProps) {
         <div>
           <CardTitle className="text-lg font-bold">{section.name}</CardTitle>
           <CardDescription>{section.totalStudentsInSection} estudiantes</CardDescription>
-          {section.studentCount !== section.totalStudentsInSection && (
-            <CardDescription className="text-xs text-muted-foreground">
-              {section.studentCount} con infracciones en el período
-            </CardDescription>
-          )}
         </div>
         <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2 h-12 w-12">
           <School className="h-6 w-6 text-muted-foreground" />

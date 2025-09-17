@@ -18,7 +18,6 @@ export interface Student {
   lastname?: string;
   photoUrl?: string;
   grado: string;
-  level: string;
   stats?: InfractionStats;
   seccion?: string;
 

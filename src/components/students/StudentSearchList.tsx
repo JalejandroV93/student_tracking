@@ -94,7 +94,7 @@ export function StudentSearchList({
   if (students.length > 0) {
     console.log("StudentSearchList - Sample student data:", {
       student: students[0],
-      level: students[0].level,
+      level: students[0].seccion,
       photoUrl: students[0].photoUrl,
       seccion: students[0].seccion
     });
@@ -170,7 +170,7 @@ export function StudentSearchList({
                       <li 
                         key={student.id}
                         ref={isLastElement ? lastElementRef : undefined}
-                        className={`rounded-lg ${getSectionColor(student.seccion || student.level)}`}
+                        className={`rounded-lg ${getSectionColor(student.seccion || student.grado)} hover:shadow-md transition-shadow`}
                       >
                         <button
                           type="button" // Important for accessibility
@@ -209,12 +209,12 @@ export function StudentSearchList({
                                 </div>
                               </div>
                               {/* Mostrar badge con sección o nivel */}
-                              {(student.seccion || student.level !== "No especificado") && (
+                              {(student.seccion !== "No especificado") && (
                                 <Badge 
                                   variant="outline" 
-                                  className={`text-xs ${getSectionBadgeColor(student.seccion || student.level)}`}
+                                  className={`text-xs ${getSectionBadgeColor(student.seccion || student.grado)}`}
                                 >
-                                  {student.seccion || student.level}
+                                  {student.seccion}
                                 </Badge>
                               )}
                             </div>

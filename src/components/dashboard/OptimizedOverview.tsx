@@ -91,13 +91,13 @@ export function OptimizedOverview({
 
       // Contar todos los estudiantes activos de esta sección
       const allSectionStudents = validatedStudents.filter(
-        (student) => student.level === sectionName
+        (student) => student.seccion === sectionName
       );
 
       // Estudiantes con infracciones en el período
       const studentsWithInfractions = validatedStudents.filter(
         (student) =>
-          sectionStudentIds.has(student.id) && student.level === sectionName
+          sectionStudentIds.has(student.id) && student.seccion === sectionName
       );
 
       // Contar infracciones por tipo

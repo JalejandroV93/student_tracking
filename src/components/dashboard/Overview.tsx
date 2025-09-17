@@ -76,9 +76,7 @@ export function Overview({
         students
           .map((student) => ({
             ...student,
-            // This function internally uses the *complete* infractions list from its store context (e.g., useAlertsStore)
-            // or it should receive the complete list if not using a separate store.
-            // Assuming getStudentAlertStatus correctly uses the full infraction list.
+            
             alertStatus: getStudentAlertStatus(student.id),
           }))
           .filter((student) => student.alertStatus !== null)
@@ -107,20 +105,23 @@ export function Overview({
   const sectionStats = useMemo(() => {
     // Base the calculation ONLY on the already filtered infractions for the selected trimester
     return Object.values(SECCIONES_ACADEMICAS).map((sectionName) => {
-      // 1. Filter the *already trimester-filtered* infractions by section
-      const sectionInfractions = filteredInfractions.filter(
-        (inf) => inf.level === sectionName // `level` should match section names like "Elementary", "Middle School" etc.
+      // 1. Get all students in this section
+      const sectionStudents = students.filter((student) => student.seccion === sectionName);
+      const totalStudentsInSection = sectionStudents.length;
+
+      // 2. Filter the *already trimester-filtered* infractions by students in this section
+      const sectionStudentIds = new Set(sectionStudents.map((student) => student.id));
+      const sectionInfractions = filteredInfractions.filter((inf) =>
+        sectionStudentIds.has(inf.studentId)
       );
 
-      // 2. Get unique students involved in these specific infractions
-      const sectionStudentIds = new Set(
+      // 3. Get unique students with infractions in this section/trimester
+      const uniqueStudentIdsWithInfractions = new Set(
         sectionInfractions.map((inf) => inf.studentId)
       );
-      const sectionStudents = students.filter((student) =>
-        sectionStudentIds.has(student.id)
-      );
+      const studentCount = uniqueStudentIdsWithInfractions.size;
 
-      // 3. Count infractions by type within this filtered set
+      // 4. Count infractions by type within this filtered set
       const typeI = sectionInfractions.filter(
         (inf) => inf.type === "Tipo I"
       ).length;
@@ -131,20 +132,20 @@ export function Overview({
         (inf) => inf.type === "Tipo III"
       ).length;
 
-      // 4. Count alerts for students active in this section *during this trimester*
-      //    (This requires checking alerts based on *all* infractions for that student up to now)
+      // 5. Count alerts for students in this section (based on all infractions for that student up to now)
       const alertsCount = sectionStudents.filter(
         (student) => getStudentAlertStatus(student.id) !== null
       ).length;
 
       return {
         name: sectionName,
-        studentCount: sectionStudents.length, // Students with infractions in this section/trimester
+        studentCount, // Unique students with infractions in this section/trimester
+        totalStudentsInSection,
         typeI,
         typeII,
         typeIII,
         total: typeI + typeII + typeIII,
-        alertsCount, // Total active alerts for students involved in this section/trimester
+        alertsCount, // Total active alerts for students in this section
       };
     });
   }, [students, filteredInfractions, getStudentAlertStatus]); // Use filteredInfractions here

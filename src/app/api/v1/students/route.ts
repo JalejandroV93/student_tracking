@@ -13,8 +13,11 @@ async function filterStudentsByUserPermissions(
   students: Array<{
     id: string;
     name: string;
+    firstname?: string;
+    lastname?: string;
+    photoUrl?: string;
     grado: string;
-    level: string;
+    seccion?: string;
     stats?: {
       total: number;
       tipoI: number;
@@ -382,7 +385,6 @@ export async function GET(request: Request) {
               id: transformedStudent.id,
               name: transformedStudent.name,
               grado: transformedStudent.grado,
-              level: transformedStudent.level,
               seccion: transformedStudent.seccion
             });
           }

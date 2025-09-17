@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/utils";
 import {
@@ -134,7 +133,7 @@ export function EnhancedInfractionDetailsModal({
                     </p>
                   </div>
                 )}
-                {student.level !== "No especificado" && (
+                {student.seccion !== "No especificado" && (
                   <div className="space-y-1">
                     <span className="font-medium text-slate-600 text-xs uppercase tracking-wide">
                       Nivel

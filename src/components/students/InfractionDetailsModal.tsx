@@ -121,7 +121,7 @@ export function InfractionDetailsModal({
                   <p className="text-slate-900 font-medium">{student.grado}</p>
                 </div>
               )}
-              {student.level !== "No especificado" && (
+              {student.seccion !== "No especificado" && (
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-blue-700">
                     Nivel Académico

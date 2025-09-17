@@ -11,37 +11,37 @@ declare global {
 }
 
 // DEBUG endpoint - POST /api/v1/phidias/sync/debug
-export async function DEBUG(request: NextRequest) {
-  try {
-    const user = await getCurrentUser();
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'No autorizado - Solo admins' }, { status: 401 });
-    }
+// export async function DEBUG(request: NextRequest) {
+//   try {
+//     const user = await getCurrentUser();
+//     if (!user || user.role !== 'ADMIN') {
+//       return NextResponse.json({ error: 'No autorizado - Solo admins' }, { status: 401 });
+//     }
 
-    const body = await request.json().catch(() => ({}));
-    const { studentId } = body;
+//     const body = await request.json().catch(() => ({}));
+//     const { studentId } = body;
 
-    if (!studentId) {
-      return NextResponse.json({ error: 'studentId requerido' }, { status: 400 });
-    }
+//     if (!studentId) {
+//       return NextResponse.json({ error: 'studentId requerido' }, { status: 400 });
+//     }
 
-    console.log(`=== DEBUG SYNC for student ${studentId} ===`);
+//     console.log(`=== DEBUG SYNC for student ${studentId} ===`);
     
-    const result = await phidiasSyncService.syncSpecificStudent(studentId, `DEBUG-${user.id}`);
+//     const result = await phidiasSyncService.syncSpecificStudent(studentId, `DEBUG-${user.id}`);
     
-    return NextResponse.json({
-      message: `Debug sync completed for student ${studentId}`,
-      result
-    });
+//     return NextResponse.json({
+//       message: `Debug sync completed for student ${studentId}`,
+//       result
+//     });
 
-  } catch (error) {
-    console.error('Error in debug sync:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
-  }
-}
+//   } catch (error) {
+//     console.error('Error in debug sync:', error);
+//     return NextResponse.json(
+//       { error: 'Error interno del servidor', details: error instanceof Error ? error.message : 'Unknown error' },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 // POST - Iniciar sincronización manual
 export async function POST(request: NextRequest) {
