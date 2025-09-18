@@ -11,7 +11,7 @@ interface SectionSelectorProps {
   baseRoute: string
 }
 
-// Mapeo de roles a secciones permitidas
+// Mapping of roles to allowed sections
 const roleToSectionPermissions: Record<Role, string[]> = {
   [Role.ADMIN]: ["preschool", "elementary", "middle", "high"],
   [Role.PRESCHOOL_COORDINATOR]: ["preschool"],
