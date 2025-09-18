@@ -108,7 +108,7 @@ export function TrimestreSelector({
   );
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col md:flex-row items-center gap-4">
       {/* Selector de Año Escolar */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Año:</span>

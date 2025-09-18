@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Search,
   UserX,
@@ -14,6 +16,7 @@ import {
   CheckCircle,
   Clock,
   Loader2,
+  Filter,
 } from "lucide-react";
 import type { Student } from "@/types/dashboard";
 import { StudentSearchListSkeleton } from "./StudentSearchList.skeleton";
@@ -28,6 +31,9 @@ interface StudentSearchListProps {
   isLoading: boolean;
   error: string | null;
   isFetching: boolean;
+  // Nuevas propiedades para el filtro de faltas
+  onlyWithInfractions?: boolean;
+  onOnlyWithInfractionsChange?: (value: boolean) => void;
 }
 
 // Componente para mostrar las estadísticas de faltas
@@ -89,6 +95,9 @@ interface StudentSearchListProps {
   hasNextPage?: boolean;
   fetchNextPage?: () => void;
   isFetchingNextPage?: boolean;
+  // Nuevas propiedades para el filtro de faltas
+  onlyWithInfractions?: boolean;
+  onOnlyWithInfractionsChange?: (value: boolean) => void;
 }
 
 export function StudentSearchList({
@@ -102,6 +111,8 @@ export function StudentSearchList({
   hasNextPage,
   fetchNextPage,
   isFetchingNextPage,
+  onlyWithInfractions = false,
+  onOnlyWithInfractionsChange,
 }: StudentSearchListProps) {
   const observer = useRef<IntersectionObserver | undefined>(undefined);
 
@@ -156,18 +167,38 @@ export function StudentSearchList({
   return (
     <Card className="w-full border-none">
       <CardHeader>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar por nombre o ID..."
-            className="pl-8 w-full" // Take full width
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            aria-label="Buscar estudiante"
-          />
-          {isFetching && !isFetchingNextPage && (
-            <RefreshCw className="absolute right-2.5 top-3 h-4 w-4 text-muted-foreground animate-spin" />
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar por nombre o ID..."
+              className="pl-8 w-full" // Take full width
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Buscar estudiante"
+            />
+            {isFetching && !isFetchingNextPage && (
+              <RefreshCw className="absolute right-2.5 top-3 h-4 w-4 text-muted-foreground animate-spin" />
+            )}
+          </div>
+          
+          {/* Filtro para estudiantes con faltas */}
+          {onOnlyWithInfractionsChange && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="only-with-infractions"
+                checked={onlyWithInfractions}
+                onCheckedChange={onOnlyWithInfractionsChange}
+              />
+              <Label 
+                htmlFor="only-with-infractions" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                Solo estudiantes con faltas
+              </Label>
+            </div>
           )}
         </div>
       </CardHeader>

@@ -42,8 +42,8 @@ export function AlertsWidget({
   console.log("Top Alerts:", topAlerts); // Debugging line to check the data being passed
 
   return (
-    <Card className="h-full flex flex-col border-none">
-      {" "}
+    <Card className="flex flex-col border-none">
+
       {/* Ensure card takes full height if needed */}
       <CardHeader>
         <CardTitle>Alertas Activas Recientes</CardTitle>
@@ -52,7 +52,7 @@ export function AlertsWidget({
         </CardDescription>
       </CardHeader>
       <CardContent className="grow">
-        {" "}
+ 
         {/* Allow content to grow */}
         {topAlerts.length > 0 ? (
           <Table>

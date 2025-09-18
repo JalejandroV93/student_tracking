@@ -26,6 +26,7 @@ export interface PaginationParams {
   search?: string;
   schoolYearId?: string;
   includeStats?: boolean;
+  onlyWithInfractions?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -49,6 +50,7 @@ function buildQueryParams(params: PaginationParams): string {
   if (params.search) searchParams.set('search', params.search);
   if (params.schoolYearId) searchParams.set('schoolYearId', params.schoolYearId);
   if (params.includeStats) searchParams.set('includeStats', 'true');
+  if (params.onlyWithInfractions) searchParams.set('onlyWithInfractions', 'true');
   
   return searchParams.toString();
 }

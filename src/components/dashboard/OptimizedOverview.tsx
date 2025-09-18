@@ -178,13 +178,11 @@ export function OptimizedOverview({
   return (
     <div className="space-y-6 w-full">
       {/* Selector de Trimestre */}
-      <div className="flex justify-end">
         <TrimestreSelector
           currentTrimestre={selectedTrimestre}
           onTrimestreChange={handleTrimestreChange}
           dashboardFilters={dashboardFilters}
         />
-      </div>
 
       {/* KPI Cards con Suspense */}
       <Suspense fallback={<KPISkeleton />}>

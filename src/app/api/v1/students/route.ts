@@ -118,6 +118,7 @@ export async function GET(request: Request) {
     const countOnly = searchParams.get("countOnly");
     const schoolYearId = searchParams.get("schoolYearId");
     const includeStats = searchParams.get("includeStats") === "true";
+    const onlyWithInfractions = searchParams.get("onlyWithInfractions") === "true";
     
     // Parámetros de paginación
     const page = parseInt(searchParams.get("page") || "1", 10);
@@ -317,6 +318,12 @@ export async function GET(request: Request) {
           firstname?: { contains: string; mode: 'insensitive' };
           lastname?: { contains: string; mode: 'insensitive' };
         }>;
+        id?: { in: number[] };
+        faltas?: {
+          some: {
+            school_year_id: number;
+          }
+        };
       } = {};
       
       if (search.trim()) {
@@ -344,8 +351,54 @@ export async function GET(request: Request) {
       const offset = (validatedPage - 1) * validatedLimit;
       
       // Fetch students with pagination
+      let baseWhereCondition = whereCondition;
+      
+      // Si se solicita solo estudiantes con faltas, modificar la consulta
+      if (onlyWithInfractions) {
+        const studentsWithInfractions = await prisma.estudiantes.findMany({
+          where: {
+            ...whereCondition,
+            faltas: {
+              some: {
+                school_year_id: targetSchoolYear.id,
+              }
+            }
+          },
+          select: { id: true },
+          orderBy: { nombre: "asc" },
+          take: validatedLimit,
+          skip: offset,
+        });
+        
+        const studentIds = studentsWithInfractions.map(s => s.id);
+        
+        // Si no hay estudiantes con faltas, retornar vacío
+        if (studentIds.length === 0) {
+          return NextResponse.json({
+            data: [],
+            pagination: {
+              currentPage: validatedPage,
+              totalPages: 0,
+              totalCount: 0,
+              limit: validatedLimit,
+              hasNextPage: false,
+              hasPrevPage: validatedPage > 1,
+            }
+          }, {
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+            },
+          });
+        }
+        
+        baseWhereCondition = {
+          ...whereCondition,
+          id: { in: studentIds }
+        };
+      }
+      
       const students = await prisma.estudiantes.findMany({
-        where: whereCondition,
+        where: baseWhereCondition,
         select: {
           id: true,
           codigo: true,
@@ -428,7 +481,19 @@ export async function GET(request: Request) {
       );
 
       // Obtener el total de elementos para metadatos de paginación
-      const totalCount = await prisma.estudiantes.count({ where: whereCondition });
+      let totalCountCondition = whereCondition;
+      if (onlyWithInfractions) {
+        totalCountCondition = {
+          ...whereCondition,
+          faltas: {
+            some: {
+              school_year_id: targetSchoolYear.id,
+            }
+          }
+        };
+      }
+      
+      const totalCount = await prisma.estudiantes.count({ where: totalCountCondition });
       const totalPages = Math.ceil(totalCount / validatedLimit);
       const hasNextPage = validatedPage < totalPages;
       const hasPrevPage = validatedPage > 1;
