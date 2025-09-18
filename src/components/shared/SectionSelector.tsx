@@ -11,7 +11,7 @@ interface SectionSelectorProps {
   baseRoute: string
 }
 
-// Mapeo de roles a secciones permitidas
+// Mapping of roles to allowed sections
 const roleToSectionPermissions: Record<Role, string[]> = {
   [Role.ADMIN]: ["preschool", "elementary", "middle", "high"],
   [Role.PRESCHOOL_COORDINATOR]: ["preschool"],
@@ -19,7 +19,7 @@ const roleToSectionPermissions: Record<Role, string[]> = {
   [Role.MIDDLE_SCHOOL_COORDINATOR]: ["middle"],
   [Role.HIGH_SCHOOL_COORDINATOR]: ["high"],
   [Role.PSYCHOLOGY]: ["preschool", "elementary", "middle", "high"],
-  [Role.TEACHER]: [], // Los profesores solo ven su grupo específico, no secciones generales
+  [Role.TEACHER]: [], // Teachers only see their specific group, not general sections
   [Role.USER]: [],
   [Role.STUDENT]: [],
 }
@@ -44,7 +44,7 @@ export function SectionSelector({ currentSection, baseRoute }: SectionSelectorPr
     return allSections.filter(section => allowedSections.includes(section.id))
   }, [user])
 
-  // Verificar si el usuario puede ver la opción "Todas"
+  // Check if user can view the "All" option
   const canViewAll = useMemo(() => {
     if (!user) return false
     
