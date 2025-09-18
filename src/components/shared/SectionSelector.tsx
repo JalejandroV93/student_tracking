@@ -61,7 +61,7 @@ export function SectionSelector({ currentSection, baseRoute }: SectionSelectorPr
   }
 
   // Si el usuario no tiene permisos para ver ninguna sección, no mostrar el selector
-  if (!user || sections.length === 0) {
+  if (sections.length === 0) {
     return null
   }
 

@@ -132,3 +132,15 @@ export function transformFollowUp(
     author: followUp.autor ?? "",
   };
 }
+
+
+export const getSectionTitle = (sectionId: string | string[] | undefined): string => {
+  const id = Array.isArray(sectionId) ? sectionId[0] : sectionId;
+  const titles: Record<string, string> = {
+    preschool: "Preschool",
+    elementary: "Elementary",
+    middle: "Middle School",
+    high: "High School",
+  };
+  return id ? titles[id] || "Desconocida" : "Todas";
+};
