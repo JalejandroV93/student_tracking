@@ -19,7 +19,7 @@ const roleToSectionPermissions: Record<Role, string[]> = {
   [Role.MIDDLE_SCHOOL_COORDINATOR]: ["middle"],
   [Role.HIGH_SCHOOL_COORDINATOR]: ["high"],
   [Role.PSYCHOLOGY]: ["preschool", "elementary", "middle", "high"],
-  [Role.TEACHER]: [], // Los profesores solo ven su grupo específico, no secciones generales
+  [Role.TEACHER]: [], // Teachers only see their specific group, not general sections
   [Role.USER]: [],
   [Role.STUDENT]: [],
 }
