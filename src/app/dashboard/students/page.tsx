@@ -14,6 +14,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 export default function StudentsListPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [onlyWithInfractions, setOnlyWithInfractions] = useState(false);
 
   // Debounce search query to avoid excessive API calls
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -27,13 +28,14 @@ export default function StudentsListPage() {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ["students-infinite", debouncedSearchQuery],
+    queryKey: ["students-infinite", debouncedSearchQuery, onlyWithInfractions],
     queryFn: ({ pageParam = 1 }) =>
       fetchStudentsInfinite({
         pageParam,
         limit: 20,
         search: debouncedSearchQuery,
         includeStats: true,
+        onlyWithInfractions: onlyWithInfractions,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -89,7 +91,8 @@ export default function StudentsListPage() {
 
   return (
     <ContentLayout title="Buscar Estudiantes">
-      <UserRoleInfo />
+      {process.env.NODE_ENV === "development" && (
+      <UserRoleInfo />)}
       <StudentSearchList
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -102,6 +105,9 @@ export default function StudentsListPage() {
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
+        // Propiedades para el filtro de faltas
+        onlyWithInfractions={onlyWithInfractions}
+        onOnlyWithInfractionsChange={setOnlyWithInfractions}
       />
       <div>
         {paginationInfo && (
@@ -110,6 +116,7 @@ export default function StudentsListPage() {
             {paginationInfo.totalCount} estudiantes
             {debouncedSearchQuery &&
               ` (filtrados por "${debouncedSearchQuery}")`}
+            {onlyWithInfractions && " con faltas"}
           </p>
         )}
       </div>
