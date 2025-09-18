@@ -42,7 +42,7 @@ export function AlertsWidget({
   console.log("Top Alerts:", topAlerts); // Debugging line to check the data being passed
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col border-none">
       {" "}
       {/* Ensure card takes full height if needed */}
       <CardHeader>

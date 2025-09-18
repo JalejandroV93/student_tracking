@@ -56,7 +56,7 @@ export function OptimizedOverview({
     // Validar que students e infractions sean arrays, fallback a array vacío si no lo son
     const validatedStudents = Array.isArray(students) ? students : [];
     const validatedInfractions = Array.isArray(infractions) ? infractions : [];
-    
+
     if (selectedTrimestre === "all") {
       return { students: validatedStudents, infractions: validatedInfractions };
     }
@@ -77,7 +77,7 @@ export function OptimizedOverview({
   const sectionStats = useMemo(() => {
     // Validar que students sea un array
     const validatedStudents = Array.isArray(students) ? students : [];
-    
+
     return Object.values(SECCIONES_ACADEMICAS).map((sectionName) => {
       // Filtrar infracciones por sección y trimestre
       const sectionInfractions = filteredData.infractions.filter(
@@ -218,18 +218,11 @@ export function OptimizedOverview({
         title="Resumen por Secciones Académicas"
         fallback={<SectionsSkeleton />}
       >
-        <Card>
-          <CardHeader>
-            <CardTitle>Resumen por Secciones Académicas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {sectionStats.map((section) => (
-                <SectionOverview key={section.name} section={section} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {sectionStats.map((section) => (
+            <SectionOverview key={section.name} section={section} />
+          ))}
+        </div>
       </DashboardSection>
     </div>
   );

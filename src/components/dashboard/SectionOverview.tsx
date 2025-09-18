@@ -44,7 +44,7 @@ export function SectionOverview({ section }: SectionOverviewProps) {
   const borderColor = getSectionColor(section.name)
 
   return (
-    <Card className={`border-l-4 ${borderColor}`}>
+    <Card className={` ${borderColor} hover:border-l-4 transition-all duration-200`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-lg font-bold">{section.name}</CardTitle>

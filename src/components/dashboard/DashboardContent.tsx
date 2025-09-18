@@ -1,7 +1,7 @@
 // src/components/dashboard/DashboardContent.tsx
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { OptimizedOverview } from "./OptimizedOverview";
@@ -11,6 +11,7 @@ import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
 
 export function DashboardContent() {
   const router = useRouter();
+  const lastAlertCountRef = useRef<number>(0);
 
   // Obtener filtros de año académico
   const dashboardFilters = useDashboardFilters();
@@ -35,17 +36,30 @@ export function DashboardContent() {
     throw error;
   }
 
+  const studentsWithAlertsCount = useMemo(() => {
+    if (areSettingsConfigured === true && students.length > 0) {
+      return getStudentsWithAlerts().length;
+    }
+    return 0;
+  }, [areSettingsConfigured, students, getStudentsWithAlerts]);
+
+
   // Notificación de alertas activas
   useEffect(() => {
-    if (areSettingsConfigured === true && students.length > 0) {
-      const studentsWithAlerts = getStudentsWithAlerts();
-      if (studentsWithAlerts.length > 0) {
-        toast.info(
-          `Hay ${studentsWithAlerts.length} estudiantes con alertas activas.`
-        );
-      }
+    if (
+      studentsWithAlertsCount > 0 &&
+      studentsWithAlertsCount !== lastAlertCountRef.current
+    ) {
+      toast.info(
+        `Hay ${studentsWithAlertsCount} estudiantes con alertas activas.`
+      );
+      lastAlertCountRef.current = studentsWithAlertsCount;
     }
-  }, [areSettingsConfigured, students, getStudentsWithAlerts]);
+  }, [studentsWithAlertsCount]);
+
+  useEffect(() => {
+    lastAlertCountRef.current = 0;
+  }, [filters.schoolYearId]);
 
   // Handler para selección de estudiante
   const handleStudentSelect = useMemo(

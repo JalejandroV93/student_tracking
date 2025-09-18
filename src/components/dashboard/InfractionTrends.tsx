@@ -44,7 +44,7 @@ export function InfractionTrends({ infractions }: InfractionTrendsProps) {
   }).reverse();
 
   return (
-    <Card>
+    <Card className="border-none">
       <CardHeader>
         <CardTitle>Tendencia de Faltas</CardTitle>
         <CardDescription>

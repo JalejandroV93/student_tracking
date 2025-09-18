@@ -27,7 +27,7 @@ function ChartSkeleton({
   icon: React.ReactNode;
 }) {
   return (
-    <Card>
+    <Card className="border-none">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {icon}
@@ -103,7 +103,7 @@ export function DashboardCharts({
         title="Alertas Recientes"
         icon={<BellRing className="h-5 w-5 text-primary" />}
         fallback={
-          <Card>
+          <Card className="border-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BellRing className="h-5 w-5 text-primary" />

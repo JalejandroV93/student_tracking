@@ -2,7 +2,6 @@ import { UserPayload } from "@/types/user";
 import { Role } from "@prisma/client";
 import {
   AlertTriangle,
-  Calendar,
   CalendarDays,
   LayoutGrid,
   LucideIcon,
