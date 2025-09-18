@@ -74,9 +74,8 @@ export function UserRoleInfo() {
   const Icon = config.icon;
 
   return (
-    <Card className="bg-none border-none">
-      <CardContent >
-        <div className="flex items-center space-x-3">
+    <Card className="border-none mb-2 rounded-full">
+      <CardContent className="flex gap-2"  >
           <Badge className={config.color}>
             <Icon className="w-4 h-4 mr-1" />
             {config.label}
@@ -84,7 +83,6 @@ export function UserRoleInfo() {
           <span className="text-sm text-muted-foreground">
             {config.description}
           </span>
-        </div>
         {user.role === "TEACHER" && (
           <div className="mt-2">
             <span className="text-xs text-muted-foreground">

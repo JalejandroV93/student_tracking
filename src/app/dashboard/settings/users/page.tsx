@@ -151,8 +151,7 @@ export default function UsersManagementPage() {
 
   return (
     <ContentLayout title="Gestión de Usuarios del Sistema">
-      <div className="space-y-6 w-full">
-        <Card>
+        <Card className="w-full border-none">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Usuarios del Sistema</CardTitle>
@@ -277,7 +276,6 @@ export default function UsersManagementPage() {
             
           </CardContent>
         </Card>
-      </div>
 
       {/* Modal para crear/editar usuario */}
       {isModalOpen && (

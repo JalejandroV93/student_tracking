@@ -322,7 +322,7 @@ export function convertCSVRowToStudent(
     const nombreCompleto = `${row.Nombre.trim()} ${row.Apellido.trim()}`;
 
     // Extraer grado y sección del campo "Grado"
-    const { grado, seccion } = extraerGradoYSeccion(row.Grado);
+    const { seccion } = extraerGradoYSeccion(row.Grado);
 
     return {
       id,
@@ -330,9 +330,9 @@ export function convertCSVRowToStudent(
       nombre: nombreCompleto,
       firstname: row.Nombre.trim(),
       lastname: row.Apellido.trim(),
-      grado: grado,
-      seccion: seccion,
-      nivel,
+      grado: row.Grado,
+      seccion: nivel,
+      nivel: seccion,
       school_year_id: schoolYearId,
       photo_url: row["URL de la foto"]?.trim() || undefined,
     };

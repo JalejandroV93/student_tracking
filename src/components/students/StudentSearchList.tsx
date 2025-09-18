@@ -5,7 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Search, UserX, RefreshCw, AlertTriangle, CheckCircle, Clock, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Search,
+  UserX,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Loader2,
+} from "lucide-react";
 import type { Student } from "@/types/dashboard";
 import { StudentSearchListSkeleton } from "./StudentSearchList.skeleton";
 import { useCallback, useRef } from "react";
@@ -22,7 +31,7 @@ interface StudentSearchListProps {
 }
 
 // Componente para mostrar las estadísticas de faltas
-function InfractionStatsDisplay({ stats }: { stats: Student['stats'] }) {
+function InfractionStatsDisplay({ stats }: { stats: Student["stats"] }) {
   if (!stats) return null;
 
   return (
@@ -37,7 +46,10 @@ function InfractionStatsDisplay({ stats }: { stats: Student['stats'] }) {
         </Badge>
       )}
       {stats.tipoII > 0 && (
-        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700">
+        <Badge
+          variant="outline"
+          className="text-xs bg-yellow-50 text-yellow-700"
+        >
           Tipo 2: {stats.tipoII}
         </Badge>
       )}
@@ -47,7 +59,10 @@ function InfractionStatsDisplay({ stats }: { stats: Student['stats'] }) {
         </Badge>
       )}
       {stats.pending > 0 && (
-        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+        <Badge
+          variant="outline"
+          className="text-xs bg-orange-50 text-orange-700"
+        >
           <Clock className="w-3 h-3 mr-1" />
           Pendientes: {stats.pending}
         </Badge>
@@ -96,7 +111,7 @@ export function StudentSearchList({
       student: students[0],
       level: students[0].seccion,
       photoUrl: students[0].photoUrl,
-      seccion: students[0].seccion
+      seccion: students[0].seccion,
     });
   }
 
@@ -108,13 +123,18 @@ export function StudentSearchList({
 
       observer.current = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting && hasNextPage && !isFetching && fetchNextPage) {
+          if (
+            entries[0].isIntersecting &&
+            hasNextPage &&
+            !isFetching &&
+            fetchNextPage
+          ) {
             fetchNextPage();
           }
         },
         {
           // Configuración mejorada para mejor detección
-          rootMargin: '100px', // Cargar cuando esté a 100px del final
+          rootMargin: "100px", // Cargar cuando esté a 100px del final
           threshold: 0.1,
         }
       );
@@ -134,7 +154,7 @@ export function StudentSearchList({
   }
 
   return (
-    <Card>
+    <Card className="w-full border-none">
       <CardHeader>
         <div className="relative">
           <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
@@ -146,7 +166,7 @@ export function StudentSearchList({
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Buscar estudiante"
           />
-          {(isFetching && !isFetchingNextPage) && (
+          {isFetching && !isFetchingNextPage && (
             <RefreshCw className="absolute right-2.5 top-3 h-4 w-4 text-muted-foreground animate-spin" />
           )}
         </div>
@@ -165,12 +185,14 @@ export function StudentSearchList({
                   {students.map((student, index) => {
                     // Si es el último elemento y hay más páginas, agregar ref para infinite scroll
                     const isLastElement = index === students.length - 1;
-                    
+
                     return (
-                      <li 
+                      <li
                         key={student.id}
                         ref={isLastElement ? lastElementRef : undefined}
-                        className={`rounded-lg ${getSectionColor(student.seccion || student.grado)} hover:shadow-md transition-shadow`}
+                        className={`rounded-lg ${getSectionColor(
+                          student.seccion || student.grado
+                        )} hover:shadow-md transition-shadow`}
                       >
                         <button
                           type="button" // Important for accessibility
@@ -183,8 +205,11 @@ export function StudentSearchList({
                               <div className="flex items-center gap-3">
                                 {/* Avatar del estudiante */}
                                 <Avatar className="w-12 h-12 border-2 border-white shadow-md">
-                                  <AvatarImage 
-                                    src={student.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${student.name}&backgroundColor=3b82f6,6366f1,8b5cf6,06b6d4,10b981&textColor=ffffff`} 
+                                  <AvatarImage
+                                    src={
+                                      student.photoUrl ||
+                                      `https://api.dicebear.com/7.x/initials/svg?seed=${student.name}&backgroundColor=3b82f6,6366f1,8b5cf6,06b6d4,10b981&textColor=ffffff`
+                                    }
                                     alt={student.name}
                                     className="object-cover"
                                   />
@@ -197,22 +222,25 @@ export function StudentSearchList({
                                       .toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
-                                
+
                                 <div>
                                   <p className="font-medium">{student.name}</p>
                                   <p className="text-sm text-muted-foreground">
                                     ID: {student.id}
                                     {student.grado !== "No especificado" &&
                                       ` | Grado: ${student.grado}`}
-                                    {student.seccion && ` | Sección: ${student.seccion}`}
+                                    {student.seccion &&
+                                      ` | Sección: ${student.seccion}`}
                                   </p>
                                 </div>
                               </div>
                               {/* Mostrar badge con sección o nivel */}
-                              {(student.seccion !== "No especificado") && (
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs ${getSectionBadgeColor(student.seccion || student.grado)}`}
+                              {student.seccion !== "No especificado" && (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs ${getSectionBadgeColor(
+                                    student.seccion || student.grado
+                                  )}`}
                                 >
                                   {student.seccion}
                                 </Badge>
@@ -225,19 +253,48 @@ export function StudentSearchList({
                     );
                   })}
                 </ul>
-                
-                {/* Indicador de carga para infinite scroll */}
+
+                {/* Indicador de carga mejorado para infinite scroll */}
                 {isFetchingNextPage && (
-                  <div className="flex justify-center items-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                    <span className="text-sm text-muted-foreground">Cargando más estudiantes...</span>
+                  <div className="px-4 py-3 space-y-2 border-t">
+                    <div className="flex items-center gap-3">
+                      {/* Skeleton del avatar */}
+                      <Skeleton className="w-12 h-12 rounded-full" />
+
+                      <div className="flex-1 space-y-2">
+                        {/* Skeleton del nombre */}
+                        <Skeleton className="h-5 w-3/4" />
+                        {/* Skeleton de los detalles */}
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+
+                      {/* Skeleton del badge */}
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+
+                    {/* Skeleton de las estadísticas de faltas */}
+                    <div className="flex flex-wrap gap-1">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                      <Skeleton className="h-5 w-18 rounded-full" />
+                    </div>
+
+                    {/* Indicador de carga sutil */}
+                    <div className="flex justify-center items-center pt-2">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        Cargando más estudiantes...
+                      </span>
+                    </div>
                   </div>
                 )}
-                
+
                 {/* Mensaje cuando ya no hay más elementos */}
                 {!hasNextPage && students.length > 0 && (
                   <div className="flex justify-center items-center py-4">
-                    <span className="text-sm text-muted-foreground">No hay más estudiantes para mostrar</span>
+                    <span className="text-sm text-muted-foreground">
+                      No hay más estudiantes para mostrar
+                    </span>
                   </div>
                 )}
               </>

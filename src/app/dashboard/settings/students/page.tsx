@@ -6,9 +6,7 @@ import { StudentManagementTabs } from "@/components/students/StudentManagementTa
 export default function StudentsPage() {
   return (
     <ContentLayout title="Gestión de Estudiantes">
-      <div className="container mx-auto py-6">
         <StudentManagementTabs />
-      </div>
     </ContentLayout>
   );
 }

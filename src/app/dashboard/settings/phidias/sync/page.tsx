@@ -50,16 +50,8 @@ export default function PhidiasSyncPage() {
 
   return (
     <section>
-      <div>
-        <h1 className="text-3xl font-bold">Control de Sincronización Phidias</h1>
-        <p className="text-muted-foreground mt-2">
-          Gestiona la sincronización de datos entre el sistema local y Phidias
-        </p>
-      </div>
-
       <SyncControl />
-
-      <Card>
+      <Card className="w-full border-none">
         <CardHeader>
           <CardTitle>Historial de Sincronizaciones</CardTitle>
           <CardDescription>
@@ -75,7 +67,7 @@ export default function PhidiasSyncPage() {
             <div className="space-y-4">
               {syncLogs.map((log) => {
                 const errors = log.errors as SyncError[] | null;
-                
+
                 return (
                   <div key={log.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
@@ -83,9 +75,9 @@ export default function PhidiasSyncPage() {
                         {getStatusBadge(log.status)}
                         <Badge variant="outline">{log.syncType}</Badge>
                         <span className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(log.startedAt), { 
-                            addSuffix: true, 
-                            locale: es 
+                          {formatDistanceToNow(new Date(log.startedAt), {
+                            addSuffix: true,
+                            locale: es
                           })}
                         </span>
                       </div>
@@ -95,7 +87,7 @@ export default function PhidiasSyncPage() {
                         </span>
                       )}
                     </div>
-                    
+
                     {log.status === 'success' && (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                         <div>
@@ -109,7 +101,7 @@ export default function PhidiasSyncPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {errors && errors.length > 0 && (
                       <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
                         <span className="font-medium text-red-700">Errores:</span>

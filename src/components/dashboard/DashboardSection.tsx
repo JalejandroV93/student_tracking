@@ -55,7 +55,7 @@ export function DashboardSection({
   );
 
   return (
-    <div className={className}>
+    <div className={`${className} border-none`}>
       <Suspense fallback={skeleton}>{children}</Suspense>
     </div>
   );

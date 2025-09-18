@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StudentDetailCard } from "@/components/students/StudentDetailCard";
 import { FollowUpDialog } from "@/components/students/FollowUpDialog";
 import { EditFollowUpDialog } from "@/components/students/EditFollowUpDialog";

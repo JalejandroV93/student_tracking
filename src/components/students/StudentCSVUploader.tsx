@@ -53,8 +53,8 @@ export function StudentCSVUploader({
   }, [reset]);
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <>
+      <Card className="border-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
@@ -66,18 +66,25 @@ export function StudentCSVUploader({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              El archivo CSV debe contener las siguientes columnas separadas por punto y coma (;):
+              El archivo CSV debe contener las siguientes columnas separadas por
+              punto y coma (;):
               <br />
-              <strong>Grado, Apellido, Nombre, Código, Id, URL de la foto</strong>
+              <strong>
+                Grado, Apellido, Nombre, Código, Id, URL de la foto
+              </strong>
               <br />
-              Ejemplo: &quot;Décimo A;García;Juan;12345;1001;https://example.com/foto.jpg&quot;
+              Ejemplo: &quot;Décimo
+              A;García;Juan;12345;1001;https://example.com/foto.jpg&quot;
             </AlertDescription>
           </Alert>
 
           {/* Selección de año académico */}
           <div className="space-y-2">
             <Label htmlFor="schoolYear">Año Académico *</Label>
-            <Select value={selectedSchoolYear} onValueChange={setSelectedSchoolYear}>
+            <Select
+              value={selectedSchoolYear}
+              onValueChange={setSelectedSchoolYear}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar año académico" />
               </SelectTrigger>
@@ -129,7 +136,11 @@ export function StudentCSVUploader({
             >
               {isUploading ? "Procesando..." : "Importar Estudiantes"}
             </Button>
-            <Button variant="outline" onClick={handleReset} disabled={isUploading}>
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={isUploading}
+            >
               Limpiar
             </Button>
           </div>
@@ -145,7 +156,7 @@ export function StudentCSVUploader({
       )}
 
       {result && (
-        <Card>
+        <Card className="border-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
@@ -156,19 +167,31 @@ export function StudentCSVUploader({
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{result.totalRows}</div>
-                  <div className="text-sm text-muted-foreground">Total de filas</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {result.totalRows}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Total de filas
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{result.created}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {result.created}
+                  </div>
                   <div className="text-sm text-muted-foreground">Creados</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">{result.updated}</div>
-                  <div className="text-sm text-muted-foreground">Actualizados</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {result.updated}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Actualizados
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{result.errors.length}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {result.errors.length}
+                  </div>
                   <div className="text-sm text-muted-foreground">Errores</div>
                 </div>
               </div>
@@ -180,11 +203,17 @@ export function StudentCSVUploader({
               {/* Mostrar errores si los hay */}
               {result.errors.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-red-600">Errores encontrados:</h4>
+                  <h4 className="font-semibold text-red-600">
+                    Errores encontrados:
+                  </h4>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {result.errors.map((error, index) => (
-                      <div key={index} className="text-sm bg-red-50 p-2 rounded border-l-4 border-red-200">
-                        <span className="font-medium">Fila {error.row}:</span> {error.error}
+                      <div
+                        key={index}
+                        className="text-sm bg-red-50 p-2 rounded border-l-4 border-red-200"
+                      >
+                        <span className="font-medium">Fila {error.row}:</span>{" "}
+                        {error.error}
                       </div>
                     ))}
                   </div>
@@ -194,6 +223,6 @@ export function StudentCSVUploader({
           </CardContent>
         </Card>
       )}
-    </div>
+    </>
   );
 }
