@@ -40,6 +40,7 @@ import {
   X 
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SeguimientosConfigSkeleton } from './seguimientos-config-skeleton';
 
 interface SeguimientoConfig {
   id: number;
@@ -225,20 +226,11 @@ export function SeguimientosConfig() {
   };
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span className="ml-2">Cargando configuraciones...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <SeguimientosConfigSkeleton />;
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

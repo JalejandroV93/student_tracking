@@ -95,6 +95,12 @@ export function getMenuList(
     {
       groupLabel: "Gestión",
       menus: [
+         {
+          href: "/dashboard/students",
+          label: "Estudiantes",
+          icon: Users,
+          active: pathname.startsWith("/dashboard/students"),
+        },
         {
           href: "",
           label: "Alertas",
@@ -123,12 +129,7 @@ export function getMenuList(
             },
           ],
         },
-        {
-          href: "/dashboard/students",
-          label: "Estudiantes",
-          icon: Users,
-          active: pathname.startsWith("/dashboard/students"),
-        },
+       
         {
           href: "",
           label: "Gestión de Casos",
@@ -167,41 +168,58 @@ export function getMenuList(
       groupLabel: "Configuración",
       menus: [
         {
-          href: "/dashboard/settings/alerts",
-          label: "Alertas",
-          icon: AlertTriangle,
-          active: pathname.startsWith("/dashboard/settings/alerts"),
-        },
-        {
-          href: "/dashboard/settings/users",
-          label: "Usuarios",
+          href: "",
+          label: "Gestión de Usuarios",
           icon: Users,
-          active: pathname.startsWith("/dashboard/settings/users"),
+          active: pathname.startsWith("/dashboard/settings/users") || pathname.startsWith("/dashboard/settings/students"),
+          submenus: [
+            {
+              href: "/dashboard/settings/users",
+              label: "Usuarios",
+              active: pathname.startsWith("/dashboard/settings/users"),
+            },
+            {
+              href: "/dashboard/settings/students",
+              label: "Estudiantes",
+              active: pathname.startsWith("/dashboard/settings/students"),
+            },
+          ],
         },
         {
-          href: "/dashboard/settings/school-years",
-          label: "Años Escolares",
-          icon: Calendar,
-          active: pathname.startsWith("/dashboard/settings/school-years"),
-        },
-        {
-          //crud estudiantes
-          href: "/dashboard/settings/students",
-          label: "Estudiantes",
-          icon: Users,
-          active: pathname.startsWith("/dashboard/settings/students"),
-        },
-        {
-          href: "/dashboard/settings/phidias/sync",
-          label: "Control de Sincronización Phidias",
-          icon: RefreshCw,
-          active: pathname.startsWith("/dashboard/settings/phidias/sync"),
-        },
-        {
-          href: "/dashboard/settings/phidias/seguimientos",
-          label: "Configuración de Seguimientos",
+          href: "",
+          label: "General",
           icon: Settings,
-          active: pathname.startsWith("/dashboard/settings/phidias/seguimientos"),
+          active: pathname.startsWith("/dashboard/settings/alerts") || pathname.startsWith("/dashboard/settings/school-years"),
+          submenus: [
+            {
+              href: "/dashboard/settings/alerts",
+              label: "Alertas",
+              active: pathname.startsWith("/dashboard/settings/alerts"),
+            },
+            {
+              href: "/dashboard/settings/school-years",
+              label: "Años Escolares",
+              active: pathname.startsWith("/dashboard/settings/school-years"),
+            },
+          ],
+        },
+        {
+          href: "",
+          label: "Phidias",
+          icon: RefreshCw,
+          active: pathname.startsWith("/dashboard/settings/phidias"),
+          submenus: [
+            {
+              href: "/dashboard/settings/phidias/sync",
+              label: "Sincronización",
+              active: pathname.startsWith("/dashboard/settings/phidias/sync"),
+            },
+            {
+              href: "/dashboard/settings/phidias/seguimientos",
+              label: "Seguimientos",
+              active: pathname.startsWith("/dashboard/settings/phidias/seguimientos"),
+            },
+          ],
         },
       ],
     });

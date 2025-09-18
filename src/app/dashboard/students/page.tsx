@@ -53,17 +53,17 @@ export default function StudentsListPage() {
       if (!data?.pages) {
         return [];
       }
-      
+
       const students = data.pages.flatMap((page) => {
         // Verificar que page.data sea un array antes de retornarlo
         if (!Array.isArray(page.data)) {
           console.error("page.data is not an array:", page.data);
           return [];
         }
-        
+
         return page.data;
       });
-      
+
       return students;
     } catch (error) {
       console.error("Error processing pages:", error);
@@ -75,7 +75,7 @@ export default function StudentsListPage() {
   const paginationInfo = useMemo(() => {
     const firstPage = data?.pages[0];
     if (!firstPage) return null;
-    
+
     return {
       totalCount: firstPage.pagination.totalCount,
       totalPages: firstPage.pagination.totalPages,
@@ -89,34 +89,29 @@ export default function StudentsListPage() {
 
   return (
     <ContentLayout title="Buscar Estudiantes">
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Busca por nombre o ID para ver el historial de faltas y seguimientos.
+      <UserRoleInfo />
+      <StudentSearchList
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        students={Array.isArray(allStudents) ? allStudents : []}
+        onSelectStudent={handleSelectStudent}
+        isLoading={isLoading}
+        error={error?.message ?? null}
+        isFetching={isFetching}
+        // Propiedades adicionales para infinite scroll
+        hasNextPage={hasNextPage}
+        fetchNextPage={fetchNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+      />
+      <div>
+        {paginationInfo && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Mostrando {paginationInfo.currentlyShowing} de{" "}
+            {paginationInfo.totalCount} estudiantes
+            {debouncedSearchQuery &&
+              ` (filtrados por "${debouncedSearchQuery}")`}
           </p>
-          {paginationInfo && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Mostrando {paginationInfo.currentlyShowing} de {paginationInfo.totalCount} estudiantes
-              {debouncedSearchQuery && ` (filtrados por "${debouncedSearchQuery}")`}
-            </p>
-          )}
-        </div>
-
-        <UserRoleInfo />
-
-        <StudentSearchList
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          students={Array.isArray(allStudents) ? allStudents : []}
-          onSelectStudent={handleSelectStudent}
-          isLoading={isLoading}
-          error={error?.message ?? null}
-          isFetching={isFetching}
-          // Propiedades adicionales para infinite scroll
-          hasNextPage={hasNextPage}
-          fetchNextPage={fetchNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-        />
+        )}
       </div>
     </ContentLayout>
   );

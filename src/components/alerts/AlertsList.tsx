@@ -36,7 +36,7 @@ export function AlertsList({ studentsWithAlerts, onSelectStudent }: AlertsListPr
   // Data is pre-filtered and pre-calculated by the store/page
 
   return (
-    <Card>
+    <Card className="w-full border-none">
       <CardHeader>
         <CardTitle>Estudiantes con Alertas Activas</CardTitle>
         <CardDescription>
