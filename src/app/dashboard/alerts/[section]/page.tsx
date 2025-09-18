@@ -9,18 +9,9 @@ import { useAlertsStore } from "@/stores/alerts.store";
 import { useSettingsStore } from "@/stores/settings.store";
 import { AlertsListSkeleton } from "@/components/alerts/AlertsList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
-
+import { getSectionTitle } from "@/lib/utils";
 // Helper to get section title
-const getSectionTitle = (sectionId: string | string[] | undefined): string => {
-  const id = Array.isArray(sectionId) ? sectionId[0] : sectionId;
-  const titles: Record<string, string> = {
-    preschool: "Preescolar",
-    elementary: "Primaria",
-    middle: "Secundaria",
-    high: "Bachillerato",
-  };
-  return id ? titles[id] || "Desconocida" : "Todas";
-};
+
 
 export default function AlertsSpecificSectionPage() {
   const router = useRouter();

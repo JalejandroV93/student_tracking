@@ -6,6 +6,7 @@ import { phidiasApiService } from '@/services/phidias-api.service';
 
 // Extender el tipo global para incluir activeSyncs
 declare global {
+  // eslint-disable-next-line no-var
   var activeSyncs: Record<string, Promise<SyncResult>> | undefined;
 }
 

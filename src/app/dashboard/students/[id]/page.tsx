@@ -384,7 +384,7 @@ export default function StudentDetailsPage() {
               ) : (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Sincronizar con Phidias
+                  Sincronizar
                 </>
               )}
             </Button>

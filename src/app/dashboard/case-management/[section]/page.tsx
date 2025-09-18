@@ -8,6 +8,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
+import { getSectionTitle } from "@/lib/utils";
+
 
 export default function CaseManagementSectionPage() {
   const router = useRouter();
@@ -26,17 +28,6 @@ export default function CaseManagementSectionPage() {
   // Conseguir los casos filtrados por sección usando el método del store
   const cases = getCases(section as string);
 
-  const getSectionTitle = (section: string | null): string => {
-    const titles: Record<string, string> = {
-      preschool: "Preescolar",
-      elementary: "Primaria",
-      middle: "Secundaria",
-      high: "Bachillerato",
-    };
-    return section
-      ? titles[section] || "Todas las secciones"
-      : "Todas las secciones";
-  };
 
   const sectionTitle = getSectionTitle(section as string);
 
