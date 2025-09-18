@@ -11,6 +11,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/student_tracking
       - AUTH_SECRET=${AUTH_SECRET}
+    env_file:
+      - .env
     restart: unless-stopped
     volumes:
       - ./logs:/app/logs
