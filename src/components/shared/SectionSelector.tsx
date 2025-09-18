@@ -12,10 +12,10 @@ export function SectionSelector({ currentSection, baseRoute }: SectionSelectorPr
   const router = useRouter()
 
   const sections = [
-    { id: "preschool", name: "Preescolar" },
-    { id: "elementary", name: "Primaria" },
-    { id: "middle", name: "Secundaria" },
-    { id: "high", name: "Preparatoria" },
+    { id: "preschool", name: "Preschool" },
+    { id: "elementary", name: "Elementary" },
+    { id: "middle", name: "Middle School" },
+    { id: "high", name: "High School" },
   ]
 
   const handleSectionChange = (sectionId: string) => {

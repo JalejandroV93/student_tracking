@@ -14,10 +14,10 @@ import { ContentLayout } from "@/components/admin-panel/content-layout";
 const getSectionTitle = (sectionId: string | string[] | undefined): string => {
   const id = Array.isArray(sectionId) ? sectionId[0] : sectionId;
   const titles: Record<string, string> = {
-    preschool: "Preescolar",
-    elementary: "Primaria",
-    middle: "Secundaria",
-    high: "Bachillerato",
+    preschool: "Preschool",
+    elementary: "Elementary",
+    middle: "Middle School",
+    high: "High School",
   };
   return id ? titles[id] || "Desconocida" : "Todas";
 };

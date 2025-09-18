@@ -28,10 +28,10 @@ export default function CaseManagementSectionPage() {
 
   const getSectionTitle = (section: string | null): string => {
     const titles: Record<string, string> = {
-      preschool: "Preescolar",
-      elementary: "Primaria",
-      middle: "Secundaria",
-      high: "Bachillerato",
+      preschool: "Preschool",
+      elementary: "Elementary",
+      middle: "Middle School",
+      high: "High School",
     };
     return section
       ? titles[section] || "Todas las secciones"
