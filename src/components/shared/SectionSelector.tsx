@@ -44,7 +44,7 @@ export function SectionSelector({ currentSection, baseRoute }: SectionSelectorPr
     return allSections.filter(section => allowedSections.includes(section.id))
   }, [user])
 
-  // Verificar si el usuario puede ver la opción "Todas"
+  // Check if user can view the "All" option
   const canViewAll = useMemo(() => {
     if (!user) return false
     
