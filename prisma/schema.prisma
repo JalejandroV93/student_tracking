@@ -16,7 +16,7 @@ model Estudiantes {
   lastname       String?
   school_year_id Int?
   grado          String? // Grado actual del estudiante
-  seccion        String? // Sección actual del estudiante
+  seccion        String? // Nivel Academico actual del estudiante
   photo_url      String? // URL de la foto del estudiante desde Phidias
   created_at     DateTime    @default(now())
   updated_at     DateTime    @updatedAt

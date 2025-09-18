@@ -16,7 +16,7 @@ services:
       - ./logs:/app/logs
     networks:
       - default
-      - n8n_network
+      #- n8n_network
 
   # Base de datos PostgreSQL
   db:
@@ -32,13 +32,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - default
-      - n8n_network
+      #- n8n_network
 
 volumes:
   postgres_data:  # Volumen persistente para los datos de PostgreSQL
 
-networks:
-  default:
-  n8n_network:
-    external: true
-    name: n8n_default
+#networks:
+#  default:
+#  n8n_network:
+#    external: true
+#    name: n8n_default
