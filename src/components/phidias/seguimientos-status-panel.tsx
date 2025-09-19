@@ -20,7 +20,8 @@ import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import type { 
   SeguimientoStatus,
-  SeguimientosStatusResponse
+  SeguimientosStatusResponse,
+  SyncStatus
 } from '@/types/phidias';
 
 export function SeguimientosStatusPanel() {
@@ -61,7 +62,7 @@ export function SeguimientosStatusPanel() {
     fetchSeguimientosStatus();
   }, []);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: SyncStatus) => {
     switch (status) {
       case 'synced':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
