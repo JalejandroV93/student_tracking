@@ -1,7 +1,7 @@
 // src/app/api/v1/phidias/seguimientos/route.ts
-import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
+import { NextRequest, NextResponse } from 'next/server';
 
 // GET - Obtener configuraciones de seguimientos
 export async function GET(request: NextRequest) {

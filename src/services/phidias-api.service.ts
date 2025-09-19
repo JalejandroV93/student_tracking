@@ -1,55 +1,6 @@
 // src/services/phidias-api.service.ts
+import { PhidiasPollResponse, PhidiasSyncResult, PhidiasGenericResult, RateLimitConfig, PhidiasConsolidateRecord, PhidiasConsolidateResult } from '@/types/phidias';
 
-export interface PhidiasItem {
-  itemName: string;
-  itemDescription: string;
-  itemvalue: string | number;
-}
-
-export interface PhidiasRecord {
-  id: number;
-  person: number;
-  personFirstname: string;
-  personLastname: string;
-  code: number;
-  author: number;
-  authorFirstname: string;
-  authorLastname: string;
-  last_editor: number;
-  timestamp: number;
-  last_edit: number;
-  items: PhidiasItem[];
-}
-
-export interface PhidiasPollResponse {
-  id: number;
-  year: {
-    id: number;
-    name: string;
-  };
-  name: string;
-  description: string;
-  start_date: number;
-  end_date: number | null;
-  single_record: number;
-  records: PhidiasRecord[];
-}
-
-export interface PhidiasSyncResult {
-  success: boolean;
-  data?: PhidiasPollResponse;
-  error?: string;
-  rateLimited?: boolean;
-  retryAfter?: number;
-}
-
-// Rate limiting configuration
-interface RateLimitConfig {
-  maxRetries: number;
-  baseDelayMs: number;
-  maxDelayMs: number;
-  backoffFactor: number;
-}
 
 class PhidiasApiService {
   private baseUrl: string;
@@ -92,7 +43,7 @@ class PhidiasApiService {
   /**
    * Realiza una petición HTTP con retry y manejo de rate limiting
    */
-  private async makeRequest(url: string, retryCount = 0): Promise<PhidiasSyncResult> {
+  private async makeRequest(url: string, retryCount = 0): Promise<PhidiasGenericResult> {
     try {
       await this.waitForRateLimit();
 
@@ -139,7 +90,7 @@ class PhidiasApiService {
         };
       }
 
-      const data: PhidiasPollResponse = await response.json();
+      const data: PhidiasPollResponse | PhidiasConsolidateRecord[] = await response.json();
       
       return {
         success: true,
@@ -187,7 +138,33 @@ class PhidiasApiService {
     
     console.log(`Fetching seguimientos for student ${personId} from poll ${pollId}`);
     
-    return this.makeRequest(url);
+    const result = await this.makeRequest(url);
+    
+    // Asegurar que el resultado tenga el tipo correcto para esta función
+    if (result.success && result.data) {
+      // Verificar que sea un PhidiasPollResponse y no un array
+      if (Array.isArray(result.data)) {
+        return {
+          success: false,
+          error: 'Expected PhidiasPollResponse but received array'
+        };
+      }
+      
+      return {
+        success: true,
+        data: result.data as PhidiasPollResponse,
+        error: result.error,
+        rateLimited: result.rateLimited,
+        retryAfter: result.retryAfter
+      };
+    }
+    
+    return {
+      success: result.success,
+      error: result.error,
+      rateLimited: result.rateLimited,
+      retryAfter: result.retryAfter
+    };
   }
 
   /**
@@ -277,6 +254,52 @@ class PhidiasApiService {
       valid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Obtiene los registros consolidados de un seguimiento específico desde Phidias
+   */
+  async getConsolidatedRecords(pollId: number): Promise<PhidiasConsolidateResult> {
+    try {
+      const url = `${this.baseUrl}/rest/1/poll/consolidate?pollId=${pollId}`;
+      
+      console.log(`🔍 Fetching consolidated records from: ${url}`);
+      
+      const result = await this.makeRequest(url);
+      
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error,
+          rateLimited: result.rateLimited,
+          retryAfter: result.retryAfter
+        };
+      }
+
+      // Verificar que la respuesta sea un array de registros
+      if (!result.data || !Array.isArray(result.data)) {
+        return {
+          success: false,
+          error: 'Invalid response format: expected array of records'
+        };
+      }
+
+      const records = result.data as PhidiasConsolidateRecord[];
+
+      return {
+        success: true,
+        data: records,
+        count: records.length
+      };
+      
+    } catch (error) {
+      console.error(`Error fetching consolidated records for poll ${pollId}:`, error);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
   /**
