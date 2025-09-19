@@ -93,7 +93,7 @@ La aplicación estará disponible en:
 
 La aplicación está configurada para sincronizarse automáticamente con el sistema Phidias todos los días:
 
-- **Horario**: 6:00 AM UTC (2:00 AM Colombia)
+- **Horario**: 6:00 AM UTC (1:00 AM Colombia)
 - **Sistemas de respaldo**: Vercel Cron Jobs, GitHub Actions, y Docker cron
 - **Endpoint**: `/api/v1/cron/sync-phidias`
 
