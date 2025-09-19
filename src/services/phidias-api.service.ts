@@ -37,6 +37,14 @@ export interface PhidiasPollResponse {
 
 export interface PhidiasSyncResult {
   success: boolean;
+  data?: PhidiasPollResponse;
+  error?: string;
+  rateLimited?: boolean;
+  retryAfter?: number;
+}
+
+export interface PhidiasGenericResult {
+  success: boolean;
   data?: PhidiasPollResponse | PhidiasConsolidateRecord[];
   error?: string;
   rateLimited?: boolean;
@@ -120,7 +128,7 @@ class PhidiasApiService {
   /**
    * Realiza una petición HTTP con retry y manejo de rate limiting
    */
-  private async makeRequest(url: string, retryCount = 0): Promise<PhidiasSyncResult> {
+  private async makeRequest(url: string, retryCount = 0): Promise<PhidiasGenericResult> {
     try {
       await this.waitForRateLimit();
 
@@ -219,13 +227,29 @@ class PhidiasApiService {
     
     // Asegurar que el resultado tenga el tipo correcto para esta función
     if (result.success && result.data) {
+      // Verificar que sea un PhidiasPollResponse y no un array
+      if (Array.isArray(result.data)) {
+        return {
+          success: false,
+          error: 'Expected PhidiasPollResponse but received array'
+        };
+      }
+      
       return {
-        ...result,
-        data: result.data as PhidiasPollResponse
+        success: true,
+        data: result.data as PhidiasPollResponse,
+        error: result.error,
+        rateLimited: result.rateLimited,
+        retryAfter: result.retryAfter
       };
     }
     
-    return result;
+    return {
+      success: result.success,
+      error: result.error,
+      rateLimited: result.rateLimited,
+      retryAfter: result.retryAfter
+    };
   }
 
   /**
@@ -337,15 +361,15 @@ class PhidiasApiService {
         };
       }
 
-      // La respuesta es directamente un array de registros
-      const records = result.data as unknown as PhidiasConsolidateRecord[];
-      
-      if (!Array.isArray(records)) {
+      // Verificar que la respuesta sea un array de registros
+      if (!result.data || !Array.isArray(result.data)) {
         return {
           success: false,
           error: 'Invalid response format: expected array of records'
         };
       }
+
+      const records = result.data as PhidiasConsolidateRecord[];
 
       return {
         success: true,
