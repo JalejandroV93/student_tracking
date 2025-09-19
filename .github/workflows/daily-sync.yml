@@ -1,4 +1,5 @@
 name: Daily Phidias Sync
+permissions: {}
 
 on:
   schedule:
