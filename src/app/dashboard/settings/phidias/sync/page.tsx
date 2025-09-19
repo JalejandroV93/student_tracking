@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SyncControl } from "@/components/phidias/sync-control";
+import { SeguimientosStatusPanel } from "@/components/phidias/seguimientos-status-panel";
 import { PhidiasSyncLog } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { Separator } from "@/components/ui/separator";
 
 interface SyncError {
   studentId: number;
@@ -49,8 +51,13 @@ export default function PhidiasSyncPage() {
   };
 
   return (
-    <section>
+    <section className="space-y-6">
       <SyncControl />
+      
+      <SeguimientosStatusPanel />
+      
+      <Separator />
+      
       <Card className="w-full border-none">
         <CardHeader>
           <CardTitle>Historial de Sincronizaciones</CardTitle>
