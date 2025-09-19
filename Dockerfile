@@ -74,7 +74,7 @@ RUN echo '#!/bin/bash\n\
     \n\
     # Ejecutar migraciones y seed\n\
     yarn run prisma:migrate\n\
-    yarn run seed\n\
+    #yarn run seed\n\
     \n\
     # Iniciar la aplicación Next.js\n\
     yarn run start' > /app/start.sh
