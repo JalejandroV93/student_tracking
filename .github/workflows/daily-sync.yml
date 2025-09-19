@@ -1,0 +1,76 @@
+name: Daily Phidias Sync
+permissions: {}
+
+on:
+  schedule:
+    # Ejecutar todos los días a las 6:30 AM UTC (como respaldo del cron de Vercel)
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+    # Permitir ejecución manual
+    inputs:
+      environment:
+        description: 'Environment to run against'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - development
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Log sync start
+        run: |
+          echo "🤖 Starting GitHub Actions daily sync backup at $(date)"
+          echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
+      
+      - name: Determine target URL
+        id: target
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" == "development" ]]; then
+            echo "url=${{ secrets.VERCEL_DEV_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ secrets.VERCEL_PROD_URL }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Execute sync via API
+        id: sync
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: github-actions-backup-sync/1.0" \
+            -X GET \
+            "${{ steps.target.outputs.url }}/api/v1/cron/sync-phidias")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n -1)
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+          
+          if [[ $http_code -ge 200 && $http_code -lt 300 ]]; then
+            echo "✅ Sync completed successfully"
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Sync failed with status $http_code"
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "::error::Sync failed with HTTP $http_code: $body"
+            exit 1
+          fi
+      
+      - name: Log results
+        if: always()
+        run: |
+          echo "🏁 Sync process completed"
+          echo "Success: ${{ steps.sync.outputs.success }}"
+          echo "Timestamp: $(date)"
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::warning::Daily sync backup failed. Check logs and manual intervention may be required."

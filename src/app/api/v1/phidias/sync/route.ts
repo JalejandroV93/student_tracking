@@ -5,6 +5,30 @@ import { phidiasSyncService } from '@/services/phidias-sync.service';
 import { phidiasApiService } from '@/services/phidias-api.service';
 import { SyncResult } from '@/types/phidias';
 
+// Verificar si la solicitud proviene de un cron job autorizado
+function isCronRequest(request: NextRequest): boolean {
+  const userAgent = request.headers.get('user-agent');
+  const cronSecret = request.headers.get('x-cron-signature');
+  const authorization = request.headers.get('authorization');
+  
+  // Verificar si es Vercel cron
+  if (userAgent?.includes('vercel-cron/1.0')) {
+    return true;
+  }
+  
+  // Verificar si tiene secret de cron personalizado
+  if (cronSecret && cronSecret === process.env.CRON_SECRET) {
+    return true;
+  }
+  
+  // Verificar si tiene token de cron en Authorization
+  if (authorization && authorization === `Bearer ${process.env.CRON_SECRET}`) {
+    return true;
+  }
+  
+  return false;
+}
+
 
 // Extender el tipo global para incluir activeSyncs
 declare global {
@@ -13,26 +37,36 @@ declare global {
 }
 
 
-// POST - Iniciar sincronización manual
+// POST - Iniciar sincronización manual o automática (cron)
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+    // Verificar si es una solicitud de cron job
+    const isCronJob = isCronRequest(request);
+    
+    let user = null;
+    
+    if (!isCronJob) {
+      // Para sincronización manual, validar usuario
+      user = await getCurrentUser();
+      if (!user) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      }
 
-    // Solo administradores y coordinadores pueden iniciar sincronización
-    const allowedRoles = [
-      'ADMIN',
-      'PRESCHOOL_COORDINATOR',
-      'ELEMENTARY_COORDINATOR',
-      'MIDDLE_SCHOOL_COORDINATOR',
-      'HIGH_SCHOOL_COORDINATOR',
-      'PSYCHOLOGY'
-    ];
+      // Solo administradores y coordinadores pueden iniciar sincronización manual
+      const allowedRoles = [
+        'ADMIN',
+        'PRESCHOOL_COORDINATOR',
+        'ELEMENTARY_COORDINATOR',
+        'MIDDLE_SCHOOL_COORDINATOR',
+        'HIGH_SCHOOL_COORDINATOR',
+        'PSYCHOLOGY'
+      ];
 
-    if (!allowedRoles.includes(user.role)) {
-      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+      if (!allowedRoles.includes(user.role)) {
+        return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+      }
+    } else {
+      console.log('🤖 Cron job sync initiated at:', new Date().toISOString());
     }
 
     // Validar configuración del servicio de Phidias
@@ -50,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Iniciar sincronización en segundo plano
     const syncOptions = {
-      triggeredBy: user.id,
+      triggeredBy: user?.id || 'system-cron',
       specificLevel,
       specificStudentId
     };
@@ -58,9 +92,9 @@ export async function POST(request: NextRequest) {
     let syncPromise: Promise<SyncResult>;
     
     if (specificStudentId) {
-      syncPromise = phidiasSyncService.syncSpecificStudent(specificStudentId, user.id);
+      syncPromise = phidiasSyncService.syncSpecificStudent(specificStudentId, user?.id || 'system-cron');
     } else if (specificLevel) {
-      syncPromise = phidiasSyncService.syncSpecificLevel(specificLevel, user.id);
+      syncPromise = phidiasSyncService.syncSpecificLevel(specificLevel, user?.id || 'system-cron');
     } else {
       syncPromise = phidiasSyncService.syncWithPhidias(syncOptions);
     }
@@ -79,11 +113,16 @@ export async function POST(request: NextRequest) {
       }
     }, 3600000); // 1 hora
 
+    const messagePrefix = isCronJob ? '🤖 Sincronización automática iniciada' : 'Sincronización manual iniciada';
+    const messageDetails = specificStudentId ? ` para estudiante ${specificStudentId}` : 
+                          specificLevel ? ` para nivel ${specificLevel}` : '';
+
     return NextResponse.json({
-      message: `Sincronización iniciada${specificStudentId ? ` para estudiante ${specificStudentId}` : ''}${specificLevel ? ` para nivel ${specificLevel}` : ''}`,
+      message: `${messagePrefix}${messageDetails}`,
       syncId,
       status: 'started',
-      triggeredBy: user.id,
+      triggeredBy: user?.id || 'system-cron',
+      type: isCronJob ? 'automatic' : 'manual',
       options: syncOptions
     }, { status: 202 });
 

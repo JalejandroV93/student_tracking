@@ -284,12 +284,35 @@ class PhidiasApiService {
         };
       }
 
-      const records = result.data as PhidiasConsolidateRecord[];
+      const allRecords = result.data as PhidiasConsolidateRecord[];
+      
+      // Filtrar registros "fantasma" que Phidias devuelve cuando no hay datos reales
+      // Estos registros tienen person_id null, timestamp de época Unix (1969), etc.
+      const validRecords = allRecords.filter(record => {
+        // Si person_id es null, es un registro fantasma
+        if (record.person_id === null || record.person_id === undefined) {
+          return false;
+        }
+        
+        // Si el timestamp es de época Unix (1969), es un registro fantasma
+        if (record.timestamp && record.timestamp.includes('1969-12-31')) {
+          return false;
+        }
+        
+        // Si el person es null o vacío, es un registro fantasma
+        if (!record.person || record.person.trim() === '') {
+          return false;
+        }
+        
+        return true;
+      });
+
+      console.log(`🔍 Poll ${pollId}: Total records: ${allRecords.length}, Valid records: ${validRecords.length}, Filtered out: ${allRecords.length - validRecords.length}`);
 
       return {
         success: true,
-        data: records,
-        count: records.length
+        data: validRecords,
+        count: validRecords.length
       };
       
     } catch (error) {

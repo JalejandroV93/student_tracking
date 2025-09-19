@@ -4,8 +4,8 @@ FROM node:24-slim AS base
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Instalar OpenSSL para Prisma
-RUN apt-get update -y && apt-get install -y openssl
+# Instalar OpenSSL para Prisma y cron para trabajos programados
+RUN apt-get update -y && apt-get install -y openssl cron curl
 
 # --- Dependencias ---
 FROM base AS dependencies
@@ -40,9 +40,8 @@ FROM node:24-slim AS runner
 
 WORKDIR /app
 
-# Instalar OpenSSL para Prisma en la etapa de producción
-RUN apt-get update -y && apt-get install -y openssl
-
+# Instalar OpenSSL para Prisma y cron para trabajos programados en la etapa de producción
+RUN apt-get update -y && apt-get install -y openssl cron curl
 
 # Configurar zona horaria para Colombia (America/Bogota)
 ENV TZ=America/Bogota
@@ -57,7 +56,30 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 
+# Crear archivo de cron job para sincronización diaria
+RUN echo "0 6 * * * root curl -X GET -H \"Authorization: Bearer \$CRON_SECRET\" http://localhost:3000/api/v1/cron/sync-phidias >> /app/logs/cron.log 2>&1" > /etc/cron.d/phidias-sync
 
+# Configurar permisos del cron job
+RUN chmod 0644 /etc/cron.d/phidias-sync
+RUN crontab /etc/cron.d/phidias-sync
+
+# Crear archivo de inicio que lance tanto cron como la aplicación
+RUN echo '#!/bin/bash\n\
+    # Iniciar el servicio cron\n\
+    service cron start\n\
+    \n\
+    # Crear logs iniciales\n\
+    touch /app/logs/cron.log\n\
+    touch /app/logs/app.log\n\
+    \n\
+    # Ejecutar migraciones y seed\n\
+    yarn run prisma:migrate\n\
+    #yarn run seed\n\
+    \n\
+    # Iniciar la aplicación Next.js\n\
+    yarn run start' > /app/start.sh
+
+RUN chmod +x /app/start.sh
 
 # Establece variables de entorno
 ENV NODE_ENV=production
@@ -67,5 +89,5 @@ ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 EXPOSE 3000
 
 # Script de inicio para cron y aplicación
-CMD ["sh", "-c", "yarn run prisma:migrate && yarn run seed && yarn run start"]
+CMD ["/app/start.sh"]
 
