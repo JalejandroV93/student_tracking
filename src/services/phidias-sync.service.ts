@@ -1,5 +1,5 @@
-import { asignarNivelAcademico, extraerNumeroFalta } from '@/lib/academic-level-utils';
 // src/services/phidias-sync.service.ts
+import { asignarNivelAcademico, extraerNumeroFalta } from '@/lib/academic-level-utils';
 import { prisma } from '@/lib/prisma';
 import { phidiasApiService } from '@/services/phidias-api.service';
 import { PhidiasPollResponse, PhidiasRecord, PhidiasSeguimientoConfig, SyncOptions, SyncResult, SyncProgress } from '@/types/phidias';

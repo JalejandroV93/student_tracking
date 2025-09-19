@@ -1,8 +1,10 @@
 // src/app/api/v1/phidias/sync/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
-import { phidiasSyncService, SyncResult } from '@/services/phidias-sync.service';
+import { phidiasSyncService } from '@/services/phidias-sync.service';
 import { phidiasApiService } from '@/services/phidias-api.service';
+import { SyncResult } from '@/types/phidias';
+
 
 // Extender el tipo global para incluir activeSyncs
 declare global {
