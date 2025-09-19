@@ -112,6 +112,7 @@ async function seed() {
       startDate: new Date("2025-07-01"),
       endDate: new Date("2026-06-30"),
       isActive: true,
+      phidias_id: 21,
       description: "Año Escolar 2025-2026",
       createdAt: new Date("2025-08-28T20:35:37.113Z"),
       updatedAt: new Date("2025-08-29T19:29:47.515Z"),

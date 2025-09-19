@@ -15,12 +15,12 @@ function isCronRequestAuthorized(request: NextRequest): boolean {
   }
   
   // Verificar si tiene secret de cron personalizado
-  if (cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) {
+  if (cronSecret && cronSecret === process.env.CRON_SECRET) {
     return true;
   }
-  
+
   // Verificar si tiene token de cron en Authorization
-  if (authorization && process.env.CRON_SECRET && authorization === `Bearer ${process.env.CRON_SECRET}`) {
+  if (authorization && authorization === `Bearer ${process.env.CRON_SECRET}`) {
     return true;
   }
   
