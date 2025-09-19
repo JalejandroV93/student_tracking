@@ -3,21 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
 import { phidiasApiService } from '@/services/phidias-api.service';
-
-interface SeguimientoStatus {
-  id: number;
-  phidias_id: number;
-  name: string;
-  tipo_falta: string;
-  nivel_academico: string;
-  isActive: boolean;
-  localCount: number;
-  phidiasCount: number;
-  status: 'synced' | 'out_of_sync' | 'error';
-  error?: string;
-  lastChecked: string;
-}
-
+import { SeguimientoStatus } from 'src/types/phidias';
 // GET - Obtener estado de sincronización de seguimientos
 export async function GET(request: NextRequest) {
   try {
