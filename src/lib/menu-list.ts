@@ -1,14 +1,6 @@
 import { UserPayload } from "@/types/user";
 import { Role } from "@prisma/client";
-import {
-  AlertTriangle,
-  CalendarDays,
-  LayoutGrid,
-  LucideIcon,
-  Users,
-  RefreshCw,
-  Settings,
-} from "lucide-react";
+import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, RefreshCw, Settings, Users } from "lucide-react";
 
 type Submenu = {
   href: string;
@@ -112,19 +104,19 @@ export function getMenuList(
             },
             {
               href: "/dashboard/alerts/preschool",
-              label: "Preescolar",
+              label: "Preschool",
             },
             {
               href: "/dashboard/alerts/elementary",
-              label: "Primaria",
+              label: "Elementary",
             },
             {
               href: "/dashboard/alerts/middle",
-              label: "Secundaria",
+              label: "Middle School",
             },
             {
               href: "/dashboard/alerts/high",
-              label: "Bachillerato",
+              label: "High School",
             },
           ],
         },
@@ -141,19 +133,19 @@ export function getMenuList(
             },
             {
               href: "/dashboard/case-management/preschool",
-              label: "Preescolar",
+              label: "Preschool",
             },
             {
               href: "/dashboard/case-management/elementary",
-              label: "Primaria",
+              label: "Elementary",
             },
             {
               href: "/dashboard/case-management/middle",
-              label: "Secundaria",
+              label: "Middle School",
             },
             {
               href: "/dashboard/case-management/high",
-              label: "Bachillerato",
+              label: "High School",
             },
           ],
         },

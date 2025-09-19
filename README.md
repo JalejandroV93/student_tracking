@@ -89,15 +89,34 @@ La aplicación estará disponible en:
 
 - <http://localhost:3002>
 
-### Sincronización con Supabase
+### Sincronización Automática con Phidias
 
-La aplicación está configurada para sincronizar automáticamente los datos desde Supabase a la base de datos local PostgreSQL todos los días a las 6:00 AM (hora de Colombia).
+La aplicación está configurada para sincronizarse automáticamente con el sistema Phidias todos los días:
 
-Si necesitas ejecutar la sincronización manualmente:
+- **Horario**: 6:00 AM UTC (2:00 AM Colombia)
+- **Sistemas de respaldo**: Vercel Cron Jobs, GitHub Actions, y Docker cron
+- **Endpoint**: `/api/v1/cron/sync-phidias`
+
+#### Configuración Requerida
+
+```env
+# Variables adicionales necesarias para Phidias
+PHIDIAS_BASE_URL=https://liceotaller.phidias.co
+PHIDIAS_API_TOKEN=tu-token-de-phidias
+CRON_SECRET=tu-secreto-para-cron-jobs
+```
+
+#### Ejecución Manual de Sincronización
 
 ```bash
-docker-compose exec app npm run sync
+# Probar sincronización en desarrollo
+npm run test:cron local
+
+# Ejecutar sincronización manual desde la UI
+# Ve a Dashboard → Configuración → Sincronización con Phidias
 ```
+
+Para más detalles, consulta la [documentación completa de sincronización automática](docs/automated-sync-setup.md).
 
 ### Verificar Logs de Sincronización
 
