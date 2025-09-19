@@ -3,20 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
 import { phidiasApiService } from '@/services/phidias-api.service';
-
-interface SeguimientoStatus {
-  id: number;
-  phidias_id: number;
-  name: string;
-  tipo_falta: string;
-  nivel_academico: string;
-  isActive: boolean;
-  localCount: number;
-  phidiasCount: number;
-  status: 'synced' | 'out_of_sync' | 'error';
-  error?: string;
-  lastChecked: string;
-}
+import { SeguimientoStatus } from '@/types/phidias';
 
 // GET - Obtener estado de sincronización de seguimientos
 export async function GET(request: NextRequest) {
@@ -71,77 +58,82 @@ export async function GET(request: NextRequest) {
       ]
     });
 
-    const statusResults: SeguimientoStatus[] = [];
+    const statusPromises = seguimientos.map(async (seguimiento) => {  
+      try {  
+        // Contar registros locales para este seguimiento  
+        const localCount = await prisma.faltas.count({  
+          where: {  
+            school_year_id: seguimiento.school_year_id,  
+            tipo_falta: seguimiento.tipo_falta,  
+            nivel: seguimiento.nivel_academico  
+          }  
+        });  
 
-    // Obtener conteos locales y de Phidias para cada seguimiento
-    for (const seguimiento of seguimientos) {
-      try {
-        // Contar registros locales para este seguimiento
-        const localCount = await prisma.faltas.count({
-          where: {
-            school_year_id: seguimiento.school_year_id,
-            tipo_falta: seguimiento.tipo_falta,
-            nivel: seguimiento.nivel_academico
-          }
-        });
+        // Obtener conteo de registros desde Phidias  
+        const phidiasResult = await phidiasApiService.getConsolidatedRecords(seguimiento.phidias_id);  
 
-        // Obtener conteo de registros desde Phidias
-        const phidiasResult = await phidiasApiService.getConsolidatedRecords(seguimiento.phidias_id);
+        let phidiasCount = 0;  
+        let error: string | undefined;  
+        let status: 'synced' | 'out_of_sync' | 'error' = 'error';  
 
-        let phidiasCount = 0;
-        let error: string | undefined;
-        let status: 'synced' | 'out_of_sync' | 'error' = 'error';
+        if (phidiasResult.success) {  
+          phidiasCount = phidiasResult.count || 0;  
+          status = localCount === phidiasCount ? 'synced' : 'out_of_sync';  
+        } else {  
+          error = phidiasResult.error;  
+          status = 'error';  
+        }  
 
-        if (phidiasResult.success) {
-          phidiasCount = phidiasResult.count || 0;
-          status = localCount === phidiasCount ? 'synced' : 'out_of_sync';
-        } else {
-          error = phidiasResult.error;
-          status = 'error';
-        }
+        return {  
+          id: seguimiento.id,  
+          phidias_id: seguimiento.phidias_id,  
+          name: seguimiento.name,  
+          tipo_falta: seguimiento.tipo_falta,  
+          nivel_academico: seguimiento.nivel_academico,  
+          isActive: seguimiento.isActive,  
+          localCount,  
+          phidiasCount,  
+          status,  
+          error,  
+          lastChecked: new Date().toISOString()  
+        } as SeguimientoStatus;  
 
-        statusResults.push({
-          id: seguimiento.id,
-          phidias_id: seguimiento.phidias_id,
-          name: seguimiento.name,
-          tipo_falta: seguimiento.tipo_falta,
-          nivel_academico: seguimiento.nivel_academico,
-          isActive: seguimiento.isActive,
-          localCount,
-          phidiasCount,
-          status,
-          error,
-          lastChecked: new Date().toISOString()
-        });
-
-      } catch (error) {
-        console.error(`Error checking status for seguimiento ${seguimiento.phidias_id}:`, error);
+      } catch (error) {  
+        console.error(`Error checking status for seguimiento ${seguimiento.phidias_id}:`, error);  
         
-        statusResults.push({
-          id: seguimiento.id,
-          phidias_id: seguimiento.phidias_id,
-          name: seguimiento.name,
-          tipo_falta: seguimiento.tipo_falta,
-          nivel_academico: seguimiento.nivel_academico,
-          isActive: seguimiento.isActive,
-          localCount: 0,
-          phidiasCount: 0,
-          status: 'error',
-          error: error instanceof Error ? error.message : 'Error desconocido',
-          lastChecked: new Date().toISOString()
-        });
-      }
-    }
+        return {  
+          id: seguimiento.id,  
+          phidias_id: seguimiento.phidias_id,  
+          name: seguimiento.name,  
+          tipo_falta: seguimiento.tipo_falta,  
+          nivel_academico: seguimiento.nivel_academico,  
+          isActive: seguimiento.isActive,  
+          localCount: 0,  
+          phidiasCount: 0,  
+          status: 'error',  
+          error: error instanceof Error ? error.message : 'Error desconocido',  
+          lastChecked: new Date().toISOString()  
+        } as SeguimientoStatus;  
+      }  
+    });  
+
+    const statusResults = await Promise.all(statusPromises); 
 
     return NextResponse.json({
       seguimientos: statusResults,
-      summary: {
-        total: statusResults.length,
-        synced: statusResults.filter(s => s.status === 'synced').length,
-        outOfSync: statusResults.filter(s => s.status === 'out_of_sync').length,
-        errors: statusResults.filter(s => s.status === 'error').length,
-        lastChecked: new Date().toISOString()
-      }
+      summary: statusResults.reduce((acc, s) => {  
+        acc.total++;  
+        if (s.status === 'synced') acc.synced++;  
+        else if (s.status === 'out_of_sync') acc.outOfSync++;  
+        else if (s.status === 'error') acc.errors++;  
+        return acc;  
+      }, { 
+        total: 0, 
+        synced: 0, 
+        outOfSync: 0, 
+        errors: 0, 
+        lastChecked: new Date().toISOString() 
+      })  
     });
 
   } catch (error) {

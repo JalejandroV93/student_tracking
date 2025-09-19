@@ -1,44 +1,10 @@
 import { asignarNivelAcademico, extraerNumeroFalta } from '@/lib/academic-level-utils';
 // src/services/phidias-sync.service.ts
 import { prisma } from '@/lib/prisma';
+import { phidiasApiService } from '@/services/phidias-api.service';
+import { PhidiasPollResponse, PhidiasRecord, PhidiasSeguimientoConfig, SyncOptions, SyncResult, SyncProgress } from '@/types/phidias';
 
-import { phidiasApiService, PhidiasPollResponse, PhidiasRecord } from './phidias-api.service';
 
-export interface SyncProgress {
-  phase: 'loading_config' | 'loading_students' | 'syncing' | 'completed' | 'error';
-  processed: number;
-  total: number;
-  message: string;
-  errors?: Array<{ studentId: number; error: string }>;
-  currentLevel?: string;
-  currentStudent?: { id: number; name?: string };
-}
-
-export interface SyncResult {
-  success: boolean;
-  logId: number;
-  studentsProcessed: number;
-  recordsCreated: number;
-  recordsUpdated: number;
-  errors: Array<{ studentId: number; pollId: number; error: string }>;
-  duration: number;
-}
-
-export interface SyncOptions {
-  triggeredBy?: string;
-  specificLevel?: string; // Filtrar por nivel académico específico
-  specificStudentId?: number; // Sincronizar solo un estudiante específico para debugging
-  onProgress?: (progress: SyncProgress) => void;
-}
-
-export interface PhidiasSeguimientoConfig {
-  id: number;
-  phidias_id: number;
-  name: string;
-  tipo_falta: string;
-  nivel_academico: string;
-  isActive: boolean;
-}
 
 class PhidiasSyncService {
   
