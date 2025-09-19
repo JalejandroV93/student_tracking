@@ -4,7 +4,7 @@ Este documento describe cómo configurar la sincronización automática diaria c
 
 ## 🎯 Resumen de la Solución
 
-La sincronización automática se ejecuta diariamente a las **6:00 AM UTC** (2:00 AM Colombia) utilizando:
+La sincronización automática se ejecuta diariamente a las **6:00 AM UTC** (1:00 AM Colombia) utilizando:
 
 - **Desarrollo (Vercel)**: Vercel Cron Jobs
 - **Producción (Docker)**: Cron jobs nativos de Linux
