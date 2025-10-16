@@ -53,6 +53,7 @@ export async function GET(
         fullName: true,
         email: true,
         role: true,
+        groupCode: true,
         createdAt: true,
         updatedAt: true,
         AreaPermissions: {

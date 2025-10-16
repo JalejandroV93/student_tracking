@@ -10,6 +10,7 @@ export interface UserPayload extends JWTPayload {
   role: Role;
   email?: string;    //Added
   phonenumber?: string; //Added
+  groupCode?: string; // Added for TEACHER role
   [key: string]: any; // Añade esta línea
 }
 

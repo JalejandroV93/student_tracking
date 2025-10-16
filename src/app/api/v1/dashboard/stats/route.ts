@@ -3,6 +3,7 @@ import {
   getActiveSchoolYear,
   getAllSchoolYears,
 } from "@/lib/school-year-utils";
+import { getCurrentUser } from "@/lib/session";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const schoolYearId = searchParams.get("schoolYearId");
+
+    // Verificar autenticación del usuario
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
     // Determinar qué año académico usar
     let targetSchoolYear;
@@ -36,6 +43,55 @@ export async function GET(request: Request) {
       }
     }
 
+    // Construir filtros adicionales según el rol del usuario
+    let additionalFilters = {};
+    
+    // Si es director de grupo (TEACHER), solo ver estadísticas de su grupo
+    if (currentUser.role === "TEACHER") {
+      const fullUser = await prisma.user.findUnique({
+        where: { id: currentUser.id },
+        select: { groupCode: true },
+      });
+      
+      if (!fullUser?.groupCode) {
+        // Si no tiene grupo asignado, no puede ver estadísticas
+        return NextResponse.json({
+          success: true,
+          data: {
+            schoolYear: {
+              id: targetSchoolYear.id,
+              name: targetSchoolYear.name,
+              isActive: targetSchoolYear.isActive,
+            },
+            infractions: {
+              total: 0,
+              tipoI: 0,
+              tipoII: 0,
+              tipoIII: 0,
+              attended: 0,
+              notAttended: 0,
+            },
+            students: {
+              withInfractions: 0,
+            },
+            availableSchoolYears: await getAllSchoolYears(),
+          },
+        });
+      }
+      
+      // Obtener estudiantes de su grupo
+      const groupStudents = await prisma.estudiantes.findMany({
+        where: {
+          school_year_id: targetSchoolYear.id,
+          grado: fullUser.groupCode,
+        },
+        select: { id: true, codigo: true },
+      });
+      
+      const studentIds = groupStudents.map(s => s.id);
+      additionalFilters = { id_estudiante: { in: studentIds } };
+    }
+
     // Obtener estadísticas básicas para el año académico seleccionado
     const [
       totalFaltas,
@@ -48,7 +104,10 @@ export async function GET(request: Request) {
     ] = await Promise.all([
       // Total de faltas del año académico
       prisma.faltas.count({
-        where: { school_year_id: targetSchoolYear.id },
+        where: { 
+          school_year_id: targetSchoolYear.id,
+          ...additionalFilters
+        },
       }),
 
       // Faltas Tipo I del año académico
@@ -56,6 +115,7 @@ export async function GET(request: Request) {
         where: {
           school_year_id: targetSchoolYear.id,
           tipo_falta: "Tipo I",
+          ...additionalFilters
         },
       }),
 
@@ -64,6 +124,7 @@ export async function GET(request: Request) {
         where: {
           school_year_id: targetSchoolYear.id,
           tipo_falta: "Tipo II",
+          ...additionalFilters
         },
       }),
 
@@ -72,6 +133,7 @@ export async function GET(request: Request) {
         where: {
           school_year_id: targetSchoolYear.id,
           tipo_falta: "Tipo III",
+          ...additionalFilters
         },
       }),
 
@@ -80,12 +142,16 @@ export async function GET(request: Request) {
         where: {
           school_year_id: targetSchoolYear.id,
           attended: true,
+          ...additionalFilters
         },
       }),
 
       // Estudiantes únicos con faltas en este año académico
       prisma.faltas.findMany({
-        where: { school_year_id: targetSchoolYear.id },
+        where: { 
+          school_year_id: targetSchoolYear.id,
+          ...additionalFilters
+        },
         select: { id_estudiante: true, codigo_estudiante: true },
         distinct: ["id_estudiante", "codigo_estudiante"],
       }),

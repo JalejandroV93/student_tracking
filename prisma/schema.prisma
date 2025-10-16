@@ -15,18 +15,21 @@ model Estudiantes {
   firstname      String?
   lastname       String?
   school_year_id Int?
-  grado          String? // Grado actual del estudiante
-  seccion        String? // Nivel Academico actual del estudiante
+  grado          String? // Grado actual del estudiante (legacy)
+  seccion        String? // Nivel Academico actual del estudiante (legacy)
+  gradeId        Int? // Nueva referencia al grado por ID
   photo_url      String? // URL de la foto del estudiante desde Phidias
   created_at     DateTime    @default(now())
   updated_at     DateTime    @updatedAt
   faltas         Faltas[]
   schoolYear     SchoolYear? @relation(fields: [school_year_id], references: [id])
+  grade          Grade?      @relation(fields: [gradeId], references: [id])
 
   @@index([codigo], map: "idx_codigo")
   @@index([school_year_id], map: "idx_estudiantes_school_year_id")
   @@index([grado], map: "idx_estudiantes_grado")
   @@index([seccion], map: "idx_estudiantes_seccion")
+  @@index([gradeId], map: "idx_estudiantes_gradeId")
 }
 
 model Faltas {
@@ -120,7 +123,8 @@ model User {
   email               String?
   phonenumber         String?
   role                Role
-  groupCode           String? // Código del grupo que dirige (solo para TEACHER)
+  groupCode           String? // Código del grupo que dirige (legacy)
+  gradeId             Int? // Nueva referencia al grado por ID (solo para TEACHER)
   password            String
   lastLogin           DateTime?
   isBlocked           Boolean           @default(false)
@@ -128,11 +132,13 @@ model User {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   AreaPermissions     AreaPermissions[]
+  grade               Grade?            @relation(fields: [gradeId], references: [id])
 
   @@index([username])
   @@index([document])
   @@index([role])
   @@index([isBlocked])
+  @@index([gradeId])
 }
 
 model AreaPermissions {
@@ -152,6 +158,23 @@ model Area {
   code            String
   createdAt       DateTime          @default(now())
   AreaPermissions AreaPermissions[]
+}
+
+model Grade {
+  id            Int           @id @default(autoincrement())
+  name          String        // Nombre completo: "Sexto A", "Kinder 4 B"
+  code          String        // Código abreviado: "6A", "K4B" 
+  academicLevel String        // Nivel académico: "Elementary", "Middle School", etc.
+  schoolYearId  Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  schoolYear    SchoolYear    @relation(fields: [schoolYearId], references: [id], onDelete: Cascade)
+  students      Estudiantes[]
+  teachers      User[]
+
+  @@unique([code, schoolYearId])
+  @@index([schoolYearId])
+  @@index([academicLevel])
 }
 
 model SyncMetadata {
@@ -187,6 +210,7 @@ model SchoolYear {
   trimestres          Trimestre[]
   estudiantes         Estudiantes[]
   phidiasSeguimientos PhidiasSeguimiento[]
+  grades              Grade[]
 
   @@index([isActive], map: "idx_school_year_active")
   @@index([startDate], map: "idx_school_year_start")

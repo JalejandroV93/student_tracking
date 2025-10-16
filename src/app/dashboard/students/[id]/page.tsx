@@ -25,6 +25,7 @@ import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
 import { StudentProfileCard } from "@/components/students/profile";
 import { StudentAdvisorChatbot } from "@/components/students/advisor";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 export default function StudentDetailsPage() {
   const params = useParams();
@@ -231,6 +232,11 @@ export default function StudentDetailsPage() {
   const [isInfractionModalOpen, setIsInfractionModalOpen] = useState(false);
   const [selectedInfractionForModal, setSelectedInfractionForModal] =
     useState<Infraction | null>(null);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [pendingInfractionToggle, setPendingInfractionToggle] = useState<{
+    infraction: Infraction;
+    observaciones?: string;
+  } | null>(null);
 
   const handleOpenFollowUpDialog = (infraction: Infraction) => {
     setSelectedInfractionForFollowUp(infraction);
@@ -262,12 +268,37 @@ export default function StudentDetailsPage() {
     infraction: Infraction,
     observaciones?: string
   ) => {
+    // Si es una falta Tipo I que está atendida y se quiere marcar como pendiente, mostrar confirmación
+    if (infraction.type === "Tipo I" && infraction.attended) {
+      setPendingInfractionToggle({ infraction, observaciones });
+      setIsConfirmationDialogOpen(true);
+      return;
+    }
+
+    // Ejecutar el toggle directamente si no necesita confirmación
+    executeToggleAttended(infraction, observaciones);
+  };
+
+  const executeToggleAttended = (
+    infraction: Infraction,
+    observaciones?: string
+  ) => {
     toggleAttended({
       infractionId: infraction.id,
       attended: !infraction.attended,
       observaciones,
       observacionesAutor: "Usuario", // TODO: Obtener del contexto de usuario
     });
+  };
+
+  const handleConfirmToggle = () => {
+    if (pendingInfractionToggle) {
+      executeToggleAttended(
+        pendingInfractionToggle.infraction,
+        pendingInfractionToggle.observaciones
+      );
+      setPendingInfractionToggle(null);
+    }
   };
 
   const handleAddObservaciones = async (
@@ -470,6 +501,22 @@ export default function StudentDetailsPage() {
             isLoading={isTogglingAttended || isSavingObservaciones}
           />
         )}
+
+        {/* Modal de confirmación para desmarcar falta como atendida */}
+        <ConfirmationDialog
+          isOpen={isConfirmationDialogOpen}
+          onOpenChange={setIsConfirmationDialogOpen}
+          onConfirm={handleConfirmToggle}
+          title="Confirmar cambio de estado"
+          description={`¿Está seguro que desea marcar esta falta como PENDIENTE?
+
+Esta acción cambiará el estado de la falta de 'Atendida' a 'No atendida' y podría afectar los reportes y estadísticas del estudiante.
+
+¿Desea continuar?`}
+          confirmText="Sí, marcar como pendiente"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
 
       </div>
       {/* Chatbot Consejero Educativo */}

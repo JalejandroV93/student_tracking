@@ -41,6 +41,7 @@ export async function GET(request: Request) {
         document: true,
         phonenumber: true,
         role: true,
+        groupCode: true,
         ...(includePermissions
           ? {
               AreaPermissions: {
@@ -102,6 +103,7 @@ export async function GET(request: Request) {
         document: fullUser.document,
         phonenumber: fullUser.phonenumber,
         role: fullUser.role,
+        groupCode: fullUser.groupCode,
         permissions: permissionsByArea,
       };
 
@@ -117,6 +119,7 @@ export async function GET(request: Request) {
       document: fullUser.document,
       phonenumber: fullUser.phonenumber,
       role: fullUser.role,
+      groupCode: fullUser.groupCode,
     };
 
     return NextResponse.json(userResponse as UserPayload);

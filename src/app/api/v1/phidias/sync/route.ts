@@ -32,7 +32,6 @@ function isCronRequest(request: NextRequest): boolean {
 
 // Extender el tipo global para incluir activeSyncs
 declare global {
-  // eslint-disable-next-line no-var
   var activeSyncs: Record<string, Promise<SyncResult>> | undefined;
 }
 

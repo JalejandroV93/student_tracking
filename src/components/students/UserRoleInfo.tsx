@@ -75,18 +75,18 @@ export function UserRoleInfo() {
 
   return (
     <Card className="border-none mb-2 rounded-full">
-      <CardContent className="flex gap-2"  >
+      <CardContent className="flex flex-row gap-2 justify-between items-center"  >
           <Badge className={config.color}>
-            <Icon className="w-4 h-4 mr-1" />
+            <Icon className="w-4 h-4 " />
             {config.label}
           </Badge>
           <span className="text-sm text-muted-foreground">
             {config.description}
           </span>
         {user.role === "TEACHER" && (
-          <div className="mt-2">
+          <div className="">
             <span className="text-xs text-muted-foreground">
-              Grupo asignado: <strong className="text-foreground">Sin especificar</strong>
+              Grupo asignado: <strong className="text-foreground">{user.groupCode || "Sin especificar"}</strong>
             </span>
           </div>
         )}

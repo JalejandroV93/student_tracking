@@ -585,3 +585,4 @@ Para soporte técnico o preguntas:
 ### Desarrollado con ❤️ para transformar la gestión educativa
 
 > Este sistema está diseñado para ayudar a las instituciones educativas a mantener un ambiente de aprendizaje positivo y seguro, facilitando el seguimiento del comportamiento estudiantil de manera justa, transparente y efectiva.
+
