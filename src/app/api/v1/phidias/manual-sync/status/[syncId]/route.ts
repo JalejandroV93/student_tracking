@@ -24,7 +24,7 @@ function validateBearerToken(request: NextRequest): boolean {
 // GET - Obtener estado de sincronización específica por ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { syncId: string } }
+  { params }: { params: Promise<{ syncId: string }> }
 ) {
   try {
     // Validar Bearer token
@@ -32,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'Token de autorización inválido' }, { status: 401 });
     }
 
-    const { syncId } = params;
+    const { syncId } = await params;
 
     if (!syncId) {
       return NextResponse.json({
