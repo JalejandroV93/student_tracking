@@ -1,90 +1,13 @@
 import { asignarNivelAcademico } from "@/lib/academic-level-utils";
-import { getSectionCategory } from "@/lib/constantes";
 import { prisma } from "@/lib/prisma";
 import { getActiveSchoolYear, getSchoolYearById } from "@/lib/school-year-utils";
 import { getCurrentUser } from "@/lib/session";
 import { transformInfraction, transformStudent } from "@/lib/utils";
-import { Role } from "@prisma/client";
+import { filterStudentsByUserPermissions } from "@/lib/role-filters";
 // src/app/api/students/route.ts
 import { NextResponse } from "next/server";
 
-// Función para filtrar estudiantes basado en permisos del usuario
-async function filterStudentsByUserPermissions(
-  students: Array<{
-    id: string;
-    name: string;
-    firstname?: string;
-    lastname?: string;
-    photoUrl?: string;
-    grado: string;
-    seccion?: string;
-    stats?: {
-      total: number;
-      tipoI: number;
-      tipoII: number;
-      tipoIII: number;
-      pending: number;
-      attended: number;
-    } | undefined;
-  }>,
-  user: { id: string; role: Role }
-) {
-  // Los administradores ven todo
-  if (user.role === "ADMIN") {
-    return students;
-  }
-
-  // Psicología ve todas las áreas
-  if (user.role === "PSYCHOLOGY") {
-    return students;
-  }
-
-  // Coordinadores ven solo su área específica
-  if (
-    user.role === "PRESCHOOL_COORDINATOR" ||
-    user.role === "ELEMENTARY_COORDINATOR" ||
-    user.role === "MIDDLE_SCHOOL_COORDINATOR" ||
-    user.role === "HIGH_SCHOOL_COORDINATOR"
-  ) {
-    const allowedSections: Record<Role, string[]> = {
-      [Role.PRESCHOOL_COORDINATOR]: ["Preschool"],
-      [Role.ELEMENTARY_COORDINATOR]: ["Elementary"],
-      [Role.MIDDLE_SCHOOL_COORDINATOR]: ["Middle School"],
-      [Role.HIGH_SCHOOL_COORDINATOR]: ["High School"],
-      [Role.ADMIN]: [],
-      [Role.PSYCHOLOGY]: [],
-      [Role.TEACHER]: [],
-      [Role.USER]: [],
-      [Role.STUDENT]: [],
-    };
-
-    const userAllowedSections = allowedSections[user.role] || [];
-    return students.filter((student) => {
-      const studentSection = getSectionCategory(student.grado);
-      return userAllowedSections.includes(studentSection);
-    });
-  }
-
-  // Directores de grupo (TEACHER) ven solo su grupo específico
-  if (user.role === "TEACHER") {
-    // Obtener el usuario completo con el groupCode
-    const fullUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { groupCode: true },
-    });
-
-    if (!fullUser?.groupCode) {
-      return []; // Si no tiene grupo asignado, no ve nada
-    }
-
-    return students.filter((student) => {
-      return student.grado === fullUser.groupCode;
-    });
-  }
-
-  // Por defecto, no ven nada
-  return [];
-}
+// NOTA: Función movida a @/lib/role-filters.ts para reutilización
 
 // Función para obtener estadísticas de faltas por estudiante
 async function getStudentInfractionStats(studentId: number, schoolYearId: number) {
@@ -310,6 +233,34 @@ export async function GET(request: Request) {
       });
     } else {
       // Fetch students with pagination and search
+      // ⚡ OPTIMIZACIÓN: Filtrar directores de grupo a nivel de BD
+      let teacherGroupFilter = {};
+      if (currentUser.role === "TEACHER") {
+        const teacherUser = await prisma.user.findUnique({
+          where: { id: currentUser.id },
+          select: { groupCode: true },
+        });
+
+        if (!teacherUser?.groupCode) {
+          console.log("🔍 TEACHER: No groupCode asignado, retornando lista vacía");
+          return NextResponse.json({
+            data: [],
+            pagination: {
+              currentPage: validatedPage,
+              totalPages: 0,
+              totalCount: 0,
+              limit: validatedLimit,
+              hasNextPage: false,
+              hasPrevPage: validatedPage > 1,
+            }
+          });
+        }
+
+        // Agregar filtro por grado específico en la consulta WHERE
+        teacherGroupFilter = { grado: teacherUser.groupCode };
+        console.log("🔍 TEACHER: Filtrando en BD por grado:", teacherUser.groupCode);
+      }
+
       // Construir la condición WHERE para la búsqueda
       let whereCondition: {
         OR?: Array<{
@@ -319,12 +270,15 @@ export async function GET(request: Request) {
           lastname?: { contains: string; mode: 'insensitive' };
         }>;
         id?: { in: number[] };
+        grado?: string; // Para filtro de directores de grupo
         faltas?: {
           some: {
             school_year_id: number;
           }
         };
-      } = {};
+      } = {
+        ...teacherGroupFilter // Aplicar filtro de director de grupo si existe
+      };
       
       if (search.trim()) {
         const searchTerms: Array<{
@@ -344,7 +298,10 @@ export async function GET(request: Request) {
           searchTerms.push({ codigo: searchAsNumber });
         }
         
-        whereCondition = { OR: searchTerms };
+        whereCondition = { 
+          ...teacherGroupFilter, // Mantener filtro de grupo
+          OR: searchTerms 
+        };
       }
       
       // Calcular offset para paginación
@@ -474,11 +431,20 @@ export async function GET(request: Request) {
         })
       );
 
-      // Aplicar filtrado basado en permisos del usuario
-      const filteredStudents = await filterStudentsByUserPermissions(
-        transformedStudents,
-        currentUser
-      );
+      // ⚡ OPTIMIZACIÓN: Solo aplicar filtrado frontend para coordinadores 
+      // Los directores (TEACHER) ya están filtrados en la consulta BD
+      let filteredStudents;
+      if (currentUser.role === "TEACHER") {
+        // Ya filtrado en BD, no necesita filtrado adicional
+        filteredStudents = transformedStudents;
+        console.log("🔍 TEACHER: Usando estudiantes ya filtrados en BD:", transformedStudents.length);
+      } else {
+        // Coordinadores y otros roles que necesitan filtrado por sección
+        filteredStudents = await filterStudentsByUserPermissions(
+          transformedStudents,
+          currentUser
+        );
+      }
 
       // Obtener el total de elementos para metadatos de paginación
       let totalCountCondition = whereCondition;

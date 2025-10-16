@@ -34,9 +34,9 @@ const filterSubmenusByRole = (
 
   // Filtrar según el rol
   return submenus.filter((submenu) => {
-    // Si es "Todas las secciones", no mostrar excepto para ADMIN
+    // Si es "Todas las secciones", mostrar para ADMIN y TEACHER
     if (submenu.label === "Todas las secciones") {
-      return user.role === Role.ADMIN;
+      return user.role === Role.ADMIN || user.role === Role.TEACHER;
     }
 
     // Filtrar por área según rol
@@ -58,8 +58,9 @@ const filterSubmenusByRole = (
           submenu.href.includes("high")
         );
       case Role.TEACHER:
-        // Los directores de grupo no ven las secciones en el menú, solo su propio grupo
-        return false;
+        // Los directores de grupo pueden ver alertas pero no las secciones específicas
+        // Solo pueden acceder a todas las alertas (que internamente se filtrarán por su grupo)
+        return submenu.label === "Todas las secciones";
       default:
         return true;
     }
@@ -217,15 +218,29 @@ export function getMenuList(
   }
 
   // Filtrar submenús según el rol del usuario
-  return menuList
+  const filteredMenuList = menuList
     .map((group) => ({
       ...group,
       menus: group.menus
-        .map((menu) => ({
-          ...menu,
-          submenus: filterSubmenusByRole(menu.submenus, user),
-        }))
-        .filter((menu) => !menu.submenus || menu.submenus.length > 0), // Filtrar menús sin submenús
+        .map((menu) => {
+          const filteredSubmenus = filterSubmenusByRole(menu.submenus, user);
+          
+          return {
+            ...menu,
+            submenus: filteredSubmenus,
+          };
+        })
+        .filter((menu) => {
+          // Filtrar "Gestión de Casos" para directores de grupo
+          if (user?.role === Role.TEACHER && menu.label === "Gestión de Casos") {
+            return false;
+          }
+          
+          const shouldKeep = !menu.submenus || menu.submenus.length > 0;
+          return shouldKeep;
+        }), // Filtrar menús sin submenús
     }))
     .filter((group) => group.menus.length > 0); // Filtrar grupos sin menús
+
+  return filteredMenuList;
 }

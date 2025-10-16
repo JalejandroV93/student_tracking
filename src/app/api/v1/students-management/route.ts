@@ -42,9 +42,34 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Aplicar filtros por rol del usuario
+    let roleBasedFilters: Prisma.EstudiantesWhereInput = {};
+    
+    // Si es director de grupo (TEACHER), solo ver su grupo
+    if (currentUser.role === "TEACHER") {
+      const fullUser = await prisma.user.findUnique({
+        where: { id: currentUser.id },
+        select: { groupCode: true },
+      });
+      
+      if (!fullUser?.groupCode) {
+        // Si no tiene grupo asignado, no puede ver nada
+        return NextResponse.json({
+          students: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        });
+      }
+      
+      roleBasedFilters = { grado: fullUser.groupCode };
+    }
+
     // Construir filtros base
     const baseWhere: Prisma.EstudiantesWhereInput = {
       school_year_id: targetSchoolYear.id,
+      ...roleBasedFilters,
       ...(search && {
         OR: [
           { nombre: { contains: search, mode: "insensitive" as const } },

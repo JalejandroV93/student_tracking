@@ -70,6 +70,11 @@ type AreaData = {
   code: string;
 };
 
+type GroupData = {
+  value: string;
+  label: string;
+};
+
 type User = {
   id: string;
   username: string;
@@ -107,6 +112,16 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
       const response = await fetch("/api/v1/areas");
       if (!response.ok) throw new Error("Error al cargar áreas");
       return response.json() as Promise<AreaData[]>;
+    },
+  });
+
+  // Obtener grupos disponibles
+  const { data: groups, isLoading: groupsLoading } = useQuery({
+    queryKey: ["groups"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/groups");
+      if (!response.ok) throw new Error("Error al cargar grupos");
+      return response.json() as Promise<GroupData[]>;
     },
   });
 
@@ -398,12 +413,24 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Código del Grupo</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ej: 6A, 10B, etc."
-                        {...field}
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value || ""}
+                      disabled={groupsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un grupo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {groups?.map((group) => (
+                          <SelectItem key={group.value} value={group.value}>
+                            {group.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -467,7 +494,7 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={userMutation.isPending || areasLoading}
+                disabled={userMutation.isPending || areasLoading || groupsLoading}
               >
                 {userMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

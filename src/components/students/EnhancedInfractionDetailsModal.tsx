@@ -21,6 +21,8 @@ import {
   X,
 } from "lucide-react";
 import type { Infraction, Student } from "@/types/dashboard";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 interface EnhancedInfractionDetailsModalProps {
   isOpen: boolean;
@@ -41,9 +43,14 @@ export function EnhancedInfractionDetailsModal({
   onAddObservaciones,
   isLoading = false,
 }: EnhancedInfractionDetailsModalProps) {
+  const { user } = useAuth();
   const [observaciones, setObservaciones] = useState("");
   const [isSubmittingObservaciones, setIsSubmittingObservaciones] =
     useState(false);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+
+  // Los directores de grupo (TEACHER) no pueden agregar observaciones ni cambiar estado
+  const canModifyInfraction = user?.role !== "TEACHER";
 
   const getBadgeVariant = (type: string) => {
     switch (type) {
@@ -59,6 +66,17 @@ export function EnhancedInfractionDetailsModal({
   };
 
   const handleToggleAttended = () => {
+    // Si la falta está atendida y se quiere marcar como pendiente, mostrar confirmación
+    if (infraction.attended) {
+      setIsConfirmationDialogOpen(true);
+      return;
+    }
+
+    // Ejecutar el toggle directamente si no necesita confirmación
+    executeToggleAttended();
+  };
+
+  const executeToggleAttended = () => {
     if (!infraction.attended && observaciones.trim()) {
       // Si se está marcando como atendida y hay observaciones, incluirlas
       onToggleAttended(infraction, observaciones.trim());
@@ -66,6 +84,10 @@ export function EnhancedInfractionDetailsModal({
     } else {
       onToggleAttended(infraction);
     }
+  };
+
+  const handleConfirmToggle = () => {
+    executeToggleAttended();
   };
 
   const handleAddObservaciones = async () => {
@@ -285,41 +307,52 @@ export function EnhancedInfractionDetailsModal({
                 </div>
               )}
 
-              {/* Agregar nueva observación */}
-              <div className="space-y-4 p-5 border border-slate-200 rounded-xl bg-slate-50">
-                <div>
-                  <label className="font-medium text-slate-700 text-sm block mb-2">
-                    Nueva observación
-                  </label>
-                  <Textarea
-                    id="observaciones"
-                    placeholder="Escriba sus observaciones sobre esta falta..."
-                    value={observaciones}
-                    onChange={(e) => setObservaciones(e.target.value)}
-                    rows={4}
-                    className="resize-none border-slate-300 focus:border-[#be1522] focus:ring-[#be1522]"
-                  />
-                </div>
+              {/* Agregar nueva observación - Solo para coordinadores */}
+              {canModifyInfraction && (
+                <div className="space-y-4 p-5 border border-slate-200 rounded-xl bg-slate-50">
+                  <div>
+                    <label className="font-medium text-slate-700 text-sm block mb-2">
+                      Nueva observación
+                    </label>
+                    <Textarea
+                      id="observaciones"
+                      placeholder="Escriba sus observaciones sobre esta falta..."
+                      value={observaciones}
+                      onChange={(e) => setObservaciones(e.target.value)}
+                      rows={4}
+                      className="resize-none border-slate-300 focus:border-[#be1522] focus:ring-[#be1522]"
+                    />
+                  </div>
 
-                <Button
-                  onClick={handleAddObservaciones}
-                  disabled={!observaciones.trim() || isSubmittingObservaciones}
-                  className="bg-[#be1522] hover:bg-[#a01219] text-white"
-                >
-                  {isSubmittingObservaciones ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      {infraction.observaciones ? "Actualizar" : "Agregar"}{" "}
-                      Observación
-                    </>
-                  )}
-                </Button>
-              </div>
+                  <Button
+                    onClick={handleAddObservaciones}
+                    disabled={!observaciones.trim() || isSubmittingObservaciones}
+                    className="bg-[#be1522] hover:bg-[#a01219] text-white"
+                  >
+                    {isSubmittingObservaciones ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        {infraction.observaciones ? "Actualizar" : "Agregar"}{" "}
+                        Observación
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Mensaje informativo para directores de grupo */}
+              {!canModifyInfraction && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-amber-800 text-sm">
+                    <strong>Información:</strong> Los directores de grupo pueden visualizar las faltas pero no pueden agregar observaciones o modificar su estado. Solo los coordinadores tienen estos permisos.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -335,7 +368,7 @@ export function EnhancedInfractionDetailsModal({
             </Button>
 
             <div className="flex gap-3">
-              {infraction.type === "Tipo I" && (
+              {infraction.type === "Tipo I" && canModifyInfraction && (
                 <Button
                   onClick={handleToggleAttended}
                   disabled={isLoading}
@@ -362,6 +395,22 @@ export function EnhancedInfractionDetailsModal({
           </div>
         </div>
       </DialogContent>
+      
+      {/* Modal de confirmación para desmarcar falta como atendida */}
+      <ConfirmationDialog
+        isOpen={isConfirmationDialogOpen}
+        onOpenChange={setIsConfirmationDialogOpen}
+        onConfirm={handleConfirmToggle}
+        title="Confirmar cambio de estado"
+        description={`¿Está seguro que desea marcar esta falta como PENDIENTE?
+
+Esta acción cambiará el estado de la falta de 'Atendida' a 'No atendida' y podría afectar los reportes y estadísticas del estudiante.
+
+¿Desea continuar?`}
+        confirmText="Sí, marcar como pendiente"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </Dialog>
   );
 }

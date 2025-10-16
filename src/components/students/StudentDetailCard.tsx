@@ -52,7 +52,7 @@ export function StudentDetailCard({
 
   return (
     <TooltipProvider>
-      <Card>
+      <Card className="">
         <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="text-2xl hidden">{student.name}</CardTitle>

@@ -36,6 +36,7 @@ export const validateCredentials = async (
       fullName: true,
       document: true,
       failedLoginAttempts: true,
+      groupCode: true,
     },
   });
 
@@ -77,6 +78,7 @@ export const validateCredentials = async (
     role: user.role,
     fullName: user.fullName, // Assuming 'nombre' is the full name
     document: user.document,
+    groupCode: user.groupCode ?? undefined,
   };
 
   return userPayload;

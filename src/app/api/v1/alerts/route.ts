@@ -1,74 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getSectionCategory } from "@/lib/constantes";
 import { prisma } from "@/lib/prisma";
 import { getActiveSchoolYear, getSchoolYearById } from "@/lib/school-year-utils";
 import { getCurrentUser } from "@/lib/session";
 import { getStudentTypeICount, transformInfraction, transformStudent } from "@/lib/utils";
 import { AlertStatus } from "@/lib/utils";
-import { Role } from "@prisma/client";
+import { filterStudentsByUserPermissions } from "@/lib/role-filters";
 import { NextResponse } from "next/server";
 
-// Función para filtrar estudiantes basado en permisos del usuario
-async function filterStudentsByUserPermissions(
-  students: Array<any>, // Simplificamos el tipo por ahora
-  user: { id: string; role: Role; [key: string]: any }
-) {
-  // Los administradores ven todo
-  if (user.role === "ADMIN") {
-    return students;
-  }
-
-  // Psicología ve todas las áreas
-  if (user.role === "PSYCHOLOGY") {
-    return students;
-  }
-
-  // Coordinadores ven solo su área específica
-  if (
-    user.role === "PRESCHOOL_COORDINATOR" ||
-    user.role === "ELEMENTARY_COORDINATOR" ||
-    user.role === "MIDDLE_SCHOOL_COORDINATOR" ||
-    user.role === "HIGH_SCHOOL_COORDINATOR"
-  ) {
-    const allowedSections: Record<Role, string[]> = {
-      [Role.PRESCHOOL_COORDINATOR]: ["Preschool"],
-      [Role.ELEMENTARY_COORDINATOR]: ["Elementary"],
-      [Role.MIDDLE_SCHOOL_COORDINATOR]: ["Middle School"],
-      [Role.HIGH_SCHOOL_COORDINATOR]: ["High School"],
-      [Role.ADMIN]: [],
-      [Role.PSYCHOLOGY]: [],
-      [Role.TEACHER]: [],
-      [Role.USER]: [],
-      [Role.STUDENT]: [],
-    };
-
-    const userAllowedSections = allowedSections[user.role] || [];
-    return students.filter((student) => {
-      const studentSection = getSectionCategory(student.grado);
-      return userAllowedSections.includes(studentSection);
-    });
-  }
-
-  // Directores de grupo (TEACHER) ven solo su grupo específico
-  if (user.role === "TEACHER") {
-    // Obtener el usuario completo con el groupCode
-    const fullUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { groupCode: true },
-    });
-
-    if (!fullUser?.groupCode) {
-      return []; // Si no tiene grupo asignado, no ve nada
-    }
-
-    return students.filter((student) => {
-      return student.grado === fullUser.groupCode;
-    });
-  }
-
-  // Por defecto, no ven nada
-  return [];
-}
+// NOTA: Función movida a @/lib/role-filters.ts para reutilización
 
 export async function GET(request: Request) {
   try {
@@ -139,9 +78,27 @@ export async function GET(request: Request) {
 
     console.log("🗺️ Settings map:", settingsMap);
 
+    // ⚡ OPTIMIZACIÓN: Filtrar directores de grupo a nivel de BD
+    let teacherGroupFilter = {};
+    if (currentUser.role === "TEACHER") {
+      const teacherUser = await prisma.user.findUnique({
+        where: { id: currentUser.id },
+        select: { groupCode: true },
+      });
+
+      if (!teacherUser?.groupCode) {
+        console.log("🚨 TEACHER alertas: No groupCode asignado, retornando lista vacía");
+        return NextResponse.json([]);
+      }
+
+      teacherGroupFilter = { grado: teacherUser.groupCode };
+      console.log("🚨 TEACHER alertas: Filtrando en BD por grado:", teacherUser.groupCode);
+    }
+
     // Fetch students and infractions filtered by school year
     const [rawStudents, rawInfractions] = await Promise.all([
       prisma.estudiantes.findMany({
+        where: teacherGroupFilter, // Aplicar filtro de director de grupo
         select: {
           id: true,
           codigo: true,
@@ -216,11 +173,20 @@ export async function GET(request: Request) {
         })
       : students;
 
-    // Filter students based on user permissions
-    const filteredStudents = await filterStudentsByUserPermissions(
-      sectionStudents,
-      currentUser
-    );
+    // ⚡ OPTIMIZACIÓN: Solo aplicar filtrado frontend para coordinadores
+    // Los directores (TEACHER) ya están filtrados en la consulta BD
+    let filteredStudents;
+    if (currentUser.role === "TEACHER") {
+      // Ya filtrado en BD, no necesita filtrado adicional
+      filteredStudents = sectionStudents;
+      console.log("🚨 TEACHER alertas: Usando estudiantes ya filtrados en BD:", sectionStudents.length);
+    } else {
+      // Coordinadores y otros roles que necesitan filtrado por sección
+      filteredStudents = await filterStudentsByUserPermissions(
+        sectionStudents,
+        currentUser
+      );
+    }
 
     // Process alerts for each student
     const studentsWithAlerts = filteredStudents

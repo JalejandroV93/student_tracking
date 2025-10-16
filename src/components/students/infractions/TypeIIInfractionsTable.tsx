@@ -20,6 +20,7 @@ import { formatDate } from "@/lib/utils";
 import { EmptyInfractionsState } from "./EmptyInfractionsState";
 import { getTypeIIInfractionStatus } from "../utils/infraction-utils";
 import type { TypeIIInfractionTableProps } from "../types";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export function TypeIIInfractionsTable({
   infractions,
@@ -29,6 +30,11 @@ export function TypeIIInfractionsTable({
   onViewFollowUpsClick,
   loadingStates,
 }: TypeIIInfractionTableProps) {
+  const { user } = useAuth();
+  
+  // Los directores de grupo (TEACHER) no pueden agregar seguimientos
+  const canAddFollowUps = user?.role !== "TEACHER";
+
   if (infractions.length === 0) {
     return (
       <EmptyInfractionsState message="No hay faltas Tipo II registradas." />
@@ -132,7 +138,7 @@ export function TypeIIInfractionsTable({
                   </TooltipContent>
                 </Tooltip>
 
-                {status.canAddFollowUp && (
+                {status.canAddFollowUp && canAddFollowUps && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
