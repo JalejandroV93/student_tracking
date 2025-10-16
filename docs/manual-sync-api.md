@@ -7,10 +7,7 @@ Este documento describe los nuevos endpoints para la sincronización manual con 
 Todos los endpoints requieren un token Bearer válido:
 
 ```
-Authorization: Bearer QgTxbAk2GoQQgT7gymDTPkd9GYcznFRDjsORDUNGePI
-```
-
-**Token generado:** 16/10/2025, válido hasta 16/10/2026
+Authorization: Bearer {TU_TOKEN_GENERADO_AQUI}
 
 ## Endpoints Disponibles
 
