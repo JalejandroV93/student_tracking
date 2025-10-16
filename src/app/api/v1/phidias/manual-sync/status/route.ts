@@ -91,7 +91,7 @@ async function getUnsyncedSections() {
         lastInfractionDate: lastInfraction?.fecha_ultima_edicion,
         needsSync: studentsCount > 0 && (
           !lastSuccessfulSync || 
-          (lastInfraction && lastInfraction.fecha_ultima_edicion! < new Date(Date.now() - 24 * 60 * 60 * 1000)) // Más de 24 horas
+          (lastInfraction?.fecha_ultima_edicion && lastInfraction.fecha_ultima_edicion < new Date(Date.now() - 24 * 60 * 60 * 1000)) // Más de 24 horas
         )
       };
     })
