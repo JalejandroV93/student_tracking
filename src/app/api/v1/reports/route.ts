@@ -167,7 +167,6 @@ export async function GET(request: NextRequest) {
       take: 15,
     }) as unknown as FaltasGroupByResult[];
 
-    // 7. Tendencia mensual (últimos 12 meses o período seleccionado) - removed unused variable
 
     // Get monthly trend data with proper filtering
     let monthlyTrendQuery = `
