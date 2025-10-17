@@ -397,7 +397,6 @@ export function ReportFilters({
                 value={dateRange}
                 onChange={handleDateRangeChange}
                 placeholder="Seleccionar rango de fechas (opcional)"
-                //disabled={isLoading}
               />
             </div>
           </div>

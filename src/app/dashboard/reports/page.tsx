@@ -68,13 +68,7 @@ export default function ReportsPage() {
     setFilters(newFilters)
   }
 
-  const handleExportPDF = async () => {
-    if (!reportData) {
-      toast.error("No hay datos para exportar")
-      return
-    }
-    // PDF export is now handled by the ReportPDFExport component
-  }
+  
 
   const getReportTitle = () => {
     if (filters.startDate && filters.endDate) {
@@ -115,7 +109,6 @@ export default function ReportsPage() {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           onGenerateReport={generateReport}
-          onExportPDF={handleExportPDF}
           isLoading={isLoading}
         />
 

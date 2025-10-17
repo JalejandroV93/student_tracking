@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
@@ -9,53 +9,55 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Get basic stats about the database
-    const totalFaltas = await prisma.faltas.count();
-    const totalEstudiantes = await prisma.estudiantes.count();
-    
-    // Get sample of recent faltas
-    const sampleFaltas = await prisma.faltas.findMany({
-      take: 5,
-      orderBy: { created_at: 'desc' },
-      select: {
-        hash: true,
-        tipo_falta: true,
-        fecha: true,
-        nivel: true,
-        seccion: true,
-        autor: true,
-        school_year_id: true,
-        trimestre: true,
-      }
-    });
-
-    // Get unique values for key fields
-    const uniqueNiveles = await prisma.faltas.groupBy({
-      by: ['nivel'],
-      where: {
-        nivel: {
-          not: null
+    const [
+      totalFaltas,
+      totalEstudiantes,
+      sampleFaltas,
+      uniqueNiveles,
+      uniqueSecciones,
+      uniqueTiposFalta,
+    ] = await Promise.all([
+      prisma.faltas.count(),
+      prisma.estudiantes.count(),
+      prisma.faltas.findMany({
+        take: 5,
+        orderBy: { created_at: 'desc' },
+        select: {
+          hash: true,
+          tipo_falta: true,
+          fecha: true,
+          nivel: true,
+          seccion: true,
+          autor: true,
+          school_year_id: true,
+          trimestre: true,
         }
-      }
-    });
-
-    const uniqueSecciones = await prisma.faltas.groupBy({
-      by: ['seccion'],
-      where: {
-        seccion: {
-          not: null
+      }),
+      prisma.faltas.groupBy({
+        by: ['nivel'],
+        where: {
+          nivel: {
+            not: null
+          }
         }
-      }
-    });
-
-    const uniqueTiposFalta = await prisma.faltas.groupBy({
-      by: ['tipo_falta'],
-      where: {
-        tipo_falta: {
-          not: null
+      }),
+      prisma.faltas.groupBy({
+        by: ['seccion'],
+        where: {
+          seccion: {
+            not: null
+          }
         }
-      }
-    });
+      }),
+      prisma.faltas.groupBy({
+        by: ['tipo_falta'],
+        where: {
+          tipo_falta: {
+            not: null
+          }
+        }
+      }),
+    ]);
 
     return NextResponse.json({
       totalFaltas,

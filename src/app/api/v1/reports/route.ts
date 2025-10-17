@@ -1,14 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
-import { Role, Prisma } from '@prisma/client';
+import { DatabaseFilters, FaltasGroupByResult, FormattedCategoryData, FormattedTeacherData, MonthlyTrendRawResult } from '@/types/api-reports';
+import { Prisma, Role } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  FaltasGroupByResult, 
-  MonthlyTrendRawResult, 
-  FormattedCategoryData, 
-  FormattedTeacherData, 
-  DatabaseFilters 
-} from '@/types/api-reports';
 
 export async function GET(request: NextRequest) {
   try {
@@ -87,7 +81,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('Debug - Final filters after role filtering:', baseFilters);
+    
     
     // 1. Summary statistics
     const [totalFaltas, faltasTipoI, faltasTipoII, faltasTipoIII] = await Promise.all([
@@ -187,9 +181,9 @@ export async function GET(request: NextRequest) {
       queryParams.push(dateFilters.gte);
     }
     
-    if (dateFilters.lte || dateFilters.lt) {
+    if (dateFilters.lte) {
       monthlyTrendQuery += ` AND fecha <= $${queryParams.length + 1}`;
-      queryParams.push(dateFilters.lte || dateFilters.lt);
+      queryParams.push(dateFilters.lte);
     }
     
     // Don't add default date filter - if no dates provided, show all records

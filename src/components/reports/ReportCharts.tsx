@@ -60,21 +60,15 @@ export function ReportCharts({ data }: ReportChartsProps) {
   ].filter((item) => item.value > 0)
 
   // Prepare monthly trend data
-  const monthlyTrendData = data.tendenciaMensual.reduce((acc: Array<Record<string, string | number>>, item) => {
+  const monthlyTrendMap = data.tendenciaMensual.reduce((acc: Record<string, Record<string, string | number>>, item) => {
     const month = new Date(item.mes).toLocaleDateString("es-ES", { month: "short", year: "numeric" })
-    const existing = acc.find((entry) => entry.mes === month)
-
-    if (existing) {
-      existing[item.tipo_falta.replace(" ", "")] = Number.parseInt(item.cantidad.toString())
-    } else {
-      acc.push({
-        mes: month,
-        [item.tipo_falta.replace(" ", "")]: Number.parseInt(item.cantidad.toString()),
-      })
+    if (!acc[month]) {
+      acc[month] = { mes: month }
     }
-
+    acc[month][item.tipo_falta.replace(" ", "")] = Number(item.cantidad)
     return acc
-  }, [])
+  }, {})
+  const monthlyTrendData = Object.values(monthlyTrendMap)
 
   return (
     <div className="space-y-6">

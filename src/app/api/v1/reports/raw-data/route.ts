@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
-import { Role, Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -98,20 +98,17 @@ export async function GET(request: NextRequest) {
     // Format the data according to the requested fields
     const formattedData = rawData.map(falta => {
       // Build student name from available fields
-      let nombreEstudiante = 'No encontrado';
-      if (falta.estudiante) {
-        if (falta.estudiante.firstname && falta.estudiante.lastname) {
-          nombreEstudiante = `${falta.estudiante.firstname} ${falta.estudiante.lastname}`;
-        } else if (falta.estudiante.nombre) {
-          nombreEstudiante = falta.estudiante.nombre;
-        }
-      }
+      const student = falta.estudiante;
+      const studentName =
+        student?.firstname && student?.lastname
+          ? `${student.firstname} ${student.lastname}`
+          : student?.nombre ?? 'No encontrado';
 
       return {
         nivel_academico: falta.nivel,
         tipo_falta: falta.tipo_falta,
         codigo_estudiante: falta.codigo_estudiante,
-        nombre_estudiante: nombreEstudiante,
+        nombre_estudiante: studentName,
         grado: falta.seccion,
         numero_falta: falta.numero_falta,
         descripcion: falta.descripcion_falta,
