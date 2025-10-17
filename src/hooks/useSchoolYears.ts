@@ -42,8 +42,11 @@ export function useSchoolYears() {
     fetchSchoolYears();
   }, []);
 
+  const activeSchoolYear = schoolYears.find(year => year.isActive);
+
   return {
     schoolYears,
+    activeSchoolYear,
     loading,
     error,
   };
