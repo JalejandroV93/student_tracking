@@ -1,6 +1,6 @@
 import { UserPayload } from "@/types/user";
 import { Role } from "@prisma/client";
-import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, RefreshCw, Settings, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, RefreshCw, Settings, Users, FileBarChart } from "lucide-react";
 
 type Submenu = {
   href: string;
@@ -150,6 +150,12 @@ export function getMenuList(
             },
           ],
         },
+        {
+          href: "/dashboard/reports",
+          label: "Reportes",
+          icon: FileBarChart,
+          active: pathname.startsWith("/dashboard/reports"),
+        },
       ],
     },
   ];
@@ -233,6 +239,11 @@ export function getMenuList(
         .filter((menu) => {
           // Filtrar "Gestión de Casos" para directores de grupo
           if (user?.role === Role.TEACHER && menu.label === "Gestión de Casos") {
+            return false;
+          }
+          
+          // Filtrar "Reportes" para directores de grupo
+          if (user?.role === Role.TEACHER && menu.label === "Reportes") {
             return false;
           }
           
