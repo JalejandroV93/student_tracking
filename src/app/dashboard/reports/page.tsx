@@ -96,7 +96,7 @@ export default function ReportsPage() {
       parts.push(`Faltas ${filters.tipoFalta}`)
     }
 
-    return parts.length > 0 ? parts.join(" • ") : " Todas las secciones y tipos de falta"
+    return parts.length > 0 ? parts.join(" • ") : "Todas las secciones y tipos de falta"
   }
 
   return (
