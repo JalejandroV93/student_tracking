@@ -28,7 +28,7 @@ export function Sidebar() {
       >
         <Button
           className={cn(
-            "transition-transform ease-in-out duration-300 mb-1",
+            "transition-transform ease-in-out duration-300 mb-1 rounded-3xl",
             !getOpenState() ? "translate-x-1" : "translate-x-0"
           )}
           variant="link"
