@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { phidiasSyncService } from '@/services/phidias-sync.service';
+import { phidiasApiService } from '@/services/phidias-api.service';
 
 // Verificar Bearer token
 function validateBearerToken(request: NextRequest): boolean {
@@ -19,6 +20,59 @@ function validateBearerToken(request: NextRequest): boolean {
   }
   
   return true;
+}
+
+// Función helper para obtener conteos de sincronización usando la lógica de consolidate
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getSyncCounts(config: any, activeSchoolYear: any) {
+  try {
+    // Contar registros locales para este seguimiento (como en consolidate)
+    const syncedInfractionsCount = await prisma.faltas.count({
+      where: {
+        school_year_id: activeSchoolYear.id,
+        tipo_falta: config.tipo_falta,
+        nivel: config.nivel_academico
+      }
+    });
+
+    // Obtener conteo total desde Phidias usando la misma lógica de consolidate
+    const phidiasResult = await phidiasApiService.getConsolidatedRecords(config.phidias_id);
+    
+    let phidiasCount = 0;
+    let pendingInfractionsCount = 0;
+    let needsSync = false;
+    let status: 'synced' | 'out_of_sync' | 'error' = 'error';
+
+    if (phidiasResult.success) {
+      phidiasCount = phidiasResult.count || 0;
+      pendingInfractionsCount = Math.max(0, phidiasCount - syncedInfractionsCount);
+      needsSync = syncedInfractionsCount !== phidiasCount;
+      status = needsSync ? 'out_of_sync' : 'synced';
+    } else {
+      // En caso de error, usar lógica de fallback
+      needsSync = true;
+      status = 'error';
+    }
+
+    return {
+      syncedInfractionsCount,
+      pendingInfractionsCount,
+      needsSync,
+      status,
+      phidiasCount,
+      error: phidiasResult.success ? undefined : phidiasResult.error
+    };
+  } catch (error) {
+    console.error(`Error getting sync counts for poll ${config.phidias_id}:`, error);
+    return {
+      syncedInfractionsCount: 0,
+      pendingInfractionsCount: 0,
+      needsSync: true,
+      status: 'error' as const,
+      phidiasCount: 0,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }
 
 // Función para obtener secciones no sincronizadas
@@ -44,33 +98,33 @@ async function getUnsyncedSections() {
     orderBy: { completedAt: 'desc' }
   });
 
-  // Obtener estadísticas por nivel académico
+  // Obtener todos los estudiantes para conteo por nivel
+  const allStudents = await prisma.estudiantes.findMany({
+    where: {
+      school_year_id: activeSchoolYear.id
+    },
+    select: {
+      id: true,
+      codigo: true,
+      seccion: true,
+      grado: true
+    }
+  });
+
+  // Obtener estadísticas por nivel académico usando lógica de consolidate
   const sectionStats = await Promise.all(
     seguimientosConfig.map(async (config) => {
-      // Contar estudiantes por nivel
-      const studentsCount = await prisma.estudiantes.count({
-        where: {
-          school_year_id: activeSchoolYear.id,
-          OR: [
-            { seccion: config.nivel_academico },
-            { grado: { contains: config.nivel_academico } }
-          ]
-        }
-      });
+      // Filtrar estudiantes para este nivel
+      const studentsForLevel = phidiasSyncService.filterStudentsByLevel(
+        allStudents,
+        config.nivel_academico
+      );
+      const studentsCount = studentsForLevel.length;
 
-      // Contar faltas sincronizadas desde la última sincronización exitosa
-      const syncedInfractionsCount = await prisma.faltas.count({
-        where: {
-          school_year_id: activeSchoolYear.id,
-          tipo_falta: config.tipo_falta,
-          nivel: config.nivel_academico,
-          ...(lastSuccessfulSync?.completedAt ? {
-            created_at: { gte: lastSuccessfulSync.completedAt }
-          } : {})
-        }
-      });
+      // Usar la nueva función que replica la lógica de consolidate
+      const syncCounts = await getSyncCounts(config, activeSchoolYear);
 
-      // Obtener la fecha de la última falta sincronizada para este nivel
+      // Obtener la fecha de la última falta para este nivel
       const lastInfraction = await prisma.faltas.findFirst({
         where: {
           school_year_id: activeSchoolYear.id,
@@ -87,12 +141,13 @@ async function getUnsyncedSections() {
         pollId: config.phidias_id,
         configName: config.name,
         studentsCount,
-        syncedInfractionsCount,
+        syncedInfractionsCount: syncCounts.syncedInfractionsCount,
+        pendingInfractionsCount: syncCounts.pendingInfractionsCount,
+        phidiasCount: syncCounts.phidiasCount,
         lastInfractionDate: lastInfraction?.fecha_ultima_edicion,
-        needsSync: studentsCount > 0 && (
-          !lastSuccessfulSync || 
-          (lastInfraction?.fecha_ultima_edicion && lastInfraction.fecha_ultima_edicion < new Date(Date.now() - 24 * 60 * 60 * 1000)) // Más de 24 horas
-        )
+        needsSync: syncCounts.needsSync,
+        status: syncCounts.status,
+        error: syncCounts.error
       };
     })
   );
@@ -114,7 +169,12 @@ async function getUnsyncedSections() {
     summary: {
       totalSections: sectionStats.length,
       sectionsNeedingSync: sectionStats.filter(s => s.needsSync).length,
-      totalStudents: sectionStats.reduce((sum, s) => sum + s.studentsCount, 0)
+      sectionsSynced: sectionStats.filter(s => s.status === 'synced').length,
+      sectionsWithErrors: sectionStats.filter(s => s.status === 'error').length,
+      totalStudents: sectionStats.reduce((sum, s) => sum + s.studentsCount, 0),
+      totalSyncedInfractions: sectionStats.reduce((sum, s) => sum + s.syncedInfractionsCount, 0),
+      totalPendingInfractions: sectionStats.reduce((sum, s) => sum + s.pendingInfractionsCount, 0),
+      totalPhidiasInfractions: sectionStats.reduce((sum, s) => sum + (s.phidiasCount || 0), 0)
     }
   };
 }

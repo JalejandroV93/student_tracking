@@ -143,7 +143,7 @@ export default function ReportsPage() {
         {/* Report Content */}
         {reportData && !isLoading && (
           <div className="space-y-6">
-            <Card className="border-2 shadow-sm">
+            <Card className="border-none shadow-none">
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="space-y-2">
@@ -151,9 +151,9 @@ export default function ReportsPage() {
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                         <FileBarChart className="h-6 w-6 text-primary" aria-hidden="true" />
                       </div>
-                      <span className="text-balance">{getReportTitle()}</span>
+                      <span className="text-lg">{getReportTitle()}</span>
                     </CardTitle>
-                    <CardDescription className="text-base text-balance">{getReportSubtitle()}</CardDescription>
+                    <CardDescription className="text-sm text-balance">{getReportSubtitle()}</CardDescription>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <ReportPreview data={reportData} title={getReportTitle()} subtitle={getReportSubtitle()} />

@@ -19,6 +19,7 @@ import {
   toggleInfractionAttended,
   addObservaciones,
   syncStudentWithPhidias,
+  deleteInfraction,
 } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
@@ -26,6 +27,7 @@ import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
 import { StudentProfileCard } from "@/components/students/profile";
 import { StudentAdvisorChatbot } from "@/components/students/advisor";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function StudentDetailsPage() {
   const params = useParams();
@@ -33,6 +35,7 @@ export default function StudentDetailsPage() {
   const studentId = params.id as string;
   const queryClient = useQueryClient();
   const { activeSchoolYear } = useDashboardFilters();
+  const { user } = useAuth();
 
   // Hook mejorado para manejo de loading por ID
   const { loadingStates, setLoading } = useInfractionLoadingState();
@@ -223,6 +226,34 @@ export default function StudentDetailsPage() {
     }
   );
 
+  const { mutate: deleteInfractionMutation } = useMutation({
+    mutationFn: deleteInfraction,
+    onMutate: (infractionId) => {
+      setLoading(infractionId, true);
+    },
+    onSuccess: () => {
+      toast.success("Falta eliminada exitosamente!");
+      setIsDeleteConfirmationOpen(false);
+      setInfractionToDelete(null);
+      
+      // Invalidar queries para actualizar los datos
+      queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["infractions"] });
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      
+      // Refrescar los datos del estudiante
+      refetchStudentDetails();
+    },
+    onError: (error, infractionId) => {
+      toast.error(`Error eliminando falta: ${error.message}`);
+      setLoading(infractionId, false);
+    },
+    onSettled: (_, __, infractionId) => {
+      setLoading(infractionId, false);
+    },
+  });
+
   const [isFollowUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [selectedInfractionForFollowUp, setSelectedInfractionForFollowUp] =
     useState<Infraction | null>(null);
@@ -237,6 +268,8 @@ export default function StudentDetailsPage() {
     infraction: Infraction;
     observaciones?: string;
   } | null>(null);
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
+  const [infractionToDelete, setInfractionToDelete] = useState<Infraction | null>(null);
 
   const handleOpenFollowUpDialog = (infraction: Infraction) => {
     setSelectedInfractionForFollowUp(infraction);
@@ -310,6 +343,17 @@ export default function StudentDetailsPage() {
       observaciones,
       autor: "Usuario", // TODO: Obtener del contexto de usuario
     });
+  };
+
+  const handleDeleteInfraction = (infraction: Infraction) => {
+    setInfractionToDelete(infraction);
+    setIsDeleteConfirmationOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (infractionToDelete) {
+      deleteInfractionMutation(infractionToDelete.id);
+    }
   };
 
   const student = studentDetailsData?.student;
@@ -454,6 +498,8 @@ export default function StudentDetailsPage() {
                 onToggleAttendedClick={handleToggleAttended}
                 onViewInfractionDetailsClick={handleOpenInfractionModal}
                 onEditFollowUp={handleOpenEditFollowUpDialog}
+                onDeleteInfractionClick={handleDeleteInfraction}
+                userRole={user?.role}
                 loadingStates={loadingStates}
               />
             </div>
@@ -514,6 +560,26 @@ Esta acción cambiará el estado de la falta de 'Atendida' a 'No atendida' y pod
 
 ¿Desea continuar?`}
           confirmText="Sí, marcar como pendiente"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
+
+        {/* Modal de confirmación para eliminar falta */}
+        <ConfirmationDialog
+          isOpen={isDeleteConfirmationOpen}
+          onOpenChange={setIsDeleteConfirmationOpen}
+          onConfirm={handleConfirmDelete}
+          title="Confirmar eliminación de falta"
+          description={`¿Está seguro que desea ELIMINAR esta falta permanentemente?
+
+Falta: ${infractionToDelete?.description || 'N/A'}
+Fecha: ${infractionToDelete ? new Date(infractionToDelete.date).toLocaleDateString() : 'N/A'}
+Tipo: ${infractionToDelete?.type || 'N/A'}
+
+ADVERTENCIA: Esta acción eliminará la falta y todos sus seguimientos relacionados de forma permanente. No se puede deshacer.
+
+¿Desea continuar?`}
+          confirmText="Sí, eliminar falta"
           cancelText="Cancelar"
           variant="destructive"
         />

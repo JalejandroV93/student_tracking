@@ -206,7 +206,7 @@ export function ReportFilters({
   ].filter(Boolean).length
 
   return (
-    <Card className="border-2 shadow-sm">
+    <Card className="border-none shadow-none">
       <CardHeader className="space-y-1 pb-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">

@@ -29,6 +29,8 @@ export function StudentDetailCard({
   onToggleAttendedClick,
   onViewInfractionDetailsClick,
   onEditFollowUp,
+  onDeleteInfractionClick,
+  userRole,
   loadingStates,
 }: StudentDetailCardProps) {
   const { dialogState, actions } = useStudentDialogs();
@@ -89,6 +91,8 @@ export function StudentDetailCard({
                     onAddFollowUpClick={onAddFollowUpClick}
                     onViewDetailsClick={handleOpenInfractionDetailsModal}
                     onViewFollowUpsClick={handleOpenDetailsDialog}
+                    onDeleteInfractionClick={onDeleteInfractionClick}
+                    userRole={userRole}
                   />
                 ))}
 

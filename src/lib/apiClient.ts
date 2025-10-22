@@ -266,3 +266,28 @@ export const addObservaciones = async ({
     observaciones_fecha: string;
   }>(response);
 };
+
+// Function to delete an infraction (admin only)
+export const deleteInfraction = async (infractionId: string): Promise<{
+  message: string;
+  deletedInfraction: {
+    hash: string;
+    descripcion: string | null;
+    fecha: Date;
+    numero: number | null;
+  };
+}> => {
+  const response = await fetch(`/api/v1/infractions/${infractionId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse<{
+    message: string;
+    deletedInfraction: {
+      hash: string;
+      descripcion: string | null;
+      fecha: Date;
+      numero: number | null;
+    };
+  }>(response);
+};

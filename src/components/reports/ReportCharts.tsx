@@ -23,7 +23,8 @@ import {
   Line,
 } from "recharts"
 import type { ReportData } from "@/types/reports"
-import { TrendingUp, BarChart3, PieChartIcon, Users, GraduationCap, AlertTriangle } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { AlertTriangle, BarChart3, GraduationCap, PieChart as PieChartIcon, TrendingUp, Users } from "lucide-react"
 
 interface ReportChartsProps {
   data: ReportData
@@ -51,6 +52,50 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// Array de colores pastel predefinidos para usar con cn()
+const pastelColors = [
+  "bg-red-100",
+  "bg-orange-100", 
+  "bg-amber-100",
+  "bg-yellow-100",
+  "bg-lime-100",
+  "bg-green-100",
+  "bg-emerald-100",
+  "bg-teal-100",
+  "bg-cyan-100",
+  "bg-sky-100",
+  "bg-blue-100",
+  "bg-indigo-100",
+  "bg-violet-100",
+  "bg-purple-100",
+  "bg-fuchsia-100",
+  "bg-pink-100",
+  "bg-rose-100",
+  "bg-red-200",
+  "bg-orange-200",
+  "bg-amber-200",
+  "bg-yellow-200",
+  "bg-lime-200",
+  "bg-green-200",
+  "bg-emerald-200",
+  "bg-teal-200",
+  "bg-cyan-200",
+  "bg-sky-200",
+  "bg-blue-200",
+  "bg-indigo-200",
+  "bg-violet-200",
+  "bg-purple-200",
+  "bg-fuchsia-200",
+  "bg-pink-200",
+  "bg-rose-200",
+
+];
+
+// Función para obtener un color pastel aleatorio
+const getRandomPastelColor = (index: number) => {
+  return pastelColors[index % pastelColors.length];
+};
+
 export function ReportCharts({ data }: ReportChartsProps) {
   // Prepare pie chart data for summary
   const summaryPieData = [
@@ -71,9 +116,9 @@ export function ReportCharts({ data }: ReportChartsProps) {
   const monthlyTrendData = Object.values(monthlyTrendMap)
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-        <Card className="border-1 shadow-sm transition-all hover:shadow-md">
+    <div className="space-y-6 bg-white/50 p-4 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 ">
+        <Card className="border-1 transition-all hover:shadow-md">
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Faltas</CardTitle>
@@ -83,12 +128,12 @@ export function ReportCharts({ data }: ReportChartsProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tracking-tight">{data.summary.total.toLocaleString()}</div>
+            <div className="text-2xl font-bold tracking-tight">{data.summary.total.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">Registros totales</p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-indigo-200 shadow-sm transition-all hover:shadow-md dark:border-indigo-900">
+        <Card className="border-1 border-indigo-200 shadow-sm transition-all hover:shadow-md dark:border-indigo-900">
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Tipo I</CardTitle>
@@ -98,14 +143,14 @@ export function ReportCharts({ data }: ReportChartsProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
+            <div className="text-2xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
               {data.summary.tipoI.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Faltas leves</p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-amber-200 shadow-sm transition-all hover:shadow-md dark:border-amber-900">
+        <Card className="border-1 border-amber-200 shadow-sm transition-all hover:shadow-md dark:border-amber-900">
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400">Tipo II</CardTitle>
@@ -115,14 +160,14 @@ export function ReportCharts({ data }: ReportChartsProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
+            <div className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
               {data.summary.tipoII.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Faltas moderadas</p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-red-200 shadow-sm transition-all hover:shadow-md dark:border-red-900">
+        <Card className="border-1 border-red-200 shadow-sm transition-all hover:shadow-md dark:border-red-900">
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Tipo III</CardTitle>
@@ -132,7 +177,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold tracking-tight text-red-600 dark:text-red-400">
+            <div className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
               {data.summary.tipoIII.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Faltas graves</p>
@@ -141,7 +186,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
       {summaryPieData.length > 0 && (
-        <Card className="border-2 shadow-sm">
+        <Card className="border-none shadow-none">
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -180,7 +225,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
       )}
 
       {data.faltasPorNivel.length > 0 && (
-        <Card className="border-2 shadow-sm">
+        <Card className="border-none shadow-none">
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -218,7 +263,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
       )}
 
       {data.faltasPorGrado.length > 0 && (
-        <Card className="border-2 shadow-sm">
+        <Card className="border-none shadow-none">
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -256,7 +301,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
       )}
 
       {data.docentesTopFaltas.length > 0 && (
-        <Card className="border-2 shadow-sm">
+        <Card className="border-none shadow-none">
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -294,7 +339,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
       )}
 
       {monthlyTrendData.length > 0 && (
-        <Card className="border-2 shadow-sm">
+        <Card className="border-none shadow-none">
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -348,7 +393,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
 </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {data.faltasMasRecurrentes.porNivel.length > 0 && (
-          <Card className="border-2 shadow-sm">
+          <Card className="border-none shadow-none">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -365,7 +410,10 @@ export function ReportCharts({ data }: ReportChartsProps) {
                 {data.faltasMasRecurrentes.porNivel.slice(0, 8).map((falta, index) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center gap-3 p-3 bg-muted/50 rounded-lg border transition-all hover:bg-muted hover:shadow-sm"
+                    className={cn(
+                      "flex justify-between items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-sm",
+                      getRandomPastelColor(index)
+                    )}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm text-balance">{falta.nivel}</div>
@@ -384,7 +432,7 @@ export function ReportCharts({ data }: ReportChartsProps) {
         )}
 
         {data.faltasMasRecurrentes.porGrado.length > 0 && (
-          <Card className="border-2 shadow-sm">
+          <Card className="border-none shadow-none">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -401,7 +449,10 @@ export function ReportCharts({ data }: ReportChartsProps) {
                 {data.faltasMasRecurrentes.porGrado.slice(0, 8).map((falta, index) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center gap-3 p-3 bg-muted/50 rounded-lg border transition-all hover:bg-muted hover:shadow-sm"
+                    className={cn(
+                      "flex justify-between items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-sm",
+                      getRandomPastelColor(index + 8)
+                    )}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm text-balance">{falta.grado}</div>

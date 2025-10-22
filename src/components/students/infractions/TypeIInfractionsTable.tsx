@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, Circle, Loader2, FileText } from "lucide-react";
+import { CheckCircle, Circle, Loader2, FileText, Trash2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +24,8 @@ export function TypeIInfractionsTable({
   infractions,
   onToggleAttendedClick,
   onViewDetailsClick,
+  onDeleteInfractionClick,
+  userRole,
   loadingStates,
 }: TypeIInfractionTableProps) {
   if (infractions.length === 0) {
@@ -137,6 +139,26 @@ export function TypeIInfractionsTable({
                     </p>
                   </TooltipContent>
                 </Tooltip>
+
+                {/* Delete button - only show for ADMIN users */}
+                {userRole === "ADMIN" && onDeleteInfractionClick && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteInfractionClick(infraction)}
+                        disabled={isLoading}
+                        className="p-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Eliminar Falta</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </TableCell>
             </TableRow>
           );
