@@ -44,7 +44,7 @@ export async function DELETE(
 
     if (!existingInfraction) {
       return NextResponse.json(
-        { error: "Infraction not found" },
+        { error: "The infraction does not exist" },
         { status: 404 }
       );
     }
