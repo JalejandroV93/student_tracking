@@ -13,7 +13,7 @@ export function SidebarToggle({ isOpen, setIsOpen }: SidebarToggleProps) {
     <div className="invisible lg:visible absolute top-[12px] -right-[16px] z-20">
       <Button
         onClick={() => setIsOpen?.()}
-        className=" w-8 h-8 rounded-4xl"
+        className="w-8 h-8 rounded-3xl"
         variant="outline"
         size="icon"
       >
