@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CreateSchoolYearRequest } from "@/types/school-year";
+import { getCurrentUser } from '@/lib/session';
 
 export async function GET() {
   try {
+
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    
     const schoolYears = await prisma.schoolYear.findMany({
       include: {
         trimestres: {

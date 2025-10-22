@@ -3,9 +3,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { SECCIONES_ACADEMICAS } from "@/lib/constantes";
 import type { AlertSettings } from "@/types/dashboard"; // Import the type
+import { getCurrentUser } from "@/lib/session";
 
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const dbSettings = await prisma.alertSettings.findMany();
 
     if (dbSettings.length === 0) {

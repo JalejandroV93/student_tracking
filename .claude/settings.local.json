@@ -13,7 +13,7 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "memory"
+    "next-devtools"
   ],
   "hooks": {
     "PostToolUse": [

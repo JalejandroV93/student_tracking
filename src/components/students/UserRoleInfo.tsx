@@ -74,7 +74,7 @@ export function UserRoleInfo() {
   const Icon = config.icon;
 
   return (
-    <Card className="border-none mb-2 rounded-full">
+    <Card className="border-none rounded-t-2xl rounded-b-none shadow-none">
       <CardContent className="flex flex-row gap-2 justify-between items-center"  >
           <Badge className={config.color}>
             <Icon className="w-4 h-4 " />

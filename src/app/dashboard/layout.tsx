@@ -7,15 +7,21 @@ import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useStore } from "@/hooks/use-store";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { user } = useAuth();
   const sidebar = useStore(useSidebar, (x) => x);
   if (!sidebar) return null;
   const { getOpenState, settings } = sidebar;
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <ReactQueryProvider>

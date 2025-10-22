@@ -165,7 +165,7 @@ export function StudentSearchList({
   }
 
   return (
-    <Card className="w-full border-none">
+    <Card className="w-full border-none rounded-t-none shadow-none">
       <CardHeader>
         <div className="space-y-4">
           <div className="relative">
@@ -209,10 +209,10 @@ export function StudentSearchList({
           </div>
         )}
         {!isLoading && !error && (
-          <ScrollArea className="h-[calc(700px-1rem)] border rounded-md">
+          <ScrollArea className="h-[calc(700px-1rem)] rounded-md">
             {students.length > 0 ? (
               <>
-                <ul className="divide-y">
+                <ul className="space-y-2 px-1 py-2">
                   {students.map((student, index) => {
                     // Si es el último elemento y hay más páginas, agregar ref para infinite scroll
                     const isLastElement = index === students.length - 1;
@@ -223,7 +223,7 @@ export function StudentSearchList({
                         ref={isLastElement ? lastElementRef : undefined}
                         className={`rounded-lg ${getSectionColor(
                           student.seccion || student.grado
-                        )} hover:shadow-md transition-shadow`}
+                        )} hover:shadow-sm transition-shadow`}
                       >
                         <button
                           type="button" // Important for accessibility

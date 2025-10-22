@@ -30,7 +30,7 @@ const roleAreaMap: Record<Role, string[]> = {
   [Role.STUDENT]: [],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get("auth_token")?.value;
   let user: UserPayload | null = null;
   let isLoggedIn = false;
