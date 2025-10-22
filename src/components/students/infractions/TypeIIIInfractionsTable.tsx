@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +23,9 @@ import type { TypeIIIInfractionTableProps } from "../types";
 export function TypeIIIInfractionsTable({
   infractions,
   onViewDetailsClick,
+  onDeleteInfractionClick,
+  userRole,
+  loadingStates,
 }: TypeIIIInfractionTableProps) {
   if (infractions.length === 0) {
     return (
@@ -42,7 +45,10 @@ export function TypeIIIInfractionsTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {infractions.map((infraction) => (
+        {infractions.map((infraction) => {
+          const isLoading = loadingStates?.[infraction.id] || false;
+          
+          return (
           <TableRow key={infraction.id}>
             <TableCell>{formatDate(infraction.date)}</TableCell>
             <TableCell>{infraction.number}</TableCell>
@@ -83,9 +89,30 @@ export function TypeIIIInfractionsTable({
                   <p>Ver Detalles Completos</p>
                 </TooltipContent>
               </Tooltip>
+
+              {/* Delete button - only show for ADMIN users */}
+              {userRole === "ADMIN" && onDeleteInfractionClick && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeleteInfractionClick(infraction)}
+                      disabled={isLoading}
+                      className="p-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50 ml-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Eliminar Falta</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </TableCell>
           </TableRow>
-        ))}
+          );
+        })}
       </TableBody>
     </Table>
   );

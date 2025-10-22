@@ -15,6 +15,8 @@ interface InfractionTableFactoryProps {
   onAddFollowUpClick?: (infraction: Infraction) => void;
   onViewDetailsClick: (infraction: Infraction) => void;
   onViewFollowUpsClick?: (infraction: Infraction) => void;
+  onDeleteInfractionClick?: (infraction: Infraction) => void;
+  userRole?: string;
 }
 
 /**
@@ -29,6 +31,8 @@ export function InfractionTableFactory({
   onAddFollowUpClick,
   onViewDetailsClick,
   onViewFollowUpsClick,
+  onDeleteInfractionClick,
+  userRole,
 }: InfractionTableFactoryProps) {
   const { type, infractions, count, variant } = groupData;
 
@@ -45,6 +49,8 @@ export function InfractionTableFactory({
             infractions={infractions}
             onToggleAttendedClick={onToggleAttendedClick}
             onViewDetailsClick={onViewDetailsClick}
+            onDeleteInfractionClick={onDeleteInfractionClick}
+            userRole={userRole}
             loadingStates={loadingStates}
           />
         );
@@ -62,6 +68,8 @@ export function InfractionTableFactory({
             onAddFollowUpClick={onAddFollowUpClick}
             onViewDetailsClick={onViewDetailsClick}
             onViewFollowUpsClick={onViewFollowUpsClick}
+            onDeleteInfractionClick={onDeleteInfractionClick}
+            userRole={userRole}
             loadingStates={loadingStates}
           />
         );
@@ -71,6 +79,8 @@ export function InfractionTableFactory({
           <TypeIIIInfractionsTable
             infractions={infractions}
             onViewDetailsClick={onViewDetailsClick}
+            onDeleteInfractionClick={onDeleteInfractionClick}
+            userRole={userRole}
             loadingStates={loadingStates}
           />
         );
