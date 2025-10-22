@@ -24,7 +24,7 @@ export async function DELETE(
     // Verify authentication and authorization
     if (currentUser.role !== "ADMIN") {
       return NextResponse.json(
-        { error: "No tienes permisos para ver este usuario" },
+        { error: "No tienes permisos para eliminar esta falta" },
         { status: 403 }
       );
     }
