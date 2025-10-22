@@ -51,7 +51,7 @@ export function StudentProfileCard({
                 alt={student.name}
                 className="object-cover"
               />
-              <AvatarFallback className="text-white font-semibold text-lg">
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 text-white font-semibold text-lg">
                 {initials}
               </AvatarFallback>
             </Avatar>
