@@ -1,18 +1,11 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  User,
-  GraduationCap,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BookOpen,
-  BarChart3,
-} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { AlertTriangle, BarChart3, BookOpen, CheckCircle, Clock, GraduationCap, User } from "lucide-react";
+import React from "react";
+
 import type { Student, Infraction, FollowUp } from "@/types/dashboard";
 import { calculateStudentProfileStats, getStudentStatus, getAttendanceRate, getFollowUpProgress } from "./utils";
 
@@ -47,7 +40,7 @@ export function StudentProfileCard({
     .toUpperCase();
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 border-slate-200 shadow-lg">
+    <Card className="w-full max-w-md mx-auto border-none">
       <CardContent className="p-6">
         <div className="space-y-6">
           {/* Foto y información básica */}
@@ -58,14 +51,14 @@ export function StudentProfileCard({
                 alt={student.name}
                 className="object-cover"
               />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold text-lg">
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 text-white font-semibold text-lg">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <h3 className="text-xl font-bold text-gray-900 mb-1">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
               {student.name}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-white mb-2">
               <User className="w-4 h-4" />
               <span>ID: {student.id}</span>
             </div>
@@ -91,22 +84,22 @@ export function StudentProfileCard({
           {/* Información académica */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <GraduationCap className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-white">
+                <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span>Grado</span>
               </div>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:text-blue-400 border-blue-200">
                 {currentGrade !== "No especificado" ? currentGrade : "No disponible"}
               </Badge>
             </div>
             
             {academicLevel !== "No especificado" && (
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <BookOpen className="w-4 h-4 text-indigo-600" />
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-white">
+                  <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span>Nivel Académico</span>
                 </div>
-                <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
+                <Badge variant="outline" className="bg-indigo-50 text-indigo-700 dark:text-indigo-400 border-indigo-200">
                   {academicLevel}
                 </Badge>
               </div>
@@ -117,8 +110,8 @@ export function StudentProfileCard({
 
           {/* Estadísticas de faltas */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-              <BarChart3 className="w-4 h-4 text-gray-600" />
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-white">
+              <BarChart3 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               <span>Resumen de Faltas</span>
             </div>
 
@@ -173,7 +166,7 @@ export function StudentProfileCard({
 
               <div className="bg-white rounded-lg p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-medium text-gray-600">Atendidas</div>
+                  <div className="text-xs font-medium text-gray-600 ">Atendidas</div>
                   <CheckCircle className="w-4 h-4 text-green-500" />
                 </div>
                 <div className="text-xl font-bold text-green-600 mt-1">
@@ -184,7 +177,7 @@ export function StudentProfileCard({
 
             {/* Por tipo de falta */}
             <div className="space-y-2">
-              <div className="text-xs font-medium text-gray-600 mb-2">Por Tipo</div>
+              <div className="text-xs font-medium text-gray-600 dark:text-white mb-2">Por Tipo</div>
               
               {stats.typeICount > 0 && (
                 <div className="flex items-center justify-between py-2 px-3 bg-green-50 rounded-lg border border-green-100">

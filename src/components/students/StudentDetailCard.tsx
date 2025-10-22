@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Info } from "lucide-react";
 import React from "react";
 
@@ -54,7 +48,7 @@ export function StudentDetailCard({
 
   return (
     <TooltipProvider>
-      <Card className="">
+      <Card className="border-none">
         <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="text-2xl hidden">{student.name}</CardTitle>
@@ -75,7 +69,7 @@ export function StudentDetailCard({
         <CardContent>
           <div className="space-y-8">
             {!hasInfractions ? (
-              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground border rounded-md">
+              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground bg-muted rounded-md">
                 <Info className="w-8 h-8 mb-2" />
                 <span>Este estudiante no tiene faltas registradas.</span>
               </div>

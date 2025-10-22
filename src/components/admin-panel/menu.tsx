@@ -72,7 +72,7 @@ export function Menu({ isOpen }: MenuProps) {
                                   ? "secondary"
                                   : "ghost"
                               }
-                              className="w-full justify-start h-10 mb-1"
+                              className="w-full justify-start rounded-3xl h-10 mb-1"
                               asChild
                             >
                               <Link href={href}>
@@ -127,7 +127,7 @@ export function Menu({ isOpen }: MenuProps) {
                   <Button
                     onClick={handleLogout}
                     variant="outline"
-                    className="w-full justify-center h-10 mt-5"
+                    className="w-full justify-center h-10 mt-5 rounded-3xl"
                   >
                     <span className={cn(isOpen === false ? "" : "mr-4")}>
                       <LogOut size={18} />
