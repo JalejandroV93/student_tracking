@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 
 import { prisma } from "./prisma";
 import { verifyToken } from "./tokens";
+import { auditService } from "@/services/audit.service";
 
 const FAILED_ATTEMPTS_THRESHOLD = 5;
 const SALT_ROUNDS = 10;
@@ -53,7 +54,7 @@ export const validateCredentials = async (
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
     // Increment failed login attempts.  Separate update for clarity.
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         failedLoginAttempts: { increment: 1 },
@@ -62,13 +63,24 @@ export const validateCredentials = async (
         }, // Block if threshold reached.
       },
     });
+
+    // Log failed login attempt
+    await auditService.logLoginFailed(
+      username,
+      updatedUser.isBlocked ? "Cuenta bloqueada por múltiples intentos fallidos" : "Contraseña incorrecta"
+    );
+
     throw new Error("Credenciales inválidas");
   }
 
   // Reset failed attempts on successful login.
   await prisma.user.update({
     where: { id: user.id },
-    data: { failedLoginAttempts: 0, isBlocked: false },
+    data: {
+      failedLoginAttempts: 0,
+      isBlocked: false,
+      lastLogin: new Date()
+    },
   });
 
   // Construct the user payload.  Only include necessary data.
@@ -155,6 +167,10 @@ export const handleSSOLogin = async (
   }
 
   if (user.isBlocked) {
+    await auditService.logLoginFailed(
+      user.username,
+      "Cuenta bloqueada"
+    );
     throw new Error("Cuenta bloqueada temporalmente");
   }
   // Update lastLogin on every successful SSO login.
@@ -162,6 +178,9 @@ export const handleSSOLogin = async (
     where: { document: String(decodedToken.email) },
     data: { lastLogin: new Date() },
   });
+
+  // Log successful SSO login
+  await auditService.logLogin(user.id, user.username);
 
   // Return a consistent user payload.
   return {

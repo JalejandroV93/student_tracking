@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
 import { phidiasSyncService } from '@/services/phidias-sync.service';
 import { phidiasApiService } from '@/services/phidias-api.service';
+import { auditService } from '@/services/audit.service';
 import { SyncResult } from '@/types/phidias';
 
 // Verificar si la solicitud proviene de un cron job autorizado
@@ -100,10 +101,28 @@ export async function POST(request: NextRequest) {
 
     // Retornar inmediatamente con el ID del proceso
     const syncId = Date.now().toString();
-    
+
     // Store the promise in a simple in-memory store (en producción usar Redis)
     global.activeSyncs = global.activeSyncs || {};
     global.activeSyncs[syncId] = syncPromise;
+
+    // Log manual sync initiation
+    if (!isCronJob && user) {
+      // Wait for syncPromise to get the logId
+      syncPromise.then((result) => {
+        if (result.logId) {
+          auditService.logPhidiasSyncManual(
+            user.id,
+            user.username,
+            result.logId,
+            { level: specificLevel, studentId: specificStudentId },
+            request
+          );
+        }
+      }).catch((error) => {
+        console.error('Error logging manual sync:', error);
+      });
+    }
 
     // Limpiar el sync después de 1 hora
     setTimeout(() => {
@@ -113,7 +132,7 @@ export async function POST(request: NextRequest) {
     }, 3600000); // 1 hora
 
     const messagePrefix = isCronJob ? '🤖 Sincronización automática iniciada' : 'Sincronización manual iniciada';
-    const messageDetails = specificStudentId ? ` para estudiante ${specificStudentId}` : 
+    const messageDetails = specificStudentId ? ` para estudiante ${specificStudentId}` :
                           specificLevel ? ` para nivel ${specificLevel}` : '';
 
     return NextResponse.json({
