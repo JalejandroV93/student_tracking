@@ -1,5 +1,6 @@
 // src/services/audit.service.ts
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 
 export type AuditAction =
@@ -43,7 +44,7 @@ interface AuditLogData {
   entityType?: AuditEntityType;
   entityId?: string | number;
   description: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   status?: AuditStatus;
@@ -292,7 +293,7 @@ class AuditService {
     hash: string,
     userId: string,
     username: string,
-    changes: Record<string, any>,
+    changes: Record<string, unknown>,
     request?: NextRequest
   ): Promise<void> {
     const context = this.extractRequestContext(request);
@@ -390,7 +391,7 @@ class AuditService {
     userId: string,
     username: string,
     queryType: string,
-    filters?: Record<string, any>,
+    filters?: Record<string, unknown>,
     request?: NextRequest
   ): Promise<void> {
     const context = this.extractRequestContext(request);
@@ -537,7 +538,7 @@ class AuditService {
       offset = 0,
     } = filters;
 
-    const where: any = {};
+    const where: Prisma.AuditLogWhereInput = {};
 
     if (userId) where.userId = userId;
     if (username) where.username = { contains: username, mode: 'insensitive' };
@@ -577,7 +578,7 @@ class AuditService {
     endDate?: Date;
     userId?: string;
   }) {
-    const where: any = {};
+    const where: Prisma.AuditLogWhereInput = {};
 
     if (filters?.startDate || filters?.endDate) {
       where.createdAt = {};
