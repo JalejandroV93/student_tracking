@@ -306,4 +306,85 @@ GET /api/v1/audit/logs?action=create&entityType=falta&startDate=2025-11-05
 
 ---
 
+## 🎨 Interfaz de Usuario (Frontend)
+
+El sistema incluye una interfaz completa para que los administradores visualicen y analicen los logs de auditoría.
+
+### Acceso
+**Ruta**: Dashboard → Configuración → Auditoría
+**URL**: `/dashboard/settings/audit`
+**Restricción**: Solo usuarios con rol `ADMIN`
+
+### Características Principales
+
+#### 📊 Pestaña "Logs"
+
+**Tabla de Logs con:**
+- ✅ Paginación (20 registros por página)
+- ✅ Filtros avanzados:
+  - Por usuario (búsqueda por nombre)
+  - Por acción (dropdown con todas las acciones)
+  - Por estado (success/error/warning)
+- ✅ Información detallada:
+  - Fecha y hora exacta
+  - Usuario que realizó la acción
+  - Tipo de acción con badge visual
+  - Entidad afectada
+  - Descripción completa
+  - Estado con colores (verde/rojo/amarillo)
+  - Dirección IP
+- ✅ Botón "Actualizar" para refrescar datos
+- ✅ Búsqueda en tiempo real al presionar Enter
+
+#### 📈 Pestaña "Estadísticas"
+
+**Métricas Clave:**
+- Total de logs en el sistema
+- Número de inicios de sesión
+- Sincronizaciones realizadas
+- Acciones fallidas (en rojo)
+
+**Gráficos Interactivos:**
+- **Acciones Más Frecuentes**: Gráfico de barras con top 10 de tipos de acciones
+- **Usuarios Más Activos**: Gráfico de barras con top 10 de usuarios
+
+### Beneficios de la Interfaz
+
+✅ **Sin necesidad de comandos**: Todo visual y fácil de usar
+✅ **Filtros intuitivos**: Encuentra exactamente lo que buscas
+✅ **Gráficos claros**: Identifica tendencias rápidamente
+✅ **Tiempo real**: Datos actualizados al instante
+✅ **Responsive**: Funciona en cualquier dispositivo
+✅ **Accesible**: Solo para administradores autorizados
+
+---
+
+## 🔄 Integraciones Completas
+
+El sistema de auditoría está integrado en:
+
+### ✅ Autenticación
+- Inicios de sesión exitosos
+- Intentos fallidos con razón
+- Cierres de sesión
+- Cambios de contraseña (preparado)
+
+### ✅ Sincronización con Phidias
+- Inicio de sync manual (con usuario)
+- Finalización de sync automático
+- Syncs fallidos con detalles
+
+### ✅ Operaciones de Faltas
+- Eliminación de faltas
+- Importación CSV de faltas
+
+### ⚠️ Listas para Integrar (métodos disponibles)
+- Creación manual de faltas
+- Actualización de faltas
+- Operaciones de casos y seguimientos
+- Gestión de usuarios
+- Exportaciones de datos
+
+---
+
 **Desarrollado con ❤️ para mejorar la trazabilidad del sistema**
