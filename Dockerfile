@@ -24,8 +24,10 @@ RUN apt-get update -y && \
 # ==================== Dependencies ====================
 FROM base AS dependencies
 
-# Copiar solo archivos de configuración de dependencias
+# Copiar archivos necesarios para instalación de dependencias
+# IMPORTANTE: Copiar prisma/ antes de pnpm install porque el postinstall ejecuta prisma generate
 COPY package.json pnpm-lock.yaml* ./
+COPY prisma ./prisma/
 
 # Instalar dependencias usando pnpm con caché montada
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
