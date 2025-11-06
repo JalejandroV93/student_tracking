@@ -1,7 +1,7 @@
 // src/app/api/v1/audit/logs/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
-import { auditService } from '@/services/audit.service';
+import { auditService, AuditAction, AuditEntityType, AuditStatus } from '@/services/audit.service';
 
 /**
  * GET /api/v1/audit/logs
@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
     // Parse filters
     const userId = searchParams.get('userId') || undefined;
     const username = searchParams.get('username') || undefined;
-    const action = (searchParams.get('action') as string) || undefined;
-    const entityType = (searchParams.get('entityType') as string) || undefined;
-    const status = (searchParams.get('status') as string) || undefined;
+    const action = (searchParams.get('action') as AuditAction) || undefined;
+    const entityType = (searchParams.get('entityType') as AuditEntityType) || undefined;
+    const status = (searchParams.get('status') as AuditStatus) || undefined;
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
