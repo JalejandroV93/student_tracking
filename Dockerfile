@@ -22,7 +22,9 @@ FROM base AS builder
 
 # Copiar node_modules desde la etapa de dependencias
 COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/prisma ./prisma
 
+# Copiar todo el código fuente
 # Copiar todo el código fuente
 COPY . .
 
