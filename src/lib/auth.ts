@@ -1,6 +1,6 @@
 // Use jose-based functions
 import { PhidiasPayload, UserPayload } from "@/types/user";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 

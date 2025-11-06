@@ -18,7 +18,7 @@ importers:
         specifier: ^5.2.1
         version: 5.2.2(react-hook-form@7.66.0(react@19.2.0))
       '@prisma/client':
-        specifier: ^6.15.0
+        specifier: ^6.17.1
         version: 6.19.0(prisma@6.19.0(typescript@5.9.3))(typescript@5.9.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
@@ -176,9 +176,6 @@ importers:
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
-      prisma:
-        specifier: ^6.15.0
-        version: 6.19.0(typescript@5.9.3)
       react:
         specifier: ^19.1.1
         version: 19.2.0
@@ -255,6 +252,9 @@ importers:
       eslint-config-next:
         specifier: 15.5.2
         version: 15.5.2(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      prisma:
+        specifier: ^6.17.1
+        version: 6.19.0(typescript@5.9.3)
       tailwindcss:
         specifier: ^4
         version: 4.1.16

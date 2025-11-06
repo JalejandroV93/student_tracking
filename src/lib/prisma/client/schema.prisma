@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/lib/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Estudiantes {
+  id             Int         @id @unique
+  codigo         Int         @unique
+  nombre         String?
+  firstname      String?
+  lastname       String?
+  school_year_id Int?
+  grado          String? // Grado actual del estudiante (legacy)
+  seccion        String? // Nivel Academico actual del estudiante (legacy)
+  gradeId        Int? // Nueva referencia al grado por ID
+  photo_url      String? // URL de la foto del estudiante desde Phidias
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  faltas         Faltas[]
+  schoolYear     SchoolYear? @relation(fields: [school_year_id], references: [id])
+  grade          Grade?      @relation(fields: [gradeId], references: [id])
+
+  @@index([codigo], map: "idx_codigo")
+  @@index([school_year_id], map: "idx_estudiantes_school_year_id")
+  @@index([grado], map: "idx_estudiantes_grado")
+  @@index([seccion], map: "idx_estudiantes_seccion")
+  @@index([gradeId], map: "idx_estudiantes_gradeId")
+}
+
+model Faltas {
+  hash                 String      @id @unique
+  id_estudiante        Int
+  codigo_estudiante    Int
+  tipo_falta           String?
+  numero_falta         Int?
+  descripcion_falta    String?
+  detalle_falta        String?
+  acciones_reparadoras String?
+  autor                String?
+  fecha                DateTime?   @db.Date
+  trimestre            String?
+  nivel                String?
+  attended             Boolean     @default(false)
+  attended_at          DateTime?
+  observaciones        String?
+  observaciones_autor  String?
+  observaciones_fecha  DateTime?
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @updatedAt
+  fecha_creacion       DateTime?
+  fecha_ultima_edicion DateTime?
+  seccion              String?
+  ultimo_editor        String?
+  id_externo           Int?
+  school_year_id       Int?
+  trimestre_id         Int?
+  casos                Casos[]
+  estudiante           Estudiantes @relation(fields: [id_estudiante], references: [id])
+
+  @@index([id_estudiante], map: "idx_estudiante")
+  @@index([codigo_estudiante], map: "idx_codigo_estudiante")
+  @@index([tipo_falta], map: "idx_tipo_falta")
+  @@index([numero_falta], map: "idx_numero_falta")
+  @@index([fecha], map: "idx_fecha")
+  @@index([nivel], map: "idx_nivel")
+  @@index([trimestre], map: "idx_trimestre")
+  @@index([trimestre_id], map: "idx_trimestre_id")
+  @@index([school_year_id], map: "idx_school_year_id")
+  @@index([attended], map: "idx_attended")
+  @@index([created_at], map: "idx_created_at")
+  @@index([seccion], map: "idx_seccion")
+  @@index([id_externo], map: "idx_id_externo")
+}
+
+model Casos {
+  id_caso      Int            @id @default(autoincrement())
+  hash_falta   String
+  fecha_inicio DateTime?      @db.Date
+  estado       String         @default("Abierto")
+  falta        Faltas         @relation(fields: [hash_falta], references: [hash])
+  seguimientos Seguimientos[]
+
+  @@index([estado], map: "idx_estado")
+  @@index([hash_falta], map: "idx_hash_falta")
+}
+
+model Seguimientos {
+  id_seguimiento    Int       @id @default(autoincrement())
+  id_caso           Int
+  tipo_seguimiento  String?
+  fecha_seguimiento DateTime? @db.Date
+  detalles          String?
+  autor             String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  updated_by        String?
+  caso              Casos     @relation(fields: [id_caso], references: [id_caso])
+
+  @@index([id_caso], map: "idx_seguimiento_caso")
+  @@index([created_at], map: "idx_seguimiento_created_at")
+  @@index([updated_at], map: "idx_seguimiento_updated_at")
+}
+
+model AlertSettings {
+  id                  Int      @id @default(autoincrement())
+  seccion             String   @unique
+  primary_threshold   Int
+  secondary_threshold Int
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+}
+
+model User {
+  id                  String            @id @default(uuid())
+  username            String            @unique
+  document            String            @unique
+  fullName            String
+  email               String?
+  phonenumber         String?
+  role                Role
+  groupCode           String? // Código del grupo que dirige (legacy)
+  gradeId             Int? // Nueva referencia al grado por ID (solo para TEACHER)
+  password            String
+  lastLogin           DateTime?
+  isBlocked           Boolean           @default(false)
+  failedLoginAttempts Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  AreaPermissions     AreaPermissions[]
+  grade               Grade?            @relation(fields: [gradeId], references: [id])
+
+  @@index([username])
+  @@index([document])
+  @@index([role])
+  @@index([isBlocked])
+  @@index([gradeId])
+}
+
+model AreaPermissions {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  areaId    Int
+  canView   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  area      Area     @relation(fields: [areaId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Area {
+  id              Int               @id @default(autoincrement())
+  name            String
+  code            String
+  createdAt       DateTime          @default(now())
+  AreaPermissions AreaPermissions[]
+}
+
+model Grade {
+  id            Int           @id @default(autoincrement())
+  name          String // Nombre completo: "Sexto A", "Kinder 4 B"
+  code          String // Código abreviado: "6A", "K4B" 
+  academicLevel String // Nivel académico: "Elementary", "Middle School", etc.
+  schoolYearId  Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  schoolYear    SchoolYear    @relation(fields: [schoolYearId], references: [id], onDelete: Cascade)
+  students      Estudiantes[]
+  teachers      User[]
+
+  @@unique([code, schoolYearId])
+  @@index([schoolYearId])
+  @@index([academicLevel])
+}
+
+model SyncMetadata {
+  id                   Int      @id @default(autoincrement())
+  tabla                String   @unique
+  ultima_actualizacion DateTime
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+}
+
+model SyncHistory {
+  id          Int       @id @default(autoincrement())
+  status      String    @default("running")
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([status], map: "idx_sync_status")
+  @@index([startedAt], map: "idx_sync_started_at")
+}
+
+model SchoolYear {
+  id                  Int                  @id @default(autoincrement())
+  name                String               @unique
+  phidias_id          Int?                 @unique
+  startDate           DateTime             @db.Date
+  endDate             DateTime             @db.Date
+  isActive            Boolean              @default(false)
+  description         String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  trimestres          Trimestre[]
+  estudiantes         Estudiantes[]
+  phidiasSeguimientos PhidiasSeguimiento[]
+  grades              Grade[]
+
+  @@index([isActive], map: "idx_school_year_active")
+  @@index([startDate], map: "idx_school_year_start")
+  @@index([endDate], map: "idx_school_year_end")
+  @@index([phidias_id], map: "idx_school_year_phidias_id")
+}
+
+model Trimestre {
+  id           Int        @id @default(autoincrement())
+  schoolYearId Int
+  name         String
+  order        Int
+  startDate    DateTime   @db.Date
+  endDate      DateTime   @db.Date
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  schoolYear   SchoolYear @relation(fields: [schoolYearId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolYearId, order], name: "unique_school_year_trimester")
+  @@index([schoolYearId], map: "idx_trimestre_school_year")
+  @@index([startDate], map: "idx_trimestre_start")
+  @@index([endDate], map: "idx_trimestre_end")
+}
+
+model PhidiasSeguimiento {
+  id              Int        @id @default(autoincrement())
+  phidias_id      Int        @unique
+  name            String
+  description     String?
+  tipo_falta      String // "Tipo I", "Tipo II", "Tipo III"
+  nivel_academico String // "Preschool", "Elementary", "Middle School", "High School"
+  school_year_id  Int
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  schoolYear      SchoolYear @relation(fields: [school_year_id], references: [id], onDelete: Cascade)
+
+  @@index([phidias_id], map: "idx_phidias_seguimiento_id")
+  @@index([tipo_falta], map: "idx_phidias_seguimiento_tipo")
+  @@index([nivel_academico], map: "idx_phidias_seguimiento_nivel")
+  @@index([school_year_id], map: "idx_phidias_seguimiento_school_year")
+  @@index([isActive], map: "idx_phidias_seguimiento_active")
+}
+
+model PhidiasSyncLog {
+  id                Int       @id @default(autoincrement())
+  syncType          String // "manual" | "automatic"
+  status            String // "success" | "error" | "partial"
+  studentsProcessed Int       @default(0)
+  recordsCreated    Int       @default(0)
+  recordsUpdated    Int       @default(0)
+  errors            Json? // Array de errores si los hay
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
+  duration          Int? // Duración en segundos
+  triggeredBy       String? // ID del usuario que inició la sincronización manual
+
+  @@index([status], map: "idx_phidias_sync_log_status")
+  @@index([startedAt], map: "idx_phidias_sync_log_started")
+  @@index([syncType], map: "idx_phidias_sync_log_type")
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  action       String // "login", "logout", "password_change", "create", "update", "delete", "sync", "query"
+  userId       String? // ID del usuario que realizó la acción (null para acciones del sistema)
+  username     String? // Username para facilitar consultas
+  entityType   String? // "falta", "estudiante", "caso", "user", "phidias_sync", etc.
+  entityId     String? // ID de la entidad afectada
+  description  String // Descripción legible de la acción
+  metadata     Json? // Datos adicionales relevantes
+  ipAddress    String? // IP del usuario
+  userAgent    String? // User agent del navegador
+  status       String   @default("success") // "success", "error", "warning"
+  errorMessage String? // Mensaje de error si status = "error"
+  duration     Int? // Duración de la operación en ms
+  createdAt    DateTime @default(now())
+
+  @@index([action], map: "idx_audit_action")
+  @@index([userId], map: "idx_audit_user")
+  @@index([entityType], map: "idx_audit_entity_type")
+  @@index([createdAt], map: "idx_audit_created_at")
+  @@index([status], map: "idx_audit_status")
+  @@index([username], map: "idx_audit_username")
+}
+
+enum Role {
+  ADMIN
+  ELEMENTARY_COORDINATOR
+  PRESCHOOL_COORDINATOR
+  MIDDLE_SCHOOL_COORDINATOR
+  HIGH_SCHOOL_COORDINATOR
+  PSYCHOLOGY
+  TEACHER
+  STUDENT
+  USER
+}

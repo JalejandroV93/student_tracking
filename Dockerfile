@@ -1,150 +1,65 @@
-# =============================================
-# Multi-stage Dockerfile optimizado con pnpm
-# =============================================
-
-# ==================== Base ====================
-FROM node:24-slim AS base
-
-# Habilitar Corepack para pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
+# Etapa base
+FROM node:24-alpine AS base
 WORKDIR /app
 
-# Instalar dependencias del sistema (OpenSSL para Prisma, cron para jobs)
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    openssl \
-    cron \
-    curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Instalar pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# ==================== Dependencies ====================
+# --- Dependencias ---
 FROM base AS dependencies
 
-# Copiar archivos necesarios para instalación de dependencias
-# IMPORTANTE: Copiar prisma/ antes de pnpm install porque el postinstall ejecuta prisma generate
-COPY package.json pnpm-lock.yaml* ./
-COPY prisma ./prisma/
+# Copiar archivos de configuración del package manager
+COPY package.json pnpm-lock.yaml ./
 
-# Instalar dependencias usando pnpm con caché montada
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --prod=false
+# Copiar el schema de Prisma ANTES de instalar dependencias
+COPY prisma ./prisma
 
-# ==================== Builder ====================
+# Instalar TODAS las dependencias (incluyendo devDependencies para el build)
+RUN pnpm install --frozen-lockfile
+
+# --- Builder ---
 FROM base AS builder
 
 # Copiar node_modules desde la etapa de dependencias
 COPY --from=dependencies /app/node_modules ./node_modules
 
-# Copiar archivos de la aplicación
+# Copiar todo el código fuente
 COPY . .
 
-# Generar Prisma Client
-RUN pnpm exec prisma generate
-
-# Construir la aplicación Next.js
-# Deshabilitar telemetría de Next.js
+# Deshabilitar la telemetría de Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm run build
 
-# ==================== Production Runner ====================
-FROM node:24-slim AS runner
+# Ejecutar el build
+RUN pnpm build
+
+# --- Producción ---
+FROM base AS runner
 
 WORKDIR /app
 
-# Instalar solo dependencias del sistema necesarias para producción
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    openssl \
-    cron \
-    curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Configurar usuario no-root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Configurar zona horaria para Colombia
-ENV TZ=America/Bogota
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Copiar archivos necesarios
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma ./prisma
 
-# Crear usuario no-root para mayor seguridad
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
 
-# Crear directorios necesarios
-RUN mkdir -p /app/logs && \
-    chown -R nextjs:nodejs /app
+# Cambiar al usuario no-root
+USER nextjs
 
 # Variables de entorno de producción
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 
-# Habilitar pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-# Copiar package.json y pnpm-lock.yaml
-COPY --chown=nextjs:nodejs package.json pnpm-lock.yaml* ./
-
-# Instalar SOLO dependencias de producción
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --prod
-
-# Copiar archivos compilados desde builder
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-
-# Configurar cron job para sincronización diaria (6 AM)
-RUN echo "0 6 * * * nextjs curl -X GET -H \"Authorization: Bearer \$CRON_SECRET\" http://localhost:3000/api/v1/cron/sync-phidias >> /app/logs/cron.log 2>&1" > /etc/cron.d/phidias-sync && \
-    chmod 0644 /etc/cron.d/phidias-sync && \
-    crontab -u nextjs /etc/cron.d/phidias-sync
-
-# Crear script de inicio optimizado
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-echo "=== Starting Student Tracking Application ==="\n\
-\n\
-# Iniciar cron como root\n\
-service cron start\n\
-echo "✓ Cron service started"\n\
-\n\
-# Crear archivos de logs\n\
-touch /app/logs/cron.log /app/logs/app.log\n\
-chown nextjs:nodejs /app/logs/*.log\n\
-echo "✓ Log files created"\n\
-\n\
-# Ejecutar migraciones de Prisma\n\
-echo "Running database migrations..."\n\
-pnpm run prisma:migrate || echo "⚠ Migration failed or no migrations needed"\n\
-echo "✓ Migrations completed"\n\
-\n\
-# Cambiar a usuario nextjs y ejecutar la aplicación\n\
-echo "Starting Next.js application..."\n\
-exec su-exec nextjs node server.js' > /app/start.sh && \
-    chmod +x /app/start.sh
-
-# Instalar su-exec para cambiar de usuario de forma segura
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends su-exec && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Cambiar ownership de archivos
-RUN chown -R nextjs:nodejs /app
-
-# Exponer puerto de Next.js
+# Exponer el puerto
 EXPOSE 3000
 
-# Healthcheck para Docker
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+# Comando para ejecutar la aplicación
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
 
-# Ejecutar como root para iniciar cron, luego cambiar a nextjs
-CMD ["/app/start.sh"]
+

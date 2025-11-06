@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Users, GraduationCap, Brain, BookOpen, User } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import type { Role } from "@prisma/client";
+import type { Role } from "@/prismacl/client";
 
 const roleConfig = {
   ADMIN: {

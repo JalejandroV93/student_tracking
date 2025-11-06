@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { hashPassword } from "@/lib/auth";
 import z from "zod";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 
 // Esquema de validación para actualizar usuario
 const updateUserSchema = z.object({

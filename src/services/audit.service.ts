@@ -1,6 +1,6 @@
 // src/services/audit.service.ts
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/prismacl/client';
 import { NextRequest } from 'next/server';
 
 export type AuditAction =

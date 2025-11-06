@@ -86,8 +86,8 @@ export async function POST(request: NextRequest) {
       user.id,
       user.username,
       `faltas_csv_${tipoFalta}`,
-      result.created,
-      result.updated,
+      result.created ?? 0,
+      result.updated ?? 0,
       result.errors.length,
       request
     );

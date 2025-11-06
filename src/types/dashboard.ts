@@ -4,7 +4,7 @@ import type {
   Faltas,
   Seguimientos,
   AlertSettings as PrismaAlertSettings,
-} from "@prisma/client";
+} from "@/prismacl/client";
 
 export type PrismaStudent = Estudiantes;
 export type PrismaInfraction = Faltas;

@@ -1,5 +1,5 @@
 import { UserPayload } from "@/types/user";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, RefreshCw, Settings, Users, FileBarChart, FileText } from "lucide-react";
 
 type Submenu = {

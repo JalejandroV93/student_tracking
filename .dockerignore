@@ -66,7 +66,7 @@ docs
 *.md
 
 # Prisma
-prisma/migrations/*.sql
+#prisma/migrations/*.sql
 
 # Caché
 .cache

@@ -1,4 +1,4 @@
-import { Casos } from "@prisma/client";
+import { Casos } from "@/prismacl/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/providers/AuthProvider"
-import { Role } from "@prisma/client"
+import { Role } from "@/prismacl/client"
 import { useMemo } from "react"
 
 interface SectionSelectorProps {
