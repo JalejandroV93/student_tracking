@@ -163,14 +163,14 @@ export function AuditLogsTable() {
         <div className="space-y-2">
           <Label htmlFor="action">Acción</Label>
           <Select
-            value={filters.action}
-            onValueChange={(value) => handleFilterChange("action", value)}
+            value={filters.action || "all"}
+            onValueChange={(value) => handleFilterChange("action", value === "all" ? "" : value)}
           >
             <SelectTrigger id="action">
               <SelectValue placeholder="Todas las acciones" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {Object.entries(actionLabels).map(([value, label]) => (
                 <SelectItem key={value} value={value}>
                   {label}
@@ -183,14 +183,14 @@ export function AuditLogsTable() {
         <div className="space-y-2">
           <Label htmlFor="status">Estado</Label>
           <Select
-            value={filters.status}
-            onValueChange={(value) => handleFilterChange("status", value)}
+            value={filters.status || "all"}
+            onValueChange={(value) => handleFilterChange("status", value === "all" ? "" : value)}
           >
             <SelectTrigger id="status">
               <SelectValue placeholder="Todos los estados" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="success">Éxito</SelectItem>
               <SelectItem value="error">Error</SelectItem>
               <SelectItem value="warning">Advertencia</SelectItem>
