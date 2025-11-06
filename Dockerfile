@@ -22,14 +22,15 @@ FROM base AS builder
 
 # Copiar node_modules desde la etapa de dependencias
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=dependencies /app/prisma ./prisma
 
-# Copiar todo el código fuente
 # Copiar todo el código fuente
 COPY . .
 
 # Deshabilitar la telemetría de Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Generar el cliente de Prisma ANTES del build
+RUN pnpm prisma generate
 
 # Ejecutar el build
 RUN pnpm build
@@ -43,13 +44,15 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copiar archivos necesarios
-COPY --from=builder /app/public ./public
+# Copiar archivos necesarios con permisos correctos
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
+# Copiar el cliente de Prisma generado
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/prisma/client ./src/lib/prisma/client
 
 # Cambiar al usuario no-root
 USER nextjs
