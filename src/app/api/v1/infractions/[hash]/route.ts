@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { auditService } from "@/services/audit.service";
 // src/app/api/v1/infractions/[hash]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ hash: string }> }
 ) {
   const { hash } = await params;
@@ -79,7 +80,15 @@ export async function DELETE(
     const deletedInfraction = await prisma.faltas.delete({
       where: { hash: hash },
     });
-    
+
+    // Log deletion
+    await auditService.logFaltaDeleted(
+      hash,
+      currentUser.id,
+      currentUser.username,
+      request
+    );
+
     return NextResponse.json({
       message: "Infraction deleted successfully",
       deletedInfraction: {

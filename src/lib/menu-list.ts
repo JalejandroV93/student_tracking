@@ -1,6 +1,6 @@
 import { UserPayload } from "@/types/user";
 import { Role } from "@prisma/client";
-import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, RefreshCw, Settings, Users, FileBarChart } from "lucide-react";
+import { AlertTriangle, CalendarDays, LayoutGrid, LucideIcon, RefreshCw, Settings, Users, FileBarChart, FileText } from "lucide-react";
 
 type Submenu = {
   href: string;
@@ -218,6 +218,12 @@ export function getMenuList(
               active: pathname.startsWith("/dashboard/settings/phidias/seguimientos"),
             },
           ],
+        },
+        {
+          href: "/dashboard/settings/audit",
+          label: "Auditoría",
+          icon: FileText,
+          active: pathname.startsWith("/dashboard/settings/audit"),
         },
       ],
     });
