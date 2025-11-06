@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role } from '@/prismacl/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {

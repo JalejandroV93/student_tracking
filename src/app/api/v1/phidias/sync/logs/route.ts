@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { Role } from '@prisma/client';
+import { Role } from '@/prismacl/client';
 
 export async function GET(request: NextRequest) {
   try {
