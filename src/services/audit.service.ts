@@ -571,6 +571,39 @@ class AuditService {
   }
 
   /**
+   * Registra una acción genérica en el log de auditoría
+   * Método versátil para registrar acciones que no tienen un método específico
+   */
+  async logAction(data: {
+    action: AuditAction | string;
+    userId?: string;
+    username?: string;
+    entityType?: AuditEntityType;
+    entityId?: string | number;
+    description: string;
+    metadata?: Record<string, unknown>;
+    status?: AuditStatus;
+    errorMessage?: string;
+    request?: NextRequest;
+  }): Promise<void> {
+    const context = this.extractRequestContext(data.request);
+
+    await this.log({
+      action: data.action as AuditAction,
+      userId: data.userId,
+      username: data.username,
+      entityType: data.entityType,
+      entityId: data.entityId?.toString(),
+      description: data.description,
+      metadata: data.metadata,
+      errorMessage: data.errorMessage,
+      ...context,
+      status: data.status || 'success',
+    });
+  }
+  
+
+  /**
    * Obtiene estadísticas de auditoría
    */
   async getStats(filters?: {
