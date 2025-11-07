@@ -7,6 +7,7 @@ import { CaseManagementList } from "@/components/case-management/CaseManagementL
 import { useCaseManagementStore } from "@/stores/case-management.store";
 import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 export default function CaseManagementAllSectionsPage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function CaseManagementAllSectionsPage() {
 
   return (
     <ContentLayout title="Gestión de Casos (Tipo II)">
+      <BreadcrumbNav />
       <div className="space-y-6">
         <p className="text-sm text-muted-foreground">
           Seguimiento de faltas Tipo II para todas las secciones.

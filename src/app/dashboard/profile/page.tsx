@@ -28,6 +28,7 @@ import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useSession } from "@/hooks/auth-client";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 // Esquema de validación para información personal
 const profileSchema = z.object({
@@ -197,6 +198,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <ContentLayout title="Mi Perfil">
+        <BreadcrumbNav />
         <Card>
           <CardHeader>
             <CardTitle>Cargando perfil...</CardTitle>
@@ -208,6 +210,7 @@ export default function ProfilePage() {
 
   return (
     <ContentLayout title="Mi Perfil">
+      <BreadcrumbNav />
       <div className="space-y-6 max-w-3xl mx-auto">
         <Card>
           <CardHeader>

@@ -10,6 +10,7 @@ import { fetchStudentsInfinite } from "@/lib/apiClient";
 import type { Student } from "@/types/dashboard";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useDebounce } from "@/hooks/useDebounce";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 export default function StudentsListPage() {
   const router = useRouter();
@@ -91,6 +92,7 @@ export default function StudentsListPage() {
 
   return (
     <ContentLayout title="Buscar Estudiantes">
+      <BreadcrumbNav />
       {process.env.NODE_ENV === "development" && (
       <UserRoleInfo />)}
       <StudentSearchList

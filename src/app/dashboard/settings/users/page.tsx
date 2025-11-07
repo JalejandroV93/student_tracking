@@ -22,10 +22,11 @@ import {
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { UserPlusIcon, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Role } from "@/prismacl/client";
+import { Role } from "@prisma/client";
 import { UserModal } from "@/components/settings/UserModal";
 import { ConfirmationModal } from "@/components/settings/ConfirmationModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 
 // Definiciones de tipos
@@ -151,6 +152,7 @@ export default function UsersManagementPage() {
 
   return (
     <ContentLayout title="Gestión de Usuarios del Sistema">
+        <BreadcrumbNav />
         <Card className="w-full border-none">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

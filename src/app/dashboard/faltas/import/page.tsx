@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProcessingResult } from "@/types/csv-import";
 import { FileText, Download, RefreshCw, Info } from "lucide-react";
+import { ContentLayout } from "@/components/admin-panel/content-layout";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 export default function CSVImportPage() {
   const [lastResult, setLastResult] = useState<ProcessingResult | null>(null);
@@ -79,15 +81,17 @@ export default function CSVImportPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Importación de Faltas</h1>
-          <p className="text-gray-600">
-            Carga masiva de datos de faltas desde archivos CSV
-          </p>
-        </div>
+    <ContentLayout title="Importación de Faltas">
+      <BreadcrumbNav />
+      <div className="container mx-auto py-6 space-y-6">
+        {/* Encabezado */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Importación de Faltas</h1>
+            <p className="text-gray-600">
+              Carga masiva de datos de faltas desde archivos CSV
+            </p>
+          </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -239,6 +243,7 @@ export default function CSVImportPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ContentLayout>
   );
 }
