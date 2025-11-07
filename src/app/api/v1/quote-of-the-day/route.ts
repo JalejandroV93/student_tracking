@@ -15,7 +15,7 @@ interface CachedQuote extends Quote {
 let cachedQuote: CachedQuote | null = null;
 
 // Categorías relacionadas con educación, motivación y crecimiento
-const EDUCATION_CATEGORIES = "education,wisdom,success,inspirational,knowledge";
+const EDUCATION_CATEGORIES = "education,wisdom";
 
 /**
  * GET /api/v1/quote-of-the-day
@@ -93,8 +93,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        content: "La educación es el arma más poderosa que puedes usar para cambiar el mundo.",
-        author: "Nelson Mandela",
+        content: "Todos los niños nacen artistas. El problema es cómo seguir siendo artistas al crecer.",
+        author: "Pablo Picasso.",
         cached: false,
         fallback: true,
       },
