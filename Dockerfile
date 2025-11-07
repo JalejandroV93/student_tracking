@@ -65,6 +65,6 @@ ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 EXPOSE 3000
 
 # Comando para ejecutar la aplicación
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm start"]
 
 
