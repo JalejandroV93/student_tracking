@@ -120,13 +120,13 @@ export function BreadcrumbNav({ customItems, hideHomeIcon = false }: BreadcrumbN
     : filteredItems;
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="mb-2">
       <BreadcrumbList>
         {/* Home/Inicio siempre presente */}
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
             <Link href="/dashboard" className="flex items-center gap-2">
-              {!hideHomeIcon && <Home className="h-4 w-4" />}
+              {!hideHomeIcon && <Home className="h-4 w-4 text-red-800" />}
               Inicio
             </Link>
           </BreadcrumbLink>
