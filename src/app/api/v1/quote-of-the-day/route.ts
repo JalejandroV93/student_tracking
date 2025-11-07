@@ -53,7 +53,7 @@ export async function GET() {
     }
 
     const response = await fetch(
-      `https://api.api-ninjas.com/v1/quotes?category=${EDUCATION_CATEGORIES}`,
+      `https://api.api-ninjas.com/v2/quotes?categories=${EDUCATION_CATEGORIES}`,
       {
         headers: {
           "X-Api-Key": apiKey,
