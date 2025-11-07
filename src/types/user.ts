@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Role } from '@prisma/client';
+import { Role } from '@/prismacl/client';
 import { JWTPayload } from 'jose';
 
 export interface UserPayload extends JWTPayload {

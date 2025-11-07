@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/card";
 import { FileText, Upload } from "lucide-react";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 
 
 export default function FaltasSettingsPage() {
   return (
     <ContentLayout title="Configuración de Faltas">
+      <BreadcrumbNav />
       <div className="container mx-auto py-6 space-y-6">
         
 

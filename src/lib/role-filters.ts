@@ -1,6 +1,6 @@
 import { getSectionCategory } from "@/lib/constantes";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 
 interface FilterableStudent {
   id: string;

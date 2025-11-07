@@ -1,16 +1,17 @@
 // src/app/api/v1/auth/login/route.ts (Traditional Login)
 import { validateCredentials } from "@/lib/auth";
 import { createToken } from "@/lib/tokens";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
 import { cookies } from "next/headers";
+import { auditService } from "@/services/audit.service";
 
 const loginSchema = z.object({
   username: z.string().min(1, "El nombre de usuario es requerido"),
   password: z.string().min(1, "La contraseña es requerida"),
 });
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const result = loginSchema.safeParse(body);
@@ -36,6 +37,9 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
     });
+
+    // Log successful login
+    await auditService.logLogin(userPayload.id, userPayload.username, request);
 
     return NextResponse.json(
       {

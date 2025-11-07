@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/tokens";
 import { UserPayload } from "@/types/user";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 
 // Rutas protegidas que requieren autenticación
 const protectedRoutes = ["/dashboard"];

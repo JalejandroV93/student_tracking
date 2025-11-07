@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
-import { CardContent, CardFooter } from "@/components/ui/card";
+import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
+import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useOptimizedAuth } from "@/hooks/useAuth";
 import { loginClient } from "@/lib/auth-client";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function LoginForm() {
   const [username, setUsername] = useState("");
@@ -30,7 +31,6 @@ export function LoginForm() {
       router.push("/dashboard/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      //console.error("Error en el inicio de sesión:", error)
       toast.error(`Error de autenticación: ${error.message}`);
       setIsLoading(false);
     }
@@ -38,83 +38,125 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <CardContent>
-        <div className="grid gap-4">
-          <div className="grid gap-2 ">
-            <Label htmlFor="username">Usuario</Label>
+      <CardContent className="space-y-4">
+        {/* Input de Usuario */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-2"
+        >
+          <Label htmlFor="username" className="text-sm font-medium">
+            Usuario
+          </Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="username"
               name="username"
               type="text"
               required
+              disabled={isLoading}
               placeholder="Ingrese su usuario"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              className="pl-10 transition-all duration-200 focus:ring-2"
             />
           </div>
-          <div className="grid gap-2 ">
-            <Label htmlFor="password">Contraseña</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                required
-                placeholder="Ingrese su contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-500" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-500" />
-                )}
-                <span className="sr-only">
-                  {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                </span>
-              </Button>
-            </div>
+        </motion.div>
+
+        {/* Input de Contraseña */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="space-y-2"
+        >
+          <Label htmlFor="password" className="text-sm font-medium">
+            Contraseña
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              disabled={isLoading}
+              placeholder="Ingrese su contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10 pr-10 transition-all duration-200 focus:ring-2"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={isLoading}
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              )}
+              <span className="sr-only">
+                {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              </span>
+            </Button>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Botón de Submit */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="pt-2"
+        >
+          <Button
+            type="submit"
+            className="w-full relative overflow-hidden group"
+            disabled={isLoading || !username.trim() || !password.trim()}
+          >
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.span
+                  key="loading"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-center"
+                >
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  Autenticando...
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="idle"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-center"
+                >
+                  Iniciar sesión
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* Efecto de hover animado */}
+            <motion.div
+              className="absolute inset-0 bg-white/20"
+              initial={{ x: "-100%" }}
+              whileHover={{ x: "100%" }}
+              transition={{ duration: 0.5 }}
+            />
+          </Button>
+        </motion.div>
       </CardContent>
-      <CardFooter>
-        <Button type="submit" className="w-full mt-4" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Iniciando sesión...
-            </>
-          ) : (
-            "Iniciar sesión"
-          )}
-        </Button>
-      </CardFooter>
     </form>
   );
 }

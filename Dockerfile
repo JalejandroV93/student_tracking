@@ -1,93 +1,70 @@
-# Utiliza una imagen oficial de Node.js como base
-FROM node:24-slim AS base
-
-# Establece el directorio de trabajo dentro del contenedor
+# Etapa base
+FROM node:24-alpine AS base
 WORKDIR /app
 
-# Instalar OpenSSL para Prisma y cron para trabajos programados
-RUN apt-get update -y && apt-get install -y openssl cron curl
+# Instalar pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # --- Dependencias ---
 FROM base AS dependencies
 
-# Agregar variable de entorno para producción
-ENV NODE_ENV=production
+# Copiar archivos de configuración del package manager
+COPY package.json pnpm-lock.yaml ./
 
-# Copia los archivos de package manager (package.json, yarn.lock, etc.)
-COPY package.json yarn.lock* ./
-COPY prisma ./prisma/
+# Copiar el schema de Prisma ANTES de instalar dependencias
+COPY prisma ./prisma
 
-# Instala las dependencias de producción
-RUN yarn install --frozen-lockfile --production=false
+# Instalar TODAS las dependencias (incluyendo devDependencies para el build)
+RUN pnpm install --frozen-lockfile
 
 # --- Builder ---
 FROM base AS builder
 
-# Copia el código de la aplicación
+# Copiar node_modules desde la etapa de dependencias
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=dependencies /app/prisma ./prisma
 
+# Copiar todo el código fuente
 COPY . .
 
-# Generar Prisma
-RUN npx prisma generate
+# Deshabilitar la telemetría de Next.js
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Ejecuta el script de build
-RUN yarn build
+# Generar el cliente de Prisma ANTES del build
+RUN pnpm prisma generate
+
+# Ejecutar el build
+RUN pnpm build
 
 # --- Producción ---
-FROM node:24-slim AS runner
+FROM base AS runner
 
 WORKDIR /app
 
-# Instalar OpenSSL para Prisma y cron para trabajos programados en la etapa de producción
-RUN apt-get update -y && apt-get install -y openssl cron curl
+# Configurar usuario no-root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Configurar zona horaria para Colombia (America/Bogota)
-ENV TZ=America/Bogota
+# Copiar archivos necesarios con permisos correctos
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Crear directorio de logs
-RUN mkdir -p /app/logs && chmod 777 /app/logs
+# Copiar el cliente de Prisma generado
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/prisma/client ./src/lib/prisma/client
 
-# Reduce el scope a node_modules de producción
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/prisma ./prisma
+# Cambiar al usuario no-root
+USER nextjs
 
-# Crear archivo de cron job para sincronización diaria
-RUN echo "0 6 * * * root curl -X GET -H \"Authorization: Bearer \$CRON_SECRET\" http://localhost:3000/api/v1/cron/sync-phidias >> /app/logs/cron.log 2>&1" > /etc/cron.d/phidias-sync
-
-# Configurar permisos del cron job
-RUN chmod 0644 /etc/cron.d/phidias-sync
-RUN crontab /etc/cron.d/phidias-sync
-
-# Crear archivo de inicio que lance tanto cron como la aplicación
-RUN echo '#!/bin/bash\n\
-    # Iniciar el servicio cron\n\
-    service cron start\n\
-    \n\
-    # Crear logs iniciales\n\
-    touch /app/logs/cron.log\n\
-    touch /app/logs/app.log\n\
-    \n\
-    # Ejecutar migraciones y seed\n\
-    yarn run prisma:migrate\n\
-    #yarn run seed\n\
-    \n\
-    # Iniciar la aplicación Next.js\n\
-    yarn run start' > /app/start.sh
-
-RUN chmod +x /app/start.sh
-
-# Establece variables de entorno
+# Variables de entorno de producción
 ENV NODE_ENV=production
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 
-# Expone el puerto en el que corre Next.js
+# Exponer el puerto
 EXPOSE 3000
 
-# Script de inicio para cron y aplicación
-CMD ["/app/start.sh"]
+# Comando para ejecutar la aplicación
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm start"]
+
 

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/session';
 import { hashPassword } from '@/lib/auth';
 import z from 'zod';
-import { Role } from '@prisma/client';
+import { Role } from '@/prismacl/client';
 
 // Esquema de validación para crear/actualizar usuario
 const userSchema = z.object({
@@ -21,8 +21,8 @@ const userSchema = z.object({
   ),
 });
 
-// GET: Obtener todos los usuarios
-export async function GET() {
+// GET: Obtener todos los usuarios con paginación y filtros
+export async function GET(request: Request) {
   try {
     // Verificar autenticación y permisos
     const user = await getCurrentUser();
@@ -38,8 +38,38 @@ export async function GET() {
       );
     }
 
-    // Obtener todos los usuarios con sus permisos de área
+    // Obtener parámetros de query
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    const blocked = searchParams.get('blocked') === 'true'; // Filtro para solo bloqueados
+
+    const skip = (page - 1) * limit;
+
+    // Construir filtros
+    const where: Record<string, unknown> = {};
+
+    // Filtro de búsqueda (por nombre, username o email)
+    if (search) {
+      where.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { username: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Filtro de usuarios bloqueados
+    if (blocked) {
+      where.isBlocked = true;
+    }
+
+    // Obtener total de usuarios con los filtros aplicados
+    const totalUsers = await prisma.user.count({ where });
+
+    // Obtener usuarios paginados con sus permisos de área
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         username: true,
@@ -47,6 +77,9 @@ export async function GET() {
         email: true,
         role: true,
         groupCode: true,
+        isBlocked: true,
+        failedLoginAttempts: true,
+        lastLogin: true,
         createdAt: true,
         updatedAt: true,
         AreaPermissions: {
@@ -56,9 +89,26 @@ export async function GET() {
         },
       },
       orderBy: { fullName: 'asc' },
+      skip,
+      take: limit,
     });
 
-    return NextResponse.json(users);
+    // Calcular metadatos de paginación
+    const totalPages = Math.ceil(totalUsers / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return NextResponse.json({
+      users,
+      pagination: {
+        total: totalUsers,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    });
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
     return NextResponse.json(

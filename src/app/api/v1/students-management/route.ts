@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { Role, Prisma } from "@prisma/client";
+import { Role, Prisma } from "@/prismacl/client";
 import { getActiveSchoolYear, getSchoolYearById } from "@/lib/school-year-utils";
 import { asignarNivelAcademico } from "@/lib/academic-level-utils";
 

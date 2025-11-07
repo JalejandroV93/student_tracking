@@ -26,6 +26,7 @@ import { SchoolYearForm } from "@/components/settings/school-years/SchoolYearFor
 import { SchoolYearEditForm } from "@/components/settings/school-years/SchoolYearEditForm";
 import { CreateSchoolYearRequest, SchoolYear, UpdateSchoolYearRequest } from "@/types/school-year";
 import { toast } from "sonner";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 export default function SchoolYearsSettingsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -82,6 +83,7 @@ export default function SchoolYearsSettingsPage() {
   if (loading) {
     return (
       <ContentLayout title="Configuración de Años Escolares">
+        <BreadcrumbNav />
         <div className="space-y-6">
           <div className="animate-pulse">
             <Card>
@@ -105,6 +107,7 @@ export default function SchoolYearsSettingsPage() {
   if (error) {
     return (
       <ContentLayout title="Configuración de Años Escolares">
+        <BreadcrumbNav />
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
@@ -115,6 +118,7 @@ export default function SchoolYearsSettingsPage() {
 
   return (
     <ContentLayout title="Configuración de Años Escolares">
+      <BreadcrumbNav />
       <div className="space-y-6">
         {/* Header con botón de crear */}
         <div className="flex justify-between items-center">

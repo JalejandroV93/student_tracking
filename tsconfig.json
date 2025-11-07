@@ -22,7 +22,8 @@
       "@/*": ["./src/*"],
       "@/ui/*": ["./src/components/ui/*"],
       "@/styles/*": ["./src/assets/styles/*"],
-      "@/img/*": ["./src/assets/img/*"]
+      "@/img/*": ["./src/assets/img/*"],
+      "@/prismacl/*": ["./src/lib/prisma/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

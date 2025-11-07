@@ -1,5 +1,5 @@
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 
 // Definir los tipos de elemento que pueden filtrarse
 interface Filterable {

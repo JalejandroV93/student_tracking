@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  output = "../src/lib/prisma/client"
 }
 
 datasource db {
@@ -271,6 +271,30 @@ model PhidiasSyncLog {
   @@index([status], map: "idx_phidias_sync_log_status")
   @@index([startedAt], map: "idx_phidias_sync_log_started")
   @@index([syncType], map: "idx_phidias_sync_log_type")
+}
+
+model AuditLog {
+  id            Int       @id @default(autoincrement())
+  action        String    // "login", "logout", "password_change", "create", "update", "delete", "sync", "query"
+  userId        String?   // ID del usuario que realizó la acción (null para acciones del sistema)
+  username      String?   // Username para facilitar consultas
+  entityType    String?   // "falta", "estudiante", "caso", "user", "phidias_sync", etc.
+  entityId      String?   // ID de la entidad afectada
+  description   String    // Descripción legible de la acción
+  metadata      Json?     // Datos adicionales relevantes
+  ipAddress     String?   // IP del usuario
+  userAgent     String?   // User agent del navegador
+  status        String    @default("success") // "success", "error", "warning"
+  errorMessage  String?   // Mensaje de error si status = "error"
+  duration      Int?      // Duración de la operación en ms
+  createdAt     DateTime  @default(now())
+
+  @@index([action], map: "idx_audit_action")
+  @@index([userId], map: "idx_audit_user")
+  @@index([entityType], map: "idx_audit_entity_type")
+  @@index([createdAt], map: "idx_audit_created_at")
+  @@index([status], map: "idx_audit_status")
+  @@index([username], map: "idx_audit_username")
 }
 
 enum Role {

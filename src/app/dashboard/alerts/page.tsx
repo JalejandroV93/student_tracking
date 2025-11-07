@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertsListSkeleton } from "@/components/alerts/AlertsList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 export default function AlertsAllSectionsPage() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function AlertsAllSectionsPage() {
   if (isLoading) {
     return (
       <ContentLayout title="Alertas">
+        <BreadcrumbNav />
         <AlertsListSkeleton />
       </ContentLayout>
     );
@@ -60,6 +62,7 @@ export default function AlertsAllSectionsPage() {
   if (error) {
     return (
       <ContentLayout title="Alertas">
+        <BreadcrumbNav />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
           <Alert variant="destructive" className="max-w-md mb-4">
             <Terminal className="h-4 w-4" />
@@ -86,6 +89,7 @@ export default function AlertsAllSectionsPage() {
   if (areSettingsConfigured === false) {
     return (
       <ContentLayout title="Alertas">
+        <BreadcrumbNav />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
           <Alert className="max-w-md mb-4">
             <Terminal className="h-4 w-4" />
@@ -107,6 +111,7 @@ export default function AlertsAllSectionsPage() {
   if (areSettingsConfigured === true) {
     return (
       <ContentLayout title="Alertas">
+        <BreadcrumbNav />
         <div className="space-y-6 w-full">
           <p className="text-sm text-muted-foreground">
             Mostrando alertas activas para todas las secciones académicas según
@@ -124,6 +129,7 @@ export default function AlertsAllSectionsPage() {
   // Fallback
   return (
     <ContentLayout title="Alertas">
+      <BreadcrumbNav />
       <AlertsListSkeleton />
     </ContentLayout>
   );

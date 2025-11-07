@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CSVProcessingService } from "@/services/csv-processing.service";
 import { UploadResponse } from "@/types/csv-import";
+import { getCurrentUser } from "@/lib/session";
+import { auditService } from "@/services/audit.service";
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar autenticación
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const duplicateHandling = formData.get("duplicateHandling") as string;
@@ -68,6 +79,17 @@ export async function POST(request: NextRequest) {
       tipoFalta,
       parseInt(trimestreId),
       duplicateHandling ? JSON.parse(duplicateHandling) : undefined
+    );
+
+    // Log import
+    await auditService.logImport(
+      user.id,
+      user.username,
+      `faltas_csv_${tipoFalta}`,
+      result.created ?? 0,
+      result.updated ?? 0,
+      result.errors.length,
+      request
     );
 
     const response: UploadResponse = {

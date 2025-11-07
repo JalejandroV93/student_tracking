@@ -91,6 +91,8 @@ export interface ProcessingResult {
   processedRows: number;
   duplicates: DuplicateInfo[];
   errors: ProcessingError[];
+  created?: number;
+  updated?: number;
 }
 
 // Resultado del procesamiento de estudiantes

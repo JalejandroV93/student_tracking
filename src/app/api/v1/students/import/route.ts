@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { CSVProcessingService } from "@/services/csv-processing.service";
 import { StudentUploadResponse } from "@/types/csv-import";
 import { getCurrentUser } from "@/lib/session";
-import { Role } from "@prisma/client";
+import { Role } from "@/prismacl/client";
 
 export async function POST(request: NextRequest) {
   try {

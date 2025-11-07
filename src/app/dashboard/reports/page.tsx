@@ -12,6 +12,7 @@ import { useSchoolYears } from "@/hooks/useSchoolYears"
 import { AlertCircle, FileBarChart, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { ContentLayout } from "@/components/admin-panel/content-layout"
+import { BreadcrumbNav } from "@/components/breadcrumb-nav"
 
 export default function ReportsPage() {
   const { activeSchoolYear } = useSchoolYears()
@@ -101,8 +102,9 @@ export default function ReportsPage() {
 
   return (
     <ContentLayout title="Reportes">
+      <BreadcrumbNav />
       <main className="flex flex-col gap-6">
-        
+
 
         {/* Filters */}
         <ReportFilters

@@ -28,6 +28,7 @@ import { StudentProfileCard } from "@/components/students/profile";
 import { StudentAdvisorChatbot } from "@/components/students/advisor";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 export default function StudentDetailsPage() {
   const params = useParams();
@@ -387,6 +388,7 @@ export default function StudentDetailsPage() {
   if (detailLoading) {
     return (
       <ContentLayout title="Detalles del Estudiante">
+        <BreadcrumbNav />
         <div className="flex items-center justify-center h-[calc(100vh-250px)]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -397,6 +399,7 @@ export default function StudentDetailsPage() {
   if (detailError) {
     return (
       <ContentLayout title="Detalles del Estudiante">
+        <BreadcrumbNav />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
           <p className="text-destructive mb-4">{detailError.message}</p>
           <Button variant="outline" onClick={() => router.back()}>
@@ -410,6 +413,7 @@ export default function StudentDetailsPage() {
   if (!student && !detailLoading) {
     return (
       <ContentLayout title="Detalles del Estudiante">
+        <BreadcrumbNav customItems={[{ label: "Estudiante no encontrado" }]} />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-250px)] text-center">
           <p className="text-muted-foreground mb-4">
             No se encontró información del estudiante.
@@ -432,6 +436,7 @@ export default function StudentDetailsPage() {
 
   return (
     <ContentLayout title={`Estudiante: ${student?.name || ""}`}>
+      <BreadcrumbNav customItems={student ? [{ label: student.name }] : []} />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-2">

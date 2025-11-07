@@ -2,6 +2,7 @@
 import { asignarNivelAcademico, extraerNumeroFalta } from '@/lib/academic-level-utils';
 import { prisma } from '@/lib/prisma';
 import { phidiasApiService } from '@/services/phidias-api.service';
+import { auditService } from '@/services/audit.service';
 import { PhidiasPollResponse, PhidiasRecord, PhidiasSeguimientoConfig, SyncOptions, SyncResult, SyncProgress } from '@/types/phidias';
 
 
@@ -601,6 +602,20 @@ class PhidiasSyncService {
         }
       });
 
+      // Log audit based on sync type
+      if (triggeredBy) {
+        // Manual sync - already logged when initiated
+      } else {
+        // Automatic sync
+        await auditService.logPhidiasSyncAuto(
+          syncLog.id,
+          studentsProcessed,
+          recordsCreated,
+          recordsUpdated,
+          duration
+        );
+      }
+
       onProgress?.({
         phase: 'completed',
         processed: seguimientosConfig.length,
@@ -635,6 +650,16 @@ class PhidiasSyncService {
           duration
         }
       });
+
+      // Log failed sync in audit
+      const isManual = !!triggeredBy;
+      await auditService.logPhidiasSyncFailed(
+        syncLog.id,
+        errorMessage,
+        isManual,
+        triggeredBy,
+        triggeredBy // In real scenario, we'd need to get username
+      );
 
       onProgress?.({
         phase: 'error',

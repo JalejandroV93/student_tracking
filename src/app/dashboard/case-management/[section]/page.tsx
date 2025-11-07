@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { CaseManagementListSkeleton } from "@/components/case-management/CaseManagementList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { getSectionTitle } from "@/lib/utils";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 
 
 export default function CaseManagementSectionPage() {
@@ -34,6 +35,7 @@ export default function CaseManagementSectionPage() {
   if (loading) {
     return (
       <ContentLayout title={`Gestión de Casos - ${sectionTitle}`}>
+        <BreadcrumbNav />
         <CaseManagementListSkeleton />
       </ContentLayout>
     );
@@ -42,6 +44,7 @@ export default function CaseManagementSectionPage() {
   if (error) {
     return (
       <ContentLayout title={`Gestión de Casos - ${sectionTitle}`}>
+        <BreadcrumbNav />
         <div className="flex items-center justify-center h-[calc(100vh-250px)] text-red-500">
           {error}
         </div>
@@ -51,6 +54,7 @@ export default function CaseManagementSectionPage() {
 
   return (
     <ContentLayout title={`Gestión de Casos - ${sectionTitle}`}>
+      <BreadcrumbNav />
       <div className="space-y-6">
         <div className="flex justify-end">
           <SectionSelector

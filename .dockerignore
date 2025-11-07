@@ -1,0 +1,83 @@
+# Dependencias
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+.pnpm-store
+
+# Next.js
+.next
+out
+build
+dist
+
+# Archivos de desarrollo
+.env*.local
+.env.development
+.env.test
+
+# Testing
+coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+
+# Sistema operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs y editores
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+.docker
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Documentación
+README.md
+CHANGELOG.md
+docs
+*.md
+
+# Prisma
+#prisma/migrations/*.sql
+
+# Caché
+.cache
+.parcel-cache
+.turbo
+
+# Temporales
+tmp
+temp
+*.tmp
+
+# Backups
+*.bak
+*.backup

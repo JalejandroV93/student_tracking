@@ -10,6 +10,7 @@ import { useSettingsStore } from "@/stores/settings.store";
 import { AlertsListSkeleton } from "@/components/alerts/AlertsList.skeleton";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { getSectionTitle } from "@/lib/utils";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 // Helper to get section title
 
 
@@ -50,6 +51,7 @@ export default function AlertsSpecificSectionPage() {
 
   return (
     <ContentLayout title={`Alertas - ${sectionTitle}`}>
+      <BreadcrumbNav />
       <div className="space-y-6">
         <div className="flex justify-end">
           <SectionSelector

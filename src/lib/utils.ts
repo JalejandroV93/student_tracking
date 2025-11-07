@@ -2,7 +2,7 @@
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Infraction } from "@/types/dashboard";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/prismacl/client";
 import { Student, FollowUp } from "@/types/dashboard";
 
 export function cn(...inputs: ClassValue[]) {
