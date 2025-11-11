@@ -15,7 +15,7 @@ interface CachedQuote extends Quote {
 let cachedQuote: CachedQuote | null = null;
 
 // Categorías relacionadas con educación, motivación y crecimiento
-const EDUCATION_CATEGORIES = "education,wisdom";
+//const EDUCATION_CATEGORIES = "education,wisdom";
 
 /**
  * GET /api/v1/quote-of-the-day
@@ -53,7 +53,7 @@ export async function GET() {
     }
 
     const response = await fetch(
-      `https://api.api-ninjas.com/v2/quotes?categories=${EDUCATION_CATEGORIES}`,
+      `https://api.api-ninjas.com/v2/quoteoftheday`,
       {
         headers: {
           "X-Api-Key": apiKey,
