@@ -52,7 +52,7 @@ export function LoginHero() {
           transition={{ duration: 0.6 }}
           className="flex items-center gap-4"
         >
-          <Logo className="w-16 h-16 lg:w-20 lg:h-20" />
+          <Logo className="w-16 h-16 lg:w-20 lg:h-20 hidden" />
           <h2 className="text-2xl lg:text-3xl font-bold text-white leading-tight">
             Seguimiento de Faltas
           </h2>

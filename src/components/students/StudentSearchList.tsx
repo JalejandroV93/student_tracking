@@ -209,10 +209,10 @@ export function StudentSearchList({
           </div>
         )}
         {!isLoading && !error && (
-          <ScrollArea className="h-[calc(700px-1rem)] border rounded-md">
+          <ScrollArea className="h-[calc(700px-1rem)] w-full rounded-md">
             {students.length > 0 ? (
               <>
-                <ul className="divide-y">
+                <ul className="divide-y w-[calc(100%-1rem)]">
                   {students.map((student, index) => {
                     // Si es el último elemento y hay más páginas, agregar ref para infinite scroll
                     const isLastElement = index === students.length - 1;
@@ -244,7 +244,7 @@ export function StudentSearchList({
                                     alt={student.name}
                                     className="object-cover"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold text-sm">
+                                  <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white font-semibold text-sm">
                                     {student.name
                                       .split(" ")
                                       .map((name) => name.charAt(0))
@@ -287,7 +287,7 @@ export function StudentSearchList({
 
                 {/* Indicador de carga mejorado para infinite scroll */}
                 {isFetchingNextPage && (
-                  <div className="px-4 py-3 space-y-2 border-t">
+                  <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center gap-3">
                       {/* Skeleton del avatar */}
                       <Skeleton className="w-12 h-12 rounded-full" />
