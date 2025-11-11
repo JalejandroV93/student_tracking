@@ -117,7 +117,7 @@ export function LoginForm() {
         >
           <Button
             type="submit"
-            className="w-full relative overflow-hidden group"
+            className="w-full relative overflow-hidden group hover:bg-red-700 bg-red-800 text-white font-semibold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading || !username.trim() || !password.trim()}
           >
             <AnimatePresence mode="wait">

@@ -53,8 +53,9 @@ export function LoginHero() {
           className="flex items-center gap-4"
         >
           <Logo className="w-16 h-16 lg:w-20 lg:h-20 hidden" />
-          <h2 className="text-2xl lg:text-3xl font-bold text-white leading-tight">
-            Seguimiento de Faltas
+          <h2 className=" text-white leading-tight">
+            <p className="text-2xl lg:text-3xl font-bold">SIGA</p>
+            <p>Sistema Integral de Gestión Académica y Convivencial</p>
           </h2>
         </motion.div>
       </div>

@@ -22,7 +22,7 @@ export default function LoginPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="w-full max-w-md bg-zinc-100 dark:bg-zinc-900 rounded-3xl p-8 shadow-xl"
+            className="w-full max-w-md bg-background  rounded-3xl p-8 shadow-xl dark:shadow-red-700/20 hover:ring-1 ring-red-700/50 hover:shadow-2xl transition-all ease-in-out duration-300"
           >
             <LoginHeader />
             <LoginForm />
