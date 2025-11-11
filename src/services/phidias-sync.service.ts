@@ -305,18 +305,19 @@ class PhidiasSyncService {
       try {
         const faltaData = await this.mapPhidiasRecordToFalta(record, studentData, schoolYearId, tipoFalta, nivelAcademico);
 
-        // Verificar si la falta ya existe
-        const existingFalta = await prisma.faltas.findUnique({
-          where: { hash: faltaData.hash }
-        });
+        // Usar transacción para evitar duplicados por condiciones de carrera
+        await prisma.$transaction(async (tx) => {
+          // Verificar existencia dentro de la transacción
+          const existingFalta = await tx.faltas.findUnique({
+            where: { hash: faltaData.hash }
+          });
 
-        if (existingFalta) {
-          // Actualizar si hay cambios
-          const lastEditTime = new Date(record.last_edit * 1000);
-          if (lastEditTime > existingFalta.fecha_ultima_edicion!) {
-            try {
+          if (existingFalta) {
+            // Actualizar si hay cambios
+            const lastEditTime = new Date(record.last_edit * 1000);
+            if (lastEditTime > existingFalta.fecha_ultima_edicion!) {
               console.log(`Updating existing falta ${faltaData.hash}`);
-              await prisma.faltas.update({
+              await tx.faltas.update({
                 where: { hash: faltaData.hash },
                 data: {
                   ...faltaData,
@@ -325,27 +326,19 @@ class PhidiasSyncService {
               });
               updated++;
               console.log(`✅ Successfully updated record ${record.id} for student ${studentData.id}`);
-            } catch (updateError) {
-              console.error(`❌ Error updating record ${record.id} for student ${studentData.id}:`, updateError);
-              throw updateError;
+            } else {
+              console.log(`Record ${record.id} for student ${studentData.id} is up to date`);
             }
           } else {
-            console.log(`Record ${record.id} for student ${studentData.id} is up to date`);
-          }
-        } else {
-          // Crear nueva falta
-          try {
+            // Crear nueva falta dentro de la transacción
             console.log(`Creating new falta with data:`, faltaData);
-            await prisma.faltas.create({
+            await tx.faltas.create({
               data: faltaData
             });
             created++;
             console.log(`✅ Successfully created new record ${record.id} for student ${studentData.id}`);
-          } catch (createError) {
-            console.error(`❌ Error creating record ${record.id} for student ${studentData.id}:`, createError);
-            throw createError; // Re-throw para que se capture en el catch principal
           }
-        }
+        });
       } catch (error) {
         console.error(`Error processing record ${record.id} for student ${studentData.id}:`, error);
         // Continuar con el siguiente registro en caso de error

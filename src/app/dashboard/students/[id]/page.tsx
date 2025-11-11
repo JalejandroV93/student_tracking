@@ -51,6 +51,8 @@ export default function StudentDetailsPage() {
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
   // Estado para controlar si ya se hizo el autoSync inicial
   const [hasAutoSynced, setHasAutoSynced] = useState(false);
+  // Lock para evitar múltiples syncs simultáneos
+  const [syncLock, setSyncLock] = useState(false);
 
   const {
     data: studentDetailsData,
@@ -60,10 +62,11 @@ export default function StudentDetailsPage() {
   } = useQuery({
     queryKey: ["students", studentId],
     queryFn: async () => {
-      const shouldAutoSync = !hasAutoSynced;
+      // Evitar múltiples syncs simultáneos usando lock
+      const shouldAutoSync = !hasAutoSynced && !syncLock;
       
       if (shouldAutoSync) {
-        // Indicar que la sincronización automática está en progreso
+        setSyncLock(true);
         setIsAutoSyncing(true);
         setHasAutoSynced(true);
       }
@@ -77,7 +80,10 @@ export default function StudentDetailsPage() {
       } finally {
         if (shouldAutoSync) {
           // Dar un pequeño delay para que sea visible la animación
-          setTimeout(() => setIsAutoSyncing(false), 1500);
+          setTimeout(() => {
+            setIsAutoSyncing(false);
+            setSyncLock(false);
+          }, 1500);
         }
       }
     },
@@ -99,12 +105,8 @@ export default function StudentDetailsPage() {
     },
     onSuccess: () => {
       toast.success("Sincronización con Phidias completada exitosamente");
-      // Invalidar el cache para forzar una nueva consulta sin autoSync
+      // Solo invalidar queries, el refetch automático se encargará del resto
       queryClient.invalidateQueries({ queryKey: ["students", studentId] });
-      // Refrescar los datos del estudiante después de un pequeño delay
-      setTimeout(() => {
-        refetchStudentDetails();
-      }, 1000);
     },
     onError: (error) => {
       toast.error(`Error en sincronización: ${error.message}`);
@@ -444,30 +446,32 @@ export default function StudentDetailsPage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
             </Button>
             
-            {/* Botón de sincronización manual */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => manualSync()}
-              disabled={isManualSyncing || isAutoSyncing}
-            >
-              {isManualSyncing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sincronizando...
-                </>
-              ) : isAutoSyncing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Auto-sincronizando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Sincronizar
-                </>
-              )}
-            </Button>
+            {/* Botón de sincronización manual - Solo para administradores */}
+            {user?.role === 'ADMIN' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => manualSync()}
+                disabled={isManualSyncing || isAutoSyncing}
+              >
+                {isManualSyncing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sincronizando...
+                  </>
+                ) : isAutoSyncing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Auto-sincronizando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Sincronizar
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Filtro de año académico */}

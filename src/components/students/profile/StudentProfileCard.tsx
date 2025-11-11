@@ -49,9 +49,9 @@ export function StudentProfileCard({
               <AvatarImage 
                 src={student.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${student.name}&backgroundColor=3b82f6,6366f1,8b5cf6,06b6d4,10b981&textColor=ffffff`} 
                 alt={student.name}
-                className="object-cover"
+                className="w-28 h-32"
               />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 text-white font-semibold text-lg">
+              <AvatarFallback className="bg-linear-to-br from-blue-500 via-purple-500 to-cyan-500 text-white font-semibold text-lg">
                 {initials}
               </AvatarFallback>
             </Avatar>
