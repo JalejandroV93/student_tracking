@@ -8,14 +8,16 @@ export interface UserPayload extends JWTPayload {
   document: string;
   fullName: string;
   role: Role;
-  email?: string;    //Added
-  phonenumber?: string; //Added
-  groupCode?: string; // Added for TEACHER role
-  [key: string]: any; // Añade esta línea
+  email?: string;    
+  phonenumber?: string; 
+  groupCode?: string; 
+  id_phidias?: string; 
+  url_photo?: string; 
+  [key: string]: any; 
 }
 
 export interface PhidiasPayload extends JWTPayload {
   name: string;
   email: string;
-  [key: string]: any; // Añade esta línea
+  [key: string]: any; 
 }

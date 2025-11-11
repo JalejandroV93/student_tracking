@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
-import { UserPlusIcon } from "lucide-react";
+import { UserPlusIcon, Upload, Users } from "lucide-react";
 import { UserModal } from "@/components/settings/UserModal";
 import { ConfirmationModal } from "@/components/settings/ConfirmationModal";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
@@ -24,6 +24,8 @@ import {
   useDeleteUser,
   useUnlockUser,
 } from "@/components/settings/users/use-user-mutations";
+import { BulkImportModal } from "@/components/settings/users/BulkImportModal";
+import { BulkGroupAssignModal } from "@/components/settings/users/BulkGroupAssignModal";
 
 // Página principal de gestión de usuarios
 export default function UsersManagementPage() {
@@ -31,6 +33,8 @@ export default function UsersManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
+  const [isBulkGroupAssignModalOpen, setIsBulkGroupAssignModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Estados para filtros y paginación
@@ -125,10 +129,26 @@ export default function UsersManagementPage() {
                 Administra los usuarios y sus permisos por áreas
               </CardDescription>
             </div>
-            <Button onClick={() => handleOpenModal()}>
-              <UserPlusIcon className="mr-2 h-4 w-4" />
-              Crear Usuario
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsBulkImportModalOpen(true)}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsBulkGroupAssignModalOpen(true)}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Asignar Grupos
+              </Button>
+              <Button onClick={() => handleOpenModal()}>
+                <UserPlusIcon className="mr-2 h-4 w-4" />
+                Crear Usuario
+              </Button>
+            </div>
           </div>
 
           <UserFilters
@@ -198,6 +218,24 @@ export default function UsersManagementPage() {
           isDeleting={unlockUserMutation.isPending}
         />
       )}
+
+      <BulkImportModal
+        open={isBulkImportModalOpen}
+        onClose={() => setIsBulkImportModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          setIsBulkImportModalOpen(false);
+        }}
+      />
+
+      <BulkGroupAssignModal
+        open={isBulkGroupAssignModalOpen}
+        onClose={() => setIsBulkGroupAssignModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          setIsBulkGroupAssignModalOpen(false);
+        }}
+      />
     </ContentLayout>
   );
 }

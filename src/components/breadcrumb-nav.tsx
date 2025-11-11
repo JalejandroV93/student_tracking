@@ -120,7 +120,7 @@ export function BreadcrumbNav({ customItems, hideHomeIcon = false }: BreadcrumbN
     : filteredItems;
 
   return (
-    <Breadcrumb className="mb-2">
+    <Breadcrumb className="mb-2 ml-2">
       <BreadcrumbList>
         {/* Home/Inicio siempre presente */}
         <BreadcrumbItem>

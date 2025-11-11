@@ -17,6 +17,19 @@ export const hashPassword = async (password: string) => {
   return bcrypt.hash(password, SALT_ROUNDS);
 };
 
+/**
+ * Normaliza un string removiendo tildes y caracteres diacríticos
+ * Útil para búsquedas case-insensitive y accent-insensitive
+ * @param str - String a normalizar
+ * @returns String normalizado sin tildes
+ */
+const normalizeString = (str: string): string => {
+  return str
+    .normalize("NFD") // Descompone caracteres con tildes
+    .replace(/[\u0300-\u036f]/g, "") // Remueve marcas diacríticas
+    .toLowerCase(); // Convierte a minúsculas
+};
+
 // Validates credentials for traditional login.
 export const validateCredentials = async (
   username: string,
@@ -26,8 +39,16 @@ export const validateCredentials = async (
     throw new Error("Credenciales incompletas");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { username },
+  // Normalizar el username ingresado (sin tildes)
+  const normalizedInputUsername = normalizeString(username);
+
+  // Buscar usuarios que coincidan con el username normalizado
+  const users = await prisma.user.findMany({
+    where: {
+      username: {
+        mode: "insensitive", // Case insensitive
+      },
+    },
     select: {
       id: true,
       username: true,
@@ -41,11 +62,18 @@ export const validateCredentials = async (
     },
   });
 
-  if (!user) {
+  // Filtrar usuarios cuyo username normalizado coincida
+  const matchingUser = users.find(
+    (u) => normalizeString(u.username) === normalizedInputUsername
+  );
+
+  if (!matchingUser) {
     // Security: Hash a dummy string to avoid username enumeration.
     await bcrypt.compare(password, "$2a$10$CwTycUXWue0Thq9StjUM0u"); // Dummy hash
     throw new Error("Credenciales inválidas");
   }
+
+  const user = matchingUser;
 
   if (user.isBlocked) {
     throw new Error("Cuenta bloqueada temporalmente");
@@ -67,7 +95,9 @@ export const validateCredentials = async (
     // Log failed login attempt
     await auditService.logLoginFailed(
       username,
-      updatedUser.isBlocked ? "Cuenta bloqueada por múltiples intentos fallidos" : "Contraseña incorrecta"
+      updatedUser.isBlocked
+        ? "Cuenta bloqueada por múltiples intentos fallidos"
+        : "Contraseña incorrecta"
     );
 
     throw new Error("Credenciales inválidas");
@@ -79,7 +109,7 @@ export const validateCredentials = async (
     data: {
       failedLoginAttempts: 0,
       isBlocked: false,
-      lastLogin: new Date()
+      lastLogin: new Date(),
     },
   });
 
@@ -167,10 +197,7 @@ export const handleSSOLogin = async (
   }
 
   if (user.isBlocked) {
-    await auditService.logLoginFailed(
-      user.username,
-      "Cuenta bloqueada"
-    );
+    await auditService.logLoginFailed(user.username, "Cuenta bloqueada");
     throw new Error("Cuenta bloqueada temporalmente");
   }
   // Update lastLogin on every successful SSO login.

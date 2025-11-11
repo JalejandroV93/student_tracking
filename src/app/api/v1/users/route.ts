@@ -13,6 +13,8 @@ const userSchema = z.object({
   password: z.string().min(6).optional(),
   role: z.nativeEnum(Role),
   groupCode: z.string().optional(), // Código del grupo para directores de grupo
+  id_phidias: z.string().optional(),
+  url_photo: z.string().url().optional().or(z.literal("")),
   areaPermissions: z.array(
     z.object({
       areaId: z.number(),
@@ -77,6 +79,8 @@ export async function GET(request: Request) {
         email: true,
         role: true,
         groupCode: true,
+        id_phidias: true,
+        url_photo: true,
         isBlocked: true,
         failedLoginAttempts: true,
         lastLogin: true,
@@ -146,7 +150,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { username, fullName, email, password, role, groupCode, areaPermissions } = result.data;
+    const { username, fullName, email, password, role, groupCode, id_phidias, url_photo, areaPermissions } = result.data;
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
@@ -180,6 +184,8 @@ export async function POST(request: Request) {
         document: username, // Usar username como documento por defecto
         role,
         groupCode: groupCode || null,
+        id_phidias: id_phidias || null,
+        url_photo: url_photo || null,
         password: hashedPassword,
       },
       select: {

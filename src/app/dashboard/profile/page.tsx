@@ -26,9 +26,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import { useSession } from "@/hooks/auth-client";
-import { Loader2 } from "lucide-react";
+import { Loader2, User as UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 // Esquema de validación para información personal
 const profileSchema = z.object({
@@ -214,13 +215,44 @@ export default function ProfilePage() {
       <div className="space-y-6 max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <CardTitle>{user.fullName}</CardTitle>
-                <CardDescription className="flex items-center gap-2 mt-1">
-                  @{user.username}
-                  <Badge>{getRoleDisplayName(user.role)}</Badge>
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              {/* Avatar section */}
+              <div className="shrink-0">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage 
+                    src={user.url_photo || ''} 
+                    alt={user.fullName}
+                    className="h-28 w-24"
+                  />
+                  <AvatarFallback className="bg-primary/10 text-lg font-semibold">
+                    {user.fullName
+                      .split(' ')
+                      .map(name => name.charAt(0))
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase() || <UserIcon className="h-8 w-8" />
+                    }
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              {/* User info section */}
+              <div className="flex-1">
+                <CardTitle className="text-2xl">{user.fullName}</CardTitle>
+                <CardDescription className="flex flex-wrap items-center gap-2 mt-2">
+                  <span>@{user.username}</span>
+                  <Badge variant="secondary">{getRoleDisplayName(user.role)}</Badge>
                 </CardDescription>
+                
+                {/* ID Phidias display */}
+                {user.id_phidias && (
+                  <div className="mt-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-md text-sm">
+                      <span className="text-muted-foreground">ID Phidias:</span>
+                      <span className="font-mono font-medium">{user.id_phidias}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -295,6 +327,8 @@ export default function ProfilePage() {
                           </FormItem>
                         )}
                       />
+
+                     
                     </div>
 
                     <Button

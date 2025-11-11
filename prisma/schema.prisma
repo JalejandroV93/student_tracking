@@ -125,6 +125,8 @@ model User {
   role                Role
   groupCode           String? // Código del grupo que dirige (legacy)
   gradeId             Int? // Nueva referencia al grado por ID (solo para TEACHER)
+  id_phidias          String? // ID del usuario en Phidias
+  url_photo           String? // URL de la foto del usuario
   password            String
   lastLogin           DateTime?
   isBlocked           Boolean           @default(false)
@@ -139,6 +141,7 @@ model User {
   @@index([role])
   @@index([isBlocked])
   @@index([gradeId])
+  @@index([id_phidias])
 }
 
 model AreaPermissions {

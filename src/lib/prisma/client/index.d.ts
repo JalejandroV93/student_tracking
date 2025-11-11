@@ -8527,6 +8527,8 @@ export namespace Prisma {
     role: $Enums.Role | null
     groupCode: string | null
     gradeId: number | null
+    id_phidias: string | null
+    url_photo: string | null
     password: string | null
     lastLogin: Date | null
     isBlocked: boolean | null
@@ -8545,6 +8547,8 @@ export namespace Prisma {
     role: $Enums.Role | null
     groupCode: string | null
     gradeId: number | null
+    id_phidias: string | null
+    url_photo: string | null
     password: string | null
     lastLogin: Date | null
     isBlocked: boolean | null
@@ -8563,6 +8567,8 @@ export namespace Prisma {
     role: number
     groupCode: number
     gradeId: number
+    id_phidias: number
+    url_photo: number
     password: number
     lastLogin: number
     isBlocked: number
@@ -8593,6 +8599,8 @@ export namespace Prisma {
     role?: true
     groupCode?: true
     gradeId?: true
+    id_phidias?: true
+    url_photo?: true
     password?: true
     lastLogin?: true
     isBlocked?: true
@@ -8611,6 +8619,8 @@ export namespace Prisma {
     role?: true
     groupCode?: true
     gradeId?: true
+    id_phidias?: true
+    url_photo?: true
     password?: true
     lastLogin?: true
     isBlocked?: true
@@ -8629,6 +8639,8 @@ export namespace Prisma {
     role?: true
     groupCode?: true
     gradeId?: true
+    id_phidias?: true
+    url_photo?: true
     password?: true
     lastLogin?: true
     isBlocked?: true
@@ -8734,6 +8746,8 @@ export namespace Prisma {
     role: $Enums.Role
     groupCode: string | null
     gradeId: number | null
+    id_phidias: string | null
+    url_photo: string | null
     password: string
     lastLogin: Date | null
     isBlocked: boolean
@@ -8771,6 +8785,8 @@ export namespace Prisma {
     role?: boolean
     groupCode?: boolean
     gradeId?: boolean
+    id_phidias?: boolean
+    url_photo?: boolean
     password?: boolean
     lastLogin?: boolean
     isBlocked?: boolean
@@ -8792,6 +8808,8 @@ export namespace Prisma {
     role?: boolean
     groupCode?: boolean
     gradeId?: boolean
+    id_phidias?: boolean
+    url_photo?: boolean
     password?: boolean
     lastLogin?: boolean
     isBlocked?: boolean
@@ -8811,6 +8829,8 @@ export namespace Prisma {
     role?: boolean
     groupCode?: boolean
     gradeId?: boolean
+    id_phidias?: boolean
+    url_photo?: boolean
     password?: boolean
     lastLogin?: boolean
     isBlocked?: boolean
@@ -8830,6 +8850,8 @@ export namespace Prisma {
     role?: boolean
     groupCode?: boolean
     gradeId?: boolean
+    id_phidias?: boolean
+    url_photo?: boolean
     password?: boolean
     lastLogin?: boolean
     isBlocked?: boolean
@@ -8838,7 +8860,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "document" | "fullName" | "email" | "phonenumber" | "role" | "groupCode" | "gradeId" | "password" | "lastLogin" | "isBlocked" | "failedLoginAttempts" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "document" | "fullName" | "email" | "phonenumber" | "role" | "groupCode" | "gradeId" | "id_phidias" | "url_photo" | "password" | "lastLogin" | "isBlocked" | "failedLoginAttempts" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     AreaPermissions?: boolean | User$AreaPermissionsArgs<ExtArgs>
     grade?: boolean | User$gradeArgs<ExtArgs>
@@ -8867,6 +8889,8 @@ export namespace Prisma {
       role: $Enums.Role
       groupCode: string | null
       gradeId: number | null
+      id_phidias: string | null
+      url_photo: string | null
       password: string
       lastLogin: Date | null
       isBlocked: boolean
@@ -9307,6 +9331,8 @@ export namespace Prisma {
     readonly role: FieldRef<"User", 'Role'>
     readonly groupCode: FieldRef<"User", 'String'>
     readonly gradeId: FieldRef<"User", 'Int'>
+    readonly id_phidias: FieldRef<"User", 'String'>
+    readonly url_photo: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly lastLogin: FieldRef<"User", 'DateTime'>
     readonly isBlocked: FieldRef<"User", 'Boolean'>
@@ -21153,6 +21179,8 @@ export namespace Prisma {
     role: 'role',
     groupCode: 'groupCode',
     gradeId: 'gradeId',
+    id_phidias: 'id_phidias',
+    url_photo: 'url_photo',
     password: 'password',
     lastLogin: 'lastLogin',
     isBlocked: 'isBlocked',
@@ -21911,6 +21939,8 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     groupCode?: StringNullableFilter<"User"> | string | null
     gradeId?: IntNullableFilter<"User"> | number | null
+    id_phidias?: StringNullableFilter<"User"> | string | null
+    url_photo?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
     isBlocked?: BoolFilter<"User"> | boolean
@@ -21931,6 +21961,8 @@ export namespace Prisma {
     role?: SortOrder
     groupCode?: SortOrderInput | SortOrder
     gradeId?: SortOrderInput | SortOrder
+    id_phidias?: SortOrderInput | SortOrder
+    url_photo?: SortOrderInput | SortOrder
     password?: SortOrder
     lastLogin?: SortOrderInput | SortOrder
     isBlocked?: SortOrder
@@ -21954,6 +21986,8 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     groupCode?: StringNullableFilter<"User"> | string | null
     gradeId?: IntNullableFilter<"User"> | number | null
+    id_phidias?: StringNullableFilter<"User"> | string | null
+    url_photo?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
     isBlocked?: BoolFilter<"User"> | boolean
@@ -21974,6 +22008,8 @@ export namespace Prisma {
     role?: SortOrder
     groupCode?: SortOrderInput | SortOrder
     gradeId?: SortOrderInput | SortOrder
+    id_phidias?: SortOrderInput | SortOrder
+    url_photo?: SortOrderInput | SortOrder
     password?: SortOrder
     lastLogin?: SortOrderInput | SortOrder
     isBlocked?: SortOrder
@@ -22000,6 +22036,8 @@ export namespace Prisma {
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     groupCode?: StringNullableWithAggregatesFilter<"User"> | string | null
     gradeId?: IntNullableWithAggregatesFilter<"User"> | number | null
+    id_phidias?: StringNullableWithAggregatesFilter<"User"> | string | null
+    url_photo?: StringNullableWithAggregatesFilter<"User"> | string | null
     password?: StringWithAggregatesFilter<"User"> | string
     lastLogin?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     isBlocked?: BoolWithAggregatesFilter<"User"> | boolean
@@ -23247,6 +23285,8 @@ export namespace Prisma {
     phonenumber?: string | null
     role: $Enums.Role
     groupCode?: string | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -23267,6 +23307,8 @@ export namespace Prisma {
     role: $Enums.Role
     groupCode?: string | null
     gradeId?: number | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -23285,6 +23327,8 @@ export namespace Prisma {
     phonenumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -23305,6 +23349,8 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
     gradeId?: NullableIntFieldUpdateOperationsInput | number | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -23324,6 +23370,8 @@ export namespace Prisma {
     role: $Enums.Role
     groupCode?: string | null
     gradeId?: number | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -23341,6 +23389,8 @@ export namespace Prisma {
     phonenumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -23359,6 +23409,8 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
     gradeId?: NullableIntFieldUpdateOperationsInput | number | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -24678,6 +24730,8 @@ export namespace Prisma {
     role?: SortOrder
     groupCode?: SortOrder
     gradeId?: SortOrder
+    id_phidias?: SortOrder
+    url_photo?: SortOrder
     password?: SortOrder
     lastLogin?: SortOrder
     isBlocked?: SortOrder
@@ -24701,6 +24755,8 @@ export namespace Prisma {
     role?: SortOrder
     groupCode?: SortOrder
     gradeId?: SortOrder
+    id_phidias?: SortOrder
+    url_photo?: SortOrder
     password?: SortOrder
     lastLogin?: SortOrder
     isBlocked?: SortOrder
@@ -24719,6 +24775,8 @@ export namespace Prisma {
     role?: SortOrder
     groupCode?: SortOrder
     gradeId?: SortOrder
+    id_phidias?: SortOrder
+    url_photo?: SortOrder
     password?: SortOrder
     lastLogin?: SortOrder
     isBlocked?: SortOrder
@@ -26946,6 +27004,8 @@ export namespace Prisma {
     phonenumber?: string | null
     role: $Enums.Role
     groupCode?: string | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -26965,6 +27025,8 @@ export namespace Prisma {
     role: $Enums.Role
     groupCode?: string | null
     gradeId?: number | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -27022,6 +27084,8 @@ export namespace Prisma {
     phonenumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -27041,6 +27105,8 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
     gradeId?: NullableIntFieldUpdateOperationsInput | number | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -27173,6 +27239,8 @@ export namespace Prisma {
     phonenumber?: string | null
     role: $Enums.Role
     groupCode?: string | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -27191,6 +27259,8 @@ export namespace Prisma {
     phonenumber?: string | null
     role: $Enums.Role
     groupCode?: string | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -27313,6 +27383,8 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     groupCode?: StringNullableFilter<"User"> | string | null
     gradeId?: IntNullableFilter<"User"> | number | null
+    id_phidias?: StringNullableFilter<"User"> | string | null
+    url_photo?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
     isBlocked?: BoolFilter<"User"> | boolean
@@ -27976,6 +28048,8 @@ export namespace Prisma {
     phonenumber?: string | null
     role: $Enums.Role
     groupCode?: string | null
+    id_phidias?: string | null
+    url_photo?: string | null
     password: string
     lastLogin?: Date | string | null
     isBlocked?: boolean
@@ -28037,6 +28111,8 @@ export namespace Prisma {
     phonenumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -28055,6 +28131,8 @@ export namespace Prisma {
     phonenumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
@@ -28073,6 +28151,8 @@ export namespace Prisma {
     phonenumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     groupCode?: NullableStringFieldUpdateOperationsInput | string | null
+    id_phidias?: NullableStringFieldUpdateOperationsInput | string | null
+    url_photo?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isBlocked?: BoolFieldUpdateOperationsInput | boolean

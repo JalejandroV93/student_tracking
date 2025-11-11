@@ -203,6 +203,8 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   groupCode: 'groupCode',
   gradeId: 'gradeId',
+  id_phidias: 'id_phidias',
+  url_photo: 'url_photo',
   password: 'password',
   lastLogin: 'lastLogin',
   isBlocked: 'isBlocked',

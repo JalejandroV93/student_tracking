@@ -42,6 +42,8 @@ export async function GET(request: Request) {
         phonenumber: true,
         role: true,
         groupCode: true,
+        id_phidias: true,
+        url_photo: true,
         ...(includePermissions
           ? {
               AreaPermissions: {
@@ -104,6 +106,8 @@ export async function GET(request: Request) {
         phonenumber: fullUser.phonenumber,
         role: fullUser.role,
         groupCode: fullUser.groupCode,
+        id_phidias: fullUser.id_phidias,
+        url_photo: fullUser.url_photo,
         permissions: permissionsByArea,
       };
 
@@ -120,6 +124,8 @@ export async function GET(request: Request) {
       phonenumber: fullUser.phonenumber,
       role: fullUser.role,
       groupCode: fullUser.groupCode,
+      id_phidias: fullUser.id_phidias,
+      url_photo: fullUser.url_photo,
     };
 
     return NextResponse.json(userResponse as UserPayload);

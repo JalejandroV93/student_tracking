@@ -49,7 +49,7 @@ export function UserRow({ user, onEdit, onDelete, onUnlock }: UserRowProps) {
       </TableCell>
       <TableCell>
         {user.role === "TEACHER" && user.groupCode ? (
-          <Badge variant="outline" className="bg-orange-50">
+          <Badge variant="outline" className="bg-orange-50 dark:bg-orange-900">
             Grupo: {user.groupCode}
           </Badge>
         ) : user.areaPermissions?.length > 0 ? (

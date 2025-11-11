@@ -18,6 +18,8 @@ export type User = {
   email: string | null;
   role: Role;
   groupCode?: string | null;
+  id_phidias?: string | null;
+  url_photo?: string | null;
   isBlocked: boolean;
   failedLoginAttempts: number;
   lastLogin: Date | null;

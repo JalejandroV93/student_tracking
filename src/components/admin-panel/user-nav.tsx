@@ -41,7 +41,11 @@ export function UserNav() {
                 className="relative h-8 w-8 rounded-full"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="#" alt="Avatar" />
+                  <AvatarImage 
+                    src={user?.url_photo || "#"} 
+                    alt={user?.fullName ? `Foto de ${user.fullName}` : "Avatar"} 
+                    className="h-10 w-8"
+                  />
                   <AvatarFallback className="bg-transparent">
                     {user?.fullName
                       ? user.fullName.substring(0, 2).toUpperCase()

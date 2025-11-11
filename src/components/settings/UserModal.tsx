@@ -54,6 +54,8 @@ const userSchema = z.object({
     .optional(),
   role: z.nativeEnum(Role),
   groupCode: z.string().optional(), // Código del grupo para directores de grupo
+  id_phidias: z.string().optional(),
+  url_photo: z.string().url("URL inválida").optional().or(z.literal("")),
   areaPermissions: z.array(
     z.object({
       areaId: z.number(),
@@ -82,6 +84,8 @@ type User = {
   email: string | null;
   role: Role;
   groupCode?: string | null; // Código del grupo para directores de grupo
+  id_phidias?: string | null;
+  url_photo?: string | null;
   areaPermissions: Array<{
     id: number;
     areaId: number;
@@ -197,6 +201,8 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
         email: user.email,
         role: user.role,
         groupCode: user.groupCode || "",
+        id_phidias: user.id_phidias || "",
+        url_photo: user.url_photo || "",
         areaPermissions:
           user.areaPermissions?.map((perm) => ({
             areaId: perm.area.id,
@@ -208,6 +214,8 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
     return {
       role: "USER" as Role,
       groupCode: "",
+      id_phidias: "",
+      url_photo: "",
       areaPermissions: [],
     };
   };
@@ -340,6 +348,40 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* ID Phidias */}
+              <FormField
+                control={form.control}
+                name="id_phidias"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID Phidias</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* URL Foto */}
+              <FormField
+                control={form.control}
+                name="url_photo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL Foto</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        value={field.value || ""} 
+                        placeholder="https://ejemplo.com/foto.jpg"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
