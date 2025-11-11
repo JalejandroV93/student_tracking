@@ -235,14 +235,14 @@ export function StudentSearchList({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 {/* Avatar del estudiante */}
-                                <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                                <Avatar className="w-14 h-14 border-2 border-white shadow-md">
                                   <AvatarImage
                                     src={
                                       student.photoUrl ||
                                       `https://api.dicebear.com/7.x/initials/svg?seed=${student.name}&backgroundColor=3b82f6,6366f1,8b5cf6,06b6d4,10b981&textColor=ffffff`
                                     }
                                     alt={student.name}
-                                    className="object-cover"
+                                    className="w-14 h-18"
                                   />
                                   <AvatarFallback className="bg-linear-to-br from-blue-500 to-indigo-600 text-white font-semibold text-sm">
                                     {student.name
