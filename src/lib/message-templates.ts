@@ -13,7 +13,7 @@ export interface CredentialsTemplateData {
  * Genera el HTML del mensaje de credenciales con estilos inline
  */
 export function generateCredentialsHtml(data: CredentialsTemplateData): string {
-  const { fullName, username, password, url } = data;
+  const { fullName, username, url } = data;
 
   return `
 <div style="min-height: 100vh; padding: 40px 20px;">
