@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyIcon, Send } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { KeyIcon } from "lucide-react";
 import { useSession } from "@/hooks/auth-client";
 
 // Esquema de validación
@@ -62,6 +61,7 @@ const userSchema = z.object({
       canView: z.boolean(),
     })
   ),
+  sendCredentials: z.boolean().optional(), // Opción para enviar credenciales al crear
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -148,14 +148,25 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
         throw new Error(error.message || "Error al procesar la solicitud");
       }
 
-      return response.json();
+      const result = await response.json();
+      return { ...result, sendCredentials: data.sendCredentials };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       toast.success(
         isEdit
           ? "Usuario actualizado correctamente"
           : "Usuario creado correctamente"
       );
+
+      // Si se marcó enviar credenciales y es un nuevo usuario
+      if (!isEdit && data.sendCredentials && data.id) {
+        try {
+          await sendCredentialsMutation.mutateAsync(data.id);
+        } catch {
+          // El error ya se maneja en el onError de sendCredentialsMutation
+        }
+      }
+
       onSuccess();
     },
     onError: (error) => {
@@ -191,6 +202,28 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
     },
   });
 
+  // Mutation para enviar credenciales vía Phidias
+  const sendCredentialsMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(`/api/v1/users/${userId}/send-credentials`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Error al enviar credenciales");
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Credenciales enviadas correctamente vía Phidias");
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
   // Preparar valores iniciales para el formulario
   const getDefaultValues = (): Partial<UserFormData> => {
     if (isEdit && user) {
@@ -217,6 +250,7 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
       id_phidias: "",
       url_photo: "",
       areaPermissions: [],
+      sendCredentials: false,
     };
   };
 
@@ -248,7 +282,12 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
 
   // Mostrar u ocultar campos según el rol
   const showAreaPermissions = (role: Role) => {
-    return role !== "ADMIN" && role !== "USER" && role !== "STUDENT" && role !== "TEACHER";
+    return (
+      role !== "ADMIN" &&
+      role !== "USER" &&
+      role !== "STUDENT" &&
+      role !== "TEACHER"
+    );
   };
 
   const showGroupCode = (role: Role) => {
@@ -256,6 +295,7 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
   };
 
   const currentRole = form.watch("role");
+  const currentIdPhidias = form.watch("id_phidias");
 
   // Función para manejar el reseteo de contraseña
   const handleResetPassword = () => {
@@ -274,6 +314,12 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
     });
   };
 
+  // Función para enviar credenciales a usuario existente
+  const handleSendCredentials = () => {
+    if (!user) return;
+    sendCredentialsMutation.mutate(user.id);
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -290,22 +336,45 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Botón para resetear contraseña (solo para admin) */}
+            {/* Botones para admin en modo edición */}
             {isEdit && isAdmin && (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleResetPassword}
-                disabled={resetPasswordMutation.isPending}
-              >
-                {resetPasswordMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <KeyIcon className="mr-2 h-4 w-4" />
-                )}
-                Restablecer contraseña
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleResetPassword}
+                  disabled={resetPasswordMutation.isPending}
+                >
+                  {resetPasswordMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <KeyIcon className="mr-2 h-4 w-4" />
+                  )}
+                  Restablecer contraseña
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleSendCredentials}
+                  disabled={
+                    sendCredentialsMutation.isPending || !user?.id_phidias
+                  }
+                  title={
+                    !user?.id_phidias
+                      ? "El usuario no tiene ID de Phidias"
+                      : "Enviar credenciales vía Phidias"
+                  }
+                >
+                  {sendCredentialsMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  Enviar Credenciales
+                </Button>
+              </div>
             )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -377,9 +446,9 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                   <FormItem>
                     <FormLabel>URL Foto</FormLabel>
                     <FormControl>
-                      <Input 
-                        {...field} 
-                        value={field.value || ""} 
+                      <Input
+                        {...field}
+                        value={field.value || ""}
                         placeholder="https://ejemplo.com/foto.jpg"
                       />
                     </FormControl>
@@ -436,7 +505,9 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
                           Coordinador Bachillerato
                         </SelectItem>
                         <SelectItem value="PSYCHOLOGY">Psicología</SelectItem>
-                        <SelectItem value="TEACHER">Director de Grupo</SelectItem>
+                        <SelectItem value="TEACHER">
+                          Director de Grupo
+                        </SelectItem>
                         <SelectItem value="USER">Usuario</SelectItem>
                         <SelectItem value="STUDENT">Estudiante</SelectItem>
                       </SelectContent>
@@ -525,6 +596,39 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
               </Card>
             )}
 
+            {/* Checkbox para enviar credenciales al crear usuario */}
+            {!isEdit && (
+              <FormField
+                control={form.control}
+                name="sendCredentials"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={!currentIdPhidias}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel
+                        className={
+                          !currentIdPhidias ? "text-muted-foreground" : ""
+                        }
+                      >
+                        Enviar credenciales vía Phidias
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        {currentIdPhidias
+                          ? "Se enviará un mensaje al usuario con sus datos de acceso"
+                          : "Ingresa un ID de Phidias para habilitar esta opción"}
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -536,7 +640,9 @@ export function UserModal({ user, onClose, onSuccess }: UserModalProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={userMutation.isPending || areasLoading || groupsLoading}
+                disabled={
+                  userMutation.isPending || areasLoading || groupsLoading
+                }
               >
                 {userMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

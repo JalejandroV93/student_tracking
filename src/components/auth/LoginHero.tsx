@@ -35,8 +35,7 @@ export function LoginHero() {
           src="/bg-tracking2.webp"
           alt="Background"
           fill
-          objectFit="cover"
-          className="object-contain"
+          className="object-cover animate-zoomEffect"
           priority
         />
       </div>
@@ -54,8 +53,8 @@ export function LoginHero() {
         >
           <Logo className="w-16 h-16 lg:w-20 lg:h-20 hidden" />
           <h2 className=" text-white leading-tight">
-            <p className="text-2xl lg:text-3xl font-bold">SIGA</p>
-            <p>Sistema Integral de Gestión Académica y Convivencial</p>
+            <p className="text-2xl lg:text-3xl font-bold">SGC</p>
+            <p>Sistema de Gestión Convivencial</p>
           </h2>
         </motion.div>
       </div>
