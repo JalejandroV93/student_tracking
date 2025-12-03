@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
-import { UserPlusIcon, Upload, Users } from "lucide-react";
+import { UserPlusIcon, Upload, Users, Send } from "lucide-react";
 import { UserModal } from "@/components/settings/UserModal";
 import { ConfirmationModal } from "@/components/settings/ConfirmationModal";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
@@ -23,9 +23,14 @@ import { useUsersQuery } from "@/components/settings/users/use-users-query";
 import {
   useDeleteUser,
   useUnlockUser,
+  useSendCredentials,
+  useBulkSendCredentials,
+  type BulkSendResult,
 } from "@/components/settings/users/use-user-mutations";
 import { BulkImportModal } from "@/components/settings/users/BulkImportModal";
 import { BulkGroupAssignModal } from "@/components/settings/users/BulkGroupAssignModal";
+import { SendCredentialsModal } from "@/components/settings/users/SendCredentialsModal";
+import { BulkSendCredentialsModal } from "@/components/settings/users/BulkSendCredentialsModal";
 
 // Página principal de gestión de usuarios
 export default function UsersManagementPage() {
@@ -34,8 +39,19 @@ export default function UsersManagementPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
   const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
-  const [isBulkGroupAssignModalOpen, setIsBulkGroupAssignModalOpen] = useState(false);
+  const [isBulkGroupAssignModalOpen, setIsBulkGroupAssignModalOpen] =
+    useState(false);
+  const [isSendCredentialsModalOpen, setIsSendCredentialsModalOpen] =
+    useState(false);
+  const [isBulkSendCredentialsModalOpen, setIsBulkSendCredentialsModalOpen] =
+    useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [bulkSendResults, setBulkSendResults] = useState<BulkSendResult | null>(
+    null
+  );
 
   // Estados para filtros y paginación
   const [page, setPage] = useState(1);
@@ -53,6 +69,8 @@ export default function UsersManagementPage() {
   // Mutaciones
   const deleteUserMutation = useDeleteUser();
   const unlockUserMutation = useUnlockUser();
+  const sendCredentialsMutation = useSendCredentials();
+  const bulkSendCredentialsMutation = useBulkSendCredentials();
 
   // Manejadores de eventos
   const handleOpenModal = (user?: User) => {
@@ -92,6 +110,65 @@ export default function UsersManagementPage() {
     }
   };
 
+  // Manejadores para envío de credenciales
+  const handleSendCredentialsClick = (user: User) => {
+    setSelectedUser(user);
+    setIsSendCredentialsModalOpen(true);
+  };
+
+  const confirmSendCredentials = () => {
+    if (selectedUser) {
+      sendCredentialsMutation.mutate(selectedUser.id, {
+        onSuccess: () => {
+          setIsSendCredentialsModalOpen(false);
+          setSelectedUser(null);
+        },
+      });
+    }
+  };
+
+  // Manejadores para selección múltiple
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(userId);
+      } else {
+        next.delete(userId);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedUserIds(new Set(users.map((u) => u.id)));
+    } else {
+      setSelectedUserIds(new Set());
+    }
+  };
+
+  // Manejadores para envío masivo de credenciales
+  const handleBulkSendCredentialsClick = () => {
+    setBulkSendResults(null);
+    setIsBulkSendCredentialsModalOpen(true);
+  };
+
+  const confirmBulkSendCredentials = () => {
+    const userIds = Array.from(selectedUserIds);
+    bulkSendCredentialsMutation.mutate(userIds, {
+      onSuccess: (results) => {
+        setBulkSendResults(results);
+        setSelectedUserIds(new Set());
+      },
+    });
+  };
+
+  const closeBulkSendModal = () => {
+    setIsBulkSendCredentialsModalOpen(false);
+    setBulkSendResults(null);
+  };
+
   const handleSearch = () => {
     setSearch(searchInput);
     setPage(1);
@@ -129,16 +206,26 @@ export default function UsersManagementPage() {
                 Administra los usuarios y sus permisos por áreas
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+            <div className="flex gap-2 flex-wrap">
+              {selectedUserIds.size > 0 && (
+                <Button
+                  variant="default"
+                  onClick={handleBulkSendCredentialsClick}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar Credenciales ({selectedUserIds.size})
+                </Button>
+              )}
+              <Button
+                variant="outline"
                 onClick={() => setIsBulkImportModalOpen(true)}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Importar CSV
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setIsBulkGroupAssignModalOpen(true)}
               >
                 <Users className="mr-2 h-4 w-4" />
@@ -166,9 +253,13 @@ export default function UsersManagementPage() {
             users={users}
             isLoading={isLoading}
             hasFilters={hasFilters}
+            selectedUsers={selectedUserIds}
+            onSelectUser={handleSelectUser}
+            onSelectAll={handleSelectAll}
             onEdit={handleOpenModal}
             onDelete={handleDeleteClick}
             onUnlock={handleUnlockClick}
+            onSendCredentials={handleSendCredentialsClick}
             onClearFilters={handleClearFilters}
           />
 
@@ -236,6 +327,30 @@ export default function UsersManagementPage() {
           setIsBulkGroupAssignModalOpen(false);
         }}
       />
+
+      {isSendCredentialsModalOpen && selectedUser && (
+        <SendCredentialsModal
+          user={selectedUser}
+          open={isSendCredentialsModalOpen}
+          onClose={() => {
+            setIsSendCredentialsModalOpen(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={confirmSendCredentials}
+          isPending={sendCredentialsMutation.isPending}
+        />
+      )}
+
+      {isBulkSendCredentialsModalOpen && (
+        <BulkSendCredentialsModal
+          users={users.filter((u) => selectedUserIds.has(u.id))}
+          open={isBulkSendCredentialsModalOpen}
+          onClose={closeBulkSendModal}
+          onConfirm={confirmBulkSendCredentials}
+          isPending={bulkSendCredentialsMutation.isPending}
+          results={bulkSendResults}
+        />
+      )}
     </ContentLayout>
   );
 }

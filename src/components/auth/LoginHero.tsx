@@ -54,7 +54,7 @@ export function LoginHero() {
         >
           <Logo className="w-16 h-16 lg:w-20 lg:h-20 hidden" />
           <h2 className=" text-white leading-tight">
-            <p className="text-2xl lg:text-3xl font-bold">SIGA</p>
+            <p className="text-2xl lg:text-3xl font-bold">SGC</p>
             <p>Sistema Integral de Gestión Académica y Convivencial</p>
           </h2>
         </motion.div>

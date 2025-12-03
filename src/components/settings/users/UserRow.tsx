@@ -1,22 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableRow, TableCell } from "@/components/ui/table";
-import { Pencil, Trash2, Unlock, AlertTriangle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pencil, Trash2, Unlock, AlertTriangle, Send } from "lucide-react";
 import { User } from "./types";
 import { getRoleBadgeColor, getRoleDisplayName } from "./role-utils";
 
 interface UserRowProps {
   user: User;
+  isSelected?: boolean;
+  onSelect?: (userId: string, checked: boolean) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
   onUnlock: (user: User) => void;
+  onSendCredentials?: (user: User) => void;
 }
 
-export function UserRow({ user, onEdit, onDelete, onUnlock }: UserRowProps) {
+export function UserRow({
+  user,
+  isSelected = false,
+  onSelect,
+  onEdit,
+  onDelete,
+  onUnlock,
+  onSendCredentials,
+}: UserRowProps) {
   const isAdminUser = user.role === "ADMIN";
+  const hasPhidiasId = Boolean(user.id_phidias);
 
   return (
     <TableRow className={user.isBlocked ? "bg-red-50" : ""}>
+      {onSelect && (
+        <TableCell className="w-10">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelect(user.id, checked as boolean)}
+            aria-label={`Seleccionar ${user.fullName}`}
+          />
+        </TableCell>
+      )}
       <TableCell className="font-medium">
         {user.fullName}
         {user.isBlocked && (
@@ -69,6 +91,25 @@ export function UserRow({ user, onEdit, onDelete, onUnlock }: UserRowProps) {
       </TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-1">
+          {onSendCredentials && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onSendCredentials(user)}
+              title={
+                hasPhidiasId
+                  ? "Enviar credenciales vía Phidias"
+                  : "Sin ID de Phidias"
+              }
+              className={hasPhidiasId ? "" : "opacity-50"}
+            >
+              <Send
+                className={`h-4 w-4 ${
+                  hasPhidiasId ? "text-blue-600" : "text-gray-400"
+                }`}
+              />
+            </Button>
+          )}
           {user.isBlocked && (
             <Button
               variant="ghost"
