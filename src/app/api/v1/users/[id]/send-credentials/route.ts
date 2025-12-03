@@ -15,7 +15,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     // Verificar autenticación
     const session = await getCurrentUser();
-    console.log("usuario actual:", session);
+    
     if (!session) {
       return NextResponse.json(
         { success: false, error: "No autorizado" },
