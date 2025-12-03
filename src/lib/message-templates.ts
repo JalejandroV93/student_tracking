@@ -78,7 +78,7 @@ export function generateCredentialsHtml(data: CredentialsTemplateData): string {
  * Genera el asunto por defecto para el mensaje de credenciales
  */
 export function getDefaultCredentialsSubject(): string {
-  return "Credenciales de acceso - Sistema Gestion de Convivencia (SGC)";
+  return "Credenciales de acceso - Sistema Gestión de Convivencia (SGC)";
 }
 
 /**
