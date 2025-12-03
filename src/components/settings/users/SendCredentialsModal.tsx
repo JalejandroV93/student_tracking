@@ -120,8 +120,8 @@ export function SendCredentialsModal({
                     <strong>Usuario:</strong> {user.username}
                   </p>
                   <p>
-                    <strong>Contraseña:</strong> {user.username}
                     <strong>Contraseña:</strong> Su documento de identificación
+                  </p>
                 </div>
               </div>
             </div>
