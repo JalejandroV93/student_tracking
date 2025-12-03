@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { phidiasCredentialsService } from "@/services/phidias-credentials.service";
 import { getCurrentUser } from "@/lib/session";
-import { headers } from "next/headers";
+import { phidiasCredentialsService } from "@/services/phidias-credentials.service";
+import { NextRequest, NextResponse } from "next/server";
 
 interface BulkSendRequest {
   userIds: string[];
