@@ -57,6 +57,7 @@ export default function UsersManagementPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [showBlockedOnly, setShowBlockedOnly] = useState(false);
+  const [roleFilter, setRoleFilter] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
   // Consulta para obtener usuarios con paginación y filtros
@@ -64,6 +65,7 @@ export default function UsersManagementPage() {
     page,
     search,
     showBlockedOnly,
+    roleFilter,
   });
 
   // Mutaciones
@@ -185,14 +187,20 @@ export default function UsersManagementPage() {
     setPage(1);
   };
 
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value === "all" ? "" : value);
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     handleClearSearch();
     setShowBlockedOnly(false);
+    setRoleFilter("");
   };
 
   const users = data?.users || [];
   const pagination = data?.pagination;
-  const hasFilters = Boolean(search || showBlockedOnly);
+  const hasFilters = Boolean(search || showBlockedOnly || roleFilter);
 
   return (
     <ContentLayout title="Gestión de Usuarios del Sistema">
@@ -241,10 +249,12 @@ export default function UsersManagementPage() {
           <UserFilters
             searchInput={searchInput}
             showBlockedOnly={showBlockedOnly}
+            roleFilter={roleFilter}
             onSearchInputChange={setSearchInput}
             onSearch={handleSearch}
             onClearSearch={handleClearSearch}
             onBlockedFilterChange={handleBlockedFilterChange}
+            onRoleFilterChange={handleRoleFilterChange}
           />
         </CardHeader>
 
